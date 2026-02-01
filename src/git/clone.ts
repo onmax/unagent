@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'pathe'
-import { simpleGit } from 'simple-git'
+import { git } from './_exec'
 
 export class GitCloneError extends Error {
   public readonly url: string
@@ -28,27 +28,23 @@ export interface CloneResult {
   error?: string
 }
 
-export async function cloneRepo(url: string, dest: string, options: CloneOptions = {}): Promise<CloneResult> {
+export function cloneRepo(url: string, dest: string, options: CloneOptions = {}): CloneResult {
   const { depth = 1, branch, timeout = 60000 } = options
 
   try {
-    const git = simpleGit({ timeout: { block: timeout } })
-
-    const cloneOptions: string[] = []
-    if (depth > 0) {
-      cloneOptions.push('--depth', String(depth))
-    }
-    if (branch) {
-      cloneOptions.push('--branch', branch)
-    }
+    const args = ['clone']
+    if (depth > 0)
+      args.push('--depth', String(depth))
+    if (branch)
+      args.push('--branch', branch)
+    args.push(url, dest)
 
     const destDir = join(dest, '..')
     if (!existsSync(destDir)) {
       mkdirSync(destDir, { recursive: true })
     }
 
-    await git.clone(url, dest, cloneOptions)
-
+    git(args, { timeout })
     return { success: true, path: dest }
   }
   catch (error) {
@@ -60,7 +56,7 @@ export async function cloneRepo(url: string, dest: string, options: CloneOptions
   }
 }
 
-export async function cloneToTemp(url: string, options: CloneOptions = {}): Promise<CloneResult> {
+export function cloneToTemp(url: string, options: CloneOptions = {}): CloneResult {
   const { tempDir = tmpdir() } = options
   const timestamp = Date.now()
   const random = Math.random().toString(36).slice(2, 8)
@@ -70,15 +66,13 @@ export async function cloneToTemp(url: string, options: CloneOptions = {}): Prom
 }
 
 export function cleanupTempDir(path: string): boolean {
-  // Safety: only remove from temp directory
   const temp = tmpdir()
   if (!path.startsWith(temp))
     return false
 
   try {
-    if (existsSync(path)) {
+    if (existsSync(path))
       rmSync(path, { recursive: true, force: true })
-    }
     return true
   }
   catch {

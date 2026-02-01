@@ -17,7 +17,7 @@ import { cloneRepo, cloneToTemp, getGitStatus } from 'unagent/git'
 Clone a repository to a specific path.
 
 ```ts
-const result = await cloneRepo('https://github.com/onmax/unagent.git', './unagent', {
+const result = cloneRepo('https://github.com/onmax/unagent.git', './unagent', {
   depth: 1, // Shallow clone (default: 1)
   branch: 'main', // Specific branch
   timeout: 60000, // Timeout in ms (default: 60000)
@@ -36,7 +36,7 @@ else {
 Clone to a temporary directory.
 
 ```ts
-const result = await cloneToTemp('https://github.com/onmax/unagent.git')
+const result = cloneToTemp('https://github.com/onmax/unagent.git')
 // result.path → "/tmp/unagent-1234567890-abc123"
 ```
 
@@ -64,7 +64,7 @@ isTempDir('/home/user/code') // false
 Get comprehensive git status.
 
 ```ts
-const status = await getGitStatus('./my-repo')
+const status = getGitStatus('./my-repo')
 
 if (status) {
   console.log(status.branch) // "main"
@@ -82,7 +82,7 @@ if (status) {
 Get current branch name.
 
 ```ts
-const branch = await getCurrentBranch('./repo') // "main"
+const branch = getCurrentBranch('./repo') // "main"
 ```
 
 ### `hasUncommittedChanges(dir)`
@@ -90,7 +90,7 @@ const branch = await getCurrentBranch('./repo') // "main"
 Check if repo has uncommitted changes.
 
 ```ts
-if (await hasUncommittedChanges('./repo')) {
+if (hasUncommittedChanges('./repo')) {
   console.log('Working directory is dirty')
 }
 ```
@@ -102,8 +102,8 @@ if (await hasUncommittedChanges('./repo')) {
 Checkout a branch or ref.
 
 ```ts
-await checkout('./repo', 'feature-branch') // true if success
-await checkout('./repo', 'v1.0.0') // checkout tag
+checkout('./repo', 'feature-branch') // true if success
+checkout('./repo', 'v1.0.0') // checkout tag
 ```
 
 ### `pull(dir)`
@@ -111,7 +111,7 @@ await checkout('./repo', 'v1.0.0') // checkout tag
 Pull latest changes.
 
 ```ts
-await pull('./repo') // true if success
+pull('./repo') // true if success
 ```
 
 ### `fetch(dir, remote?)`
@@ -119,8 +119,8 @@ await pull('./repo') // true if success
 Fetch from remote.
 
 ```ts
-await fetch('./repo') // fetch from 'origin'
-await fetch('./repo', 'upstream')
+fetch('./repo') // fetch from 'origin'
+fetch('./repo', 'upstream')
 ```
 
 ### `getRemoteUrl(dir, remote?)`
@@ -128,7 +128,7 @@ await fetch('./repo', 'upstream')
 Get remote URL.
 
 ```ts
-const url = await getRemoteUrl('./repo')
+const url = getRemoteUrl('./repo')
 // → "https://github.com/onmax/unagent.git"
 ```
 
@@ -137,7 +137,7 @@ const url = await getRemoteUrl('./repo')
 Get latest commit hash.
 
 ```ts
-const hash = await getLatestCommitHash('./repo')
+const hash = getLatestCommitHash('./repo')
 // → "abc123..."
 ```
 
@@ -179,15 +179,15 @@ class GitCloneError extends Error {
 ```ts
 import { cleanupTempDir, cloneToTemp, getGitStatus } from 'unagent/git'
 
-async function inspectRepo(url: string) {
-  const { success, path, error } = await cloneToTemp(url)
+function inspectRepo(url: string) {
+  const { success, path, error } = cloneToTemp(url)
 
   if (!success) {
     throw new Error(`Clone failed: ${error}`)
   }
 
   try {
-    const status = await getGitStatus(path)
+    const status = getGitStatus(path)
     console.log(`Branch: ${status?.branch}`)
     return status
   }

@@ -4,57 +4,27 @@
   "version": "0.0.2",
   "packageManager": "pnpm@10.28.2",
   "description": "Unified agent primitives for AI coding agents",
-  "author": "",
+  "author": "Maximilian Conradt <https://github.com/onmax>",
   "license": "MIT",
+  "funding": "https://github.com/sponsors/onmax",
   "homepage": "https://unagent.onmax.me",
   "repository": { "type": "git", "url": "https://github.com/onmax/unagent" },
-  "keywords": [
-    "unjs",
-    "agent",
-    "ai",
-    "skills",
-    "claude",
-    "cursor",
-    "windsurf"
-  ],
+  "keywords": ["unjs", "agent", "ai", "skills", "claude", "cursor", "windsurf"],
   "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./env": {
-      "types": "./dist/env/index.d.ts",
-      "import": "./dist/env/index.js"
-    },
-    "./skill": {
-      "types": "./dist/skill/index.d.ts",
-      "import": "./dist/skill/index.js"
-    },
-    "./link": {
-      "types": "./dist/link/index.d.ts",
-      "import": "./dist/link/index.js"
-    },
-    "./lock": {
-      "types": "./dist/lock/index.d.ts",
-      "import": "./dist/lock/index.js"
-    },
-    "./source": {
-      "types": "./dist/source/index.d.ts",
-      "import": "./dist/source/index.js"
-    },
-    "./git": {
-      "types": "./dist/git/index.d.ts",
-      "import": "./dist/git/index.js"
-    },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js"
-    }
+    ".": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
+    "./env": { "types": "./dist/env/index.d.mts", "default": "./dist/env/index.mjs" },
+    "./skill": { "types": "./dist/skill/index.d.mts", "default": "./dist/skill/index.mjs" },
+    "./link": { "types": "./dist/link/index.d.mts", "default": "./dist/link/index.mjs" },
+    "./lock": { "types": "./dist/lock/index.d.mts", "default": "./dist/lock/index.mjs" },
+    "./source": { "types": "./dist/source/index.d.mts", "default": "./dist/source/index.mjs" },
+    "./git": { "types": "./dist/git/index.d.mts", "default": "./dist/git/index.mjs" },
+    "./utils": { "types": "./dist/utils/index.d.mts", "default": "./dist/utils/index.mjs" }
   },
-  "files": [
-    "dist"
-  ],
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -63,21 +33,29 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "release": "bumpp",
-    "prepublishOnly": "pnpm build"
+    "prepare": "simple-git-hooks",
+    "prepublishOnly": "nr build"
   },
   "dependencies": {
-    "gray-matter": "^4.0.0",
-    "pathe": "^2.0.3",
-    "simple-git": "^3.0.0",
-    "std-env": "^3.10.0"
+    "pathe": "catalog:",
+    "std-env": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.0.0",
-    "@types/node": "^25.1.0",
-    "bumpp": "^9.0.0",
-    "eslint": "^9.0.0",
-    "tsdown": "^0.15.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "@antfu/eslint-config": "catalog:",
+    "@types/node": "catalog:",
+    "bumpp": "catalog:",
+    "eslint": "catalog:",
+    "lint-staged": "catalog:",
+    "simple-git-hooks": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }

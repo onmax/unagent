@@ -1,4 +1,4 @@
-import matter from 'gray-matter'
+import { parseFrontmatter } from './_frontmatter'
 
 export interface SkillFrontmatter {
   // Required by agentskills.io spec
@@ -24,10 +24,10 @@ export interface ParsedSkill {
 }
 
 export function parseSkillMd(content: string): ParsedSkill {
-  const { data, content: body } = matter(content)
+  const { data, content: body } = parseFrontmatter<SkillFrontmatter>(content)
   return {
-    frontmatter: data as SkillFrontmatter,
-    content: body.trim(),
+    frontmatter: data,
+    content: body,
     raw: content,
   }
 }

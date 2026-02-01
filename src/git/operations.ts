@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { simpleGit } from 'simple-git'
+import { git, parseGitStatus } from './_exec'
 
 export interface GitStatus {
   isRepo: boolean
@@ -12,27 +12,24 @@ export interface GitStatus {
   hasChanges: boolean
 }
 
-export async function getGitStatus(dir: string): Promise<GitStatus | undefined> {
+export function getGitStatus(dir: string): GitStatus | undefined {
   if (!existsSync(dir))
     return undefined
 
   try {
-    const git = simpleGit(dir)
-    const isRepo = await git.checkIsRepo()
-    if (!isRepo)
-      return undefined
-
-    const status = await git.status()
+    git(['rev-parse', '--is-inside-work-tree'], { cwd: dir })
+    const output = git(['status', '--porcelain=v2', '--branch'], { cwd: dir })
+    const parsed = parseGitStatus(output)
 
     return {
       isRepo: true,
-      branch: status.current || 'HEAD',
-      ahead: status.ahead,
-      behind: status.behind,
-      staged: status.staged,
-      modified: status.modified,
-      untracked: status.not_added,
-      hasChanges: !status.isClean(),
+      branch: parsed.branch,
+      ahead: parsed.ahead,
+      behind: parsed.behind,
+      staged: parsed.staged,
+      modified: parsed.modified,
+      untracked: parsed.untracked,
+      hasChanges: parsed.staged.length > 0 || parsed.modified.length > 0 || parsed.untracked.length > 0,
     }
   }
   catch {
@@ -40,21 +37,18 @@ export async function getGitStatus(dir: string): Promise<GitStatus | undefined> 
   }
 }
 
-export async function getCurrentBranch(dir: string): Promise<string | undefined> {
+export function getCurrentBranch(dir: string): string | undefined {
   try {
-    const git = simpleGit(dir)
-    const branch = await git.revparse(['--abbrev-ref', 'HEAD'])
-    return branch.trim()
+    return git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dir })
   }
   catch {
     return undefined
   }
 }
 
-export async function checkout(dir: string, ref: string): Promise<boolean> {
+export function checkout(dir: string, ref: string): boolean {
   try {
-    const git = simpleGit(dir)
-    await git.checkout(ref)
+    git(['checkout', ref], { cwd: dir })
     return true
   }
   catch {
@@ -62,10 +56,9 @@ export async function checkout(dir: string, ref: string): Promise<boolean> {
   }
 }
 
-export async function pull(dir: string): Promise<boolean> {
+export function pull(dir: string): boolean {
   try {
-    const git = simpleGit(dir)
-    await git.pull()
+    git(['pull'], { cwd: dir })
     return true
   }
   catch {
@@ -73,10 +66,9 @@ export async function pull(dir: string): Promise<boolean> {
   }
 }
 
-export async function fetch(dir: string, remote: string = 'origin'): Promise<boolean> {
+export function fetch(dir: string, remote: string = 'origin'): boolean {
   try {
-    const git = simpleGit(dir)
-    await git.fetch(remote)
+    git(['fetch', remote], { cwd: dir })
     return true
   }
   catch {
@@ -84,30 +76,25 @@ export async function fetch(dir: string, remote: string = 'origin'): Promise<boo
   }
 }
 
-export async function getRemoteUrl(dir: string, remote: string = 'origin'): Promise<string | undefined> {
+export function getRemoteUrl(dir: string, remote: string = 'origin'): string | undefined {
   try {
-    const git = simpleGit(dir)
-    const remotes = await git.getRemotes(true)
-    const found = remotes.find(r => r.name === remote)
-    return found?.refs.fetch
+    return git(['remote', 'get-url', remote], { cwd: dir })
   }
   catch {
     return undefined
   }
 }
 
-export async function getLatestCommitHash(dir: string): Promise<string | undefined> {
+export function getLatestCommitHash(dir: string): string | undefined {
   try {
-    const git = simpleGit(dir)
-    const log = await git.log({ maxCount: 1 })
-    return log.latest?.hash
+    return git(['rev-parse', 'HEAD'], { cwd: dir })
   }
   catch {
     return undefined
   }
 }
 
-export async function hasUncommittedChanges(dir: string): Promise<boolean> {
-  const status = await getGitStatus(dir)
+export function hasUncommittedChanges(dir: string): boolean {
+  const status = getGitStatus(dir)
   return status?.hasChanges ?? false
 }
