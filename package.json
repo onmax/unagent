@@ -13,12 +13,22 @@
   "sideEffects": false,
   "exports": {
     ".": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
+    "./context": { "types": "./dist/context/index.d.mts", "default": "./dist/context/index.mjs" },
     "./env": { "types": "./dist/env/index.d.mts", "default": "./dist/env/index.mjs" },
-    "./skill": { "types": "./dist/skill/index.d.mts", "default": "./dist/skill/index.mjs" },
+    "./exec": { "types": "./dist/exec/index.d.mts", "default": "./dist/exec/index.mjs" },
+    "./fs": { "types": "./dist/fs/index.d.mts", "default": "./dist/fs/index.mjs" },
+    "./git": { "types": "./dist/git/index.d.mts", "default": "./dist/git/index.mjs" },
+    "./hooks": { "types": "./dist/hooks/index.d.mts", "default": "./dist/hooks/index.mjs" },
     "./link": { "types": "./dist/link/index.d.mts", "default": "./dist/link/index.mjs" },
     "./lock": { "types": "./dist/lock/index.d.mts", "default": "./dist/lock/index.mjs" },
+    "./registry": { "types": "./dist/registry/index.d.mts", "default": "./dist/registry/index.mjs" },
+    "./sandbox": { "types": "./dist/sandbox/index.d.mts", "default": "./dist/sandbox/index.mjs" },
+    "./skill": { "types": "./dist/skill/index.d.mts", "default": "./dist/skill/index.mjs" },
     "./source": { "types": "./dist/source/index.d.mts", "default": "./dist/source/index.mjs" },
-    "./git": { "types": "./dist/git/index.d.mts", "default": "./dist/git/index.mjs" },
+    "./stop": { "types": "./dist/stop/index.d.mts", "default": "./dist/stop/index.mjs" },
+    "./stream": { "types": "./dist/stream/index.d.mts", "default": "./dist/stream/index.mjs" },
+    "./tool": { "types": "./dist/tool/index.d.mts", "default": "./dist/tool/index.mjs" },
+    "./usage": { "types": "./dist/usage/index.d.mts", "default": "./dist/usage/index.mjs" },
     "./utils": { "types": "./dist/utils/index.d.mts", "default": "./dist/utils/index.mjs" }
   },
   "main": "./dist/index.mjs",
@@ -36,7 +46,18 @@
     "prepare": "simple-git-hooks",
     "prepublishOnly": "pnpm run build"
   },
+  "peerDependencies": {
+    "@cloudflare/sandbox": ">=0.1.0",
+    "@vercel/sandbox": ">=0.1.0",
+    "unstorage": ">=1.10.0"
+  },
+  "peerDependenciesMeta": {
+    "@cloudflare/sandbox": { "optional": true },
+    "@vercel/sandbox": { "optional": true },
+    "unstorage": { "optional": true }
+  },
   "dependencies": {
+    "hookable": "catalog:",
     "pathe": "catalog:",
     "std-env": "catalog:",
     "yaml": "catalog:"
