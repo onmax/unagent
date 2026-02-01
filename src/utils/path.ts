@@ -1,8 +1,8 @@
 import { homedir } from 'node:os'
-import { relative, resolve } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
 
 export function shortenPath(filepath: string, cwd?: string): string {
-  const home = homedir()
+  const home = normalize(homedir())
   const resolved = resolve(filepath)
 
   if (cwd) {
@@ -21,7 +21,7 @@ export function shortenPath(filepath: string, cwd?: string): string {
 
 export function expandPath(filepath: string): string {
   if (filepath.startsWith('~')) {
-    return `${homedir()}${filepath.slice(1)}`
+    return `${normalize(homedir())}${filepath.slice(1)}`
   }
   return resolve(filepath)
 }

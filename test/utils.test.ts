@@ -1,15 +1,16 @@
 import { homedir } from 'node:os'
+import { normalize } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { expandPath, formatList, pluralize, shortenPath, stripAnsi, truncate } from '../src/utils'
 
 describe('utils/path', () => {
   it('shortenPath replaces home with ~', () => {
-    const home = homedir()
+    const home = normalize(homedir())
     expect(shortenPath(`${home}/test`)).toBe('~/test')
   })
 
   it('expandPath expands ~', () => {
-    const home = homedir()
+    const home = normalize(homedir())
     expect(expandPath('~/test')).toBe(`${home}/test`)
   })
 })
