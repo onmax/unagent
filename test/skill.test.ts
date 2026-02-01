@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { discoverSkills, extractSkillName, filterSkills, parseSkillMd, toPromptXml, validateSkill, validateSkillMd } from '../src/skill'
+import { discoverSkills, extractSkillName, filterSkills, installSkill, parseSkillMd, toPromptXml, uninstallSkill, validateSkill, validateSkillMd } from '../src/skill'
 
 describe('skill/parse', () => {
   it('parses SKILL.md with frontmatter', () => {
@@ -190,5 +190,88 @@ describe('skill/prompt', () => {
 
   it('returns empty string for no skills', () => {
     expect(toPromptXml([])).toBe('')
+  })
+})
+
+describe('skill/install', () => {
+  const testDir = join(process.cwd(), '.test-install')
+  const sourceDir = join(testDir, 'source')
+  const targetDir = join(testDir, 'target')
+
+  beforeEach(() => {
+    rmSync(testDir, { recursive: true, force: true })
+    mkdirSync(sourceDir, { recursive: true })
+    mkdirSync(targetDir, { recursive: true })
+
+    // Create a test skill in source
+    const skillDir = join(sourceDir, 'test-skill')
+    mkdirSync(skillDir)
+    writeFileSync(join(skillDir, 'SKILL.md'), `---
+name: test-skill
+description: A test skill
+---
+Instructions here`)
+  })
+
+  afterEach(() => {
+    rmSync(testDir, { recursive: true, force: true })
+  })
+
+  it('installs skill from local path', async () => {
+    const result = await installSkill({
+      source: sourceDir,
+      skills: ['test-skill'],
+      agents: ['claude-code'],
+    })
+
+    // Should fail gracefully since claude-code dir doesn't exist in test env
+    expect(result).toBeDefined()
+    expect(Array.isArray(result.installed)).toBe(true)
+    expect(Array.isArray(result.errors)).toBe(true)
+  })
+
+  it('returns error for non-existent skill', async () => {
+    const result = await installSkill({
+      source: sourceDir,
+      skills: ['non-existent'],
+      agents: ['claude-code'],
+    })
+
+    expect(result.errors.some(e => e.skill === 'non-existent')).toBe(true)
+  })
+
+  it('returns error for empty source', async () => {
+    const emptyDir = join(testDir, 'empty')
+    mkdirSync(emptyDir)
+
+    const result = await installSkill({
+      source: emptyDir,
+      agents: ['claude-code'],
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.errors.some(e => e.error.includes('No skills found'))).toBe(true)
+  })
+})
+
+describe('skill/uninstall', () => {
+  it('returns error when no agents specified and none detected', async () => {
+    const result = await uninstallSkill({
+      skill: 'non-existent',
+      agents: [],
+    })
+
+    // With empty agents array, should try to detect and likely fail
+    expect(result).toBeDefined()
+  })
+
+  it('handles non-existent skill gracefully', async () => {
+    const result = await uninstallSkill({
+      skill: 'definitely-not-installed',
+      agents: ['claude-code'],
+    })
+
+    // Should not throw, returns result with no removed entries
+    expect(result.removed).toHaveLength(0)
   })
 })

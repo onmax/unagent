@@ -1,4 +1,6 @@
 export * from './discover'
+export * from './install'
 export * from './parse'
 export * from './prompt'
+export * from './uninstall'
 export * from './validate'

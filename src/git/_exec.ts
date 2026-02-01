@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 
 export interface GitExecOptions {
   cwd?: string
@@ -6,12 +6,17 @@ export interface GitExecOptions {
 }
 
 export function git(args: string[], opts?: GitExecOptions): string {
-  return execSync(`git ${args.join(' ')}`, {
+  const result = spawnSync('git', args, {
     cwd: opts?.cwd,
     timeout: opts?.timeout,
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe'],
-  }).trim()
+  })
+  if (result.error)
+    throw result.error
+  if (result.status !== 0)
+    throw new Error(result.stderr || `git ${args[0]} failed with code ${result.status}`)
+  return (result.stdout ?? '').trim()
 }
 
 export interface GitStatusParsed {
