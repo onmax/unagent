@@ -18,7 +18,7 @@ landing:
     github:
       label: GitHub
       icon: i-simple-icons-github
-      to: 'https://github.com/unjs/unagent'
+      to: 'https://github.com/onmax/unagent'
       color: neutral
   features:
     - title: Agent Detection

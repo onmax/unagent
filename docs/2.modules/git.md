@@ -17,7 +17,7 @@ import { cloneRepo, cloneToTemp, getGitStatus } from 'unagent/git'
 Clone a repository to a specific path.
 
 ```ts
-const result = await cloneRepo('https://github.com/unjs/unagent.git', './unagent', {
+const result = await cloneRepo('https://github.com/onmax/unagent.git', './unagent', {
   depth: 1, // Shallow clone (default: 1)
   branch: 'main', // Specific branch
   timeout: 60000, // Timeout in ms (default: 60000)
@@ -36,7 +36,7 @@ else {
 Clone to a temporary directory.
 
 ```ts
-const result = await cloneToTemp('https://github.com/unjs/unagent.git')
+const result = await cloneToTemp('https://github.com/onmax/unagent.git')
 // result.path → "/tmp/unagent-1234567890-abc123"
 ```
 
@@ -129,7 +129,7 @@ Get remote URL.
 
 ```ts
 const url = await getRemoteUrl('./repo')
-// → "https://github.com/unjs/unagent.git"
+// → "https://github.com/onmax/unagent.git"
 ```
 
 ### `getLatestCommitHash(dir)`

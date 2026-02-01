@@ -26,7 +26,7 @@ parseSource('unjs/unagent/skills/commit#main')
 // → { type: 'github', owner: 'unjs', repo: 'unagent', path: 'skills/commit', ref: 'main', isLocal: false }
 
 // GitHub URL
-parseSource('https://github.com/unjs/unagent/tree/main/src')
+parseSource('https://github.com/onmax/unagent/tree/main/src')
 // → { type: 'github', owner: 'unjs', repo: 'unagent', ref: 'main', path: 'src', isLocal: false }
 
 // GitHub prefix
@@ -104,7 +104,7 @@ getProviderFromUrl('https://example.com/...') // 'url'
 Parse GitHub URL into components.
 
 ```ts
-parseGitHubUrl('https://github.com/unjs/unagent/tree/main/src')
+parseGitHubUrl('https://github.com/onmax/unagent/tree/main/src')
 // → { provider: 'github', owner: 'unjs', repo: 'unagent', ref: 'main', path: 'src' }
 ```
 
@@ -118,7 +118,7 @@ Build clone URL for GitHub.
 
 ```ts
 buildGitHubCloneUrl('unjs', 'unagent')
-// → "https://github.com/unjs/unagent.git"
+// → "https://github.com/onmax/unagent.git"
 ```
 
 ### `buildGitLabCloneUrl(owner, repo)`
