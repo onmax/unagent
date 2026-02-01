@@ -1,0 +1,82 @@
+{
+  "name": "unagent",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Unified agent primitives for AI coding agents",
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unjs/unagent"
+  },
+  "keywords": [
+    "unjs",
+    "agent",
+    "ai",
+    "skills",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./env": {
+      "types": "./dist/env/index.d.ts",
+      "import": "./dist/env/index.js"
+    },
+    "./skill": {
+      "types": "./dist/skill/index.d.ts",
+      "import": "./dist/skill/index.js"
+    },
+    "./link": {
+      "types": "./dist/link/index.d.ts",
+      "import": "./dist/link/index.js"
+    },
+    "./lock": {
+      "types": "./dist/lock/index.d.ts",
+      "import": "./dist/lock/index.js"
+    },
+    "./source": {
+      "types": "./dist/source/index.d.ts",
+      "import": "./dist/source/index.js"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.ts",
+      "import": "./dist/git/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "release": "bumpp",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.0",
+    "simple-git": "^3.0.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.0.0",
+    "@types/node": "^25.1.0",
+    "bumpp": "^9.0.0",
+    "eslint": "^9.0.0",
+    "tsdown": "^0.15.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
