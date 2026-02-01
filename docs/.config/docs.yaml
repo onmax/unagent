@@ -4,7 +4,7 @@ name: unagent
 icon: i-lucide-bot
 shortDescription: unified primitives for AI coding agents
 description: 'Detect agents, discover skills, parse sources, and manage installations across 40+ AI coding tools.'
-github: unjs/unagent
+github: onmax/unagent
 url: 'https://unagent.unjs.io'
 themeColor: rose
 automd: true

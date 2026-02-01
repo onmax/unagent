@@ -12,6 +12,7 @@ export default defineConfig({
     'src/utils/index.ts',
   ],
   format: 'esm',
+  fixedExtension: true,
   dts: true,
   clean: true,
 })

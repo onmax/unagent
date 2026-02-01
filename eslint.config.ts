@@ -3,6 +3,7 @@ import antfu from '@antfu/eslint-config'
 export default antfu({
   type: 'lib',
   typescript: true,
+  pnpm: true,
   rules: {
     'node/prefer-global/process': 'off',
     'no-control-regex': 'off',
