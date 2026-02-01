@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://unpkg.com/undocs/schema/config.json
+
+name: "unagent"
+icon: "i-lucide-bot"
+shortDescription: "unified primitives for AI coding agents"
+description: "Detect agents, discover skills, parse sources, and manage installations across 40+ AI coding tools."
+github: "unjs/unagent"
+url: "https://unagent.unjs.io"
+themeColor: "rose"
+automd: true
+landing:
+  contributors: true
+  heroLinks:
+    primary:
+      label: "Get Started"
+      icon: "i-lucide-rocket"
+      to: "/guide"
+    github:
+      label: "GitHub"
+      icon: "i-simple-icons-github"
+      to: "https://github.com/unjs/unagent"
+      color: "neutral"
+  features:
+    - title: "Agent Detection"
+      description: "Detect 40+ AI coding agents by env vars or config"
+      icon: "i-lucide-scan-search"
+    - title: "Skill Discovery"
+      description: "Parse and discover markdown-based skill files"
+      icon: "i-lucide-file-text"
+    - title: "Source Parsing"
+      description: "Parse GitHub/GitLab URLs and local paths"
+      icon: "i-lucide-link"
+    - title: "Git Operations"
+      description: "Clone repos, manage temp dirs, check status"
+      icon: "i-lucide-git-branch"

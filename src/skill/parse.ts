@@ -1,14 +1,20 @@
 import matter from 'gray-matter'
 
 export interface SkillFrontmatter {
-  name?: string
-  description?: string
-  version?: string
-  author?: string
+  // Required by agentskills.io spec
+  name: string // lowercase, hyphens, 1-64 chars
+  description: string // 1-1024 chars
+
+  // Optional per spec
+  license?: string
+  compatibility?: string // max 500 chars
+  metadata?: Record<string, string>
+  'allowed-tools'?: string // space-delimited
+
+  // Extended (not in spec, for agent-specific use)
   globs?: string | string[]
   alwaysApply?: boolean
   tags?: string[]
-  [key: string]: unknown
 }
 
 export interface ParsedSkill {
@@ -39,6 +45,7 @@ export function extractSkillName(frontmatter: SkillFrontmatter, filename?: strin
   return 'Unnamed Skill'
 }
 
+/** @deprecated Use validateSkill from './validate' for spec-compliant validation */
 export function validateSkillMd(parsed: ParsedSkill): string[] {
   const errors: string[] = []
 

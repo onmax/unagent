@@ -1,27 +1,24 @@
 import type { ParsedSkill } from './parse'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { basename, extname, join } from 'pathe'
-import { extractSkillName, parseSkillMd } from './parse'
+import { basename, join } from 'pathe'
+import { parseSkillMd } from './parse'
 
 export interface DiscoveredSkill {
-  path: string
-  filename: string
-  name: string
+  path: string // path to skill directory
+  name: string // directory name = skill name
   parsed: ParsedSkill
 }
 
 export interface DiscoverOptions {
   recursive?: boolean
-  extensions?: string[]
 }
 
-const DEFAULT_EXTENSIONS = ['.md']
+const SKILL_FILE = 'SKILL.md'
 
 export function discoverSkills(dir: string, options: DiscoverOptions = {}): DiscoveredSkill[] {
-  const { recursive = false, extensions = DEFAULT_EXTENSIONS } = options
+  const { recursive = false } = options
 
-  if (!existsSync(dir))
-    return []
+  if (!existsSync(dir)) return []
 
   const skills: DiscoveredSkill[] = []
   const entries = readdirSync(dir)
@@ -30,24 +27,25 @@ export function discoverSkills(dir: string, options: DiscoverOptions = {}): Disc
     const fullPath = join(dir, entry)
     const stat = statSync(fullPath)
 
-    if (stat.isDirectory() && recursive) {
-      skills.push(...discoverSkills(fullPath, options))
-    }
-    else if (stat.isFile() && extensions.includes(extname(entry).toLowerCase())) {
+    if (!stat.isDirectory()) continue
+
+    const skillFile = join(fullPath, SKILL_FILE)
+    if (existsSync(skillFile)) {
       try {
-        const content = readFileSync(fullPath, 'utf-8')
+        const content = readFileSync(skillFile, 'utf-8')
         const parsed = parseSkillMd(content)
-        const filename = basename(entry, extname(entry))
         skills.push({
           path: fullPath,
-          filename,
-          name: extractSkillName(parsed.frontmatter, filename),
+          name: basename(fullPath),
           parsed,
         })
       }
       catch {
         // skip invalid files
       }
+    }
+    else if (recursive) {
+      skills.push(...discoverSkills(fullPath, options))
     }
   }
 
@@ -58,17 +56,13 @@ export function filterSkills(skills: DiscoveredSkill[], query: string): Discover
   const lowerQuery = query.toLowerCase()
   return skills.filter((skill) => {
     const nameMatch = skill.name.toLowerCase().includes(lowerQuery)
-    const filenameMatch = skill.filename.toLowerCase().includes(lowerQuery)
-    const tagMatch = skill.parsed.frontmatter.tags?.some(tag =>
-      tag.toLowerCase().includes(lowerQuery),
-    )
-    return nameMatch || filenameMatch || tagMatch
+    const descMatch = skill.parsed.frontmatter.description?.toLowerCase().includes(lowerQuery)
+    const tagMatch = skill.parsed.frontmatter.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
+    return nameMatch || descMatch || tagMatch
   })
 }
 
 export function findSkillByName(skills: DiscoveredSkill[], name: string): DiscoveredSkill | undefined {
   const lowerName = name.toLowerCase()
-  return skills.find(skill =>
-    skill.name.toLowerCase() === lowerName || skill.filename.toLowerCase() === lowerName,
-  )
+  return skills.find(skill => skill.name.toLowerCase() === lowerName)
 }

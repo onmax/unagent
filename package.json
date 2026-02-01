@@ -5,10 +5,8 @@
   "description": "Unified agent primitives for AI coding agents",
   "author": "",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/unjs/unagent"
-  },
+  "homepage": "https://unagent.onmax.me",
+  "repository": { "type": "git", "url": "https://github.com/onmax/unagent" },
   "keywords": [
     "unjs",
     "agent",
