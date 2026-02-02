@@ -7,7 +7,14 @@ icon: i-lucide-file-text
 The skill module discovers and parses [agentskills.io](https://agentskills.io/specification) compliant skill files. Use it to load skills from directories and validate them against the specification.
 
 ```ts
-import { discoverSkills, parseSkillMd, toPromptXml, validateSkill } from 'unagent/skill'
+import {
+  discoverSkills,
+  installSkill,
+  parseSkillMd,
+  toPromptXml,
+  uninstallSkill,
+  validateSkill,
+} from 'unagent/skill'
 ```
 
 ## Skill Directory Format
@@ -199,6 +206,66 @@ interface ValidationResult {
 }
 ```
 
+## Installation
+
+The installation functions manage skills across AI coding agents.
+
+### installSkill
+
+This function installs skills from a source to one or more agents.
+
+```ts
+import { installSkill } from 'unagent/skill'
+
+const result = await installSkill({
+  source: 'vercel-labs/agent-skills', // GitHub repo, URL, or local path
+  skills: ['frontend-design'], // Filter to specific skills (optional)
+  agents: ['claude-code', 'cursor'], // Target agents (auto-detects if omitted)
+  mode: 'symlink', // or 'copy' (default: 'symlink')
+})
+
+if (result.success) {
+  for (const entry of result.installed) {
+    console.log(`Installed ${entry.skill} to ${entry.agent} at ${entry.path}`)
+  }
+}
+else {
+  for (const err of result.errors) {
+    console.error(`Failed: ${err.skill} → ${err.agent}: ${err.error}`)
+  }
+}
+```
+
+The function supports multiple source formats:
+
+| Format | Example |
+|--------|---------|
+| GitHub shorthand | `owner/repo` or `owner/repo/path` |
+| GitHub URL | `https://github.com/owner/repo` |
+| GitLab URL | `https://gitlab.com/owner/repo` |
+| Local path | `~/my-skills` or `./skills` |
+
+### uninstallSkill
+
+This function removes a skill from agents.
+
+```ts
+import { uninstallSkill } from 'unagent/skill'
+
+const result = await uninstallSkill({
+  skill: 'frontend-design',
+  agents: ['claude-code'], // Auto-detects if omitted
+})
+
+if (result.success) {
+  for (const entry of result.removed) {
+    console.log(`Removed ${entry.skill} from ${entry.agent}`)
+  }
+}
+```
+
+Both functions update the lockfile in each agent's skills directory to track installed skills.
+
 ## Frontmatter Fields
 
 | Field | Type | Spec | Description |
@@ -212,3 +279,34 @@ interface ValidationResult {
 | `globs` | `string \| string[]` | Extended | File patterns to match |
 | `alwaysApply` | `boolean` | Extended | Always include this skill |
 | `tags` | `string[]` | Extended | Tags for filtering |
+
+## Installation Types
+
+```ts
+interface InstallSkillOptions {
+  source: string // GitHub repo, URL, or local path
+  skills?: string[] // Filter to specific skills
+  agents?: string[] // Target agents (auto-detects if omitted)
+  global?: boolean // Install to global config (default: true)
+  cwd?: string // Working directory for local installs
+  mode?: 'symlink' | 'copy' // Link mode (default: 'symlink')
+}
+
+interface InstallSkillResult {
+  success: boolean
+  installed: Array<{ skill: string, agent: string, path: string }>
+  errors: Array<{ skill: string, agent: string, error: string }>
+}
+
+interface UninstallSkillOptions {
+  skill: string // Skill name to remove
+  agents?: string[] // Target agents (auto-detects if omitted)
+  global?: boolean // Uninstall from global config
+  cwd?: string // Working directory
+}
+
+interface UninstallSkillResult {
+  success: boolean
+  removed: Array<{ skill: string, agent: string, path: string }>
+  errors: Array<{ skill: string, agent: string, error: string }>
+}
