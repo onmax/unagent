@@ -69,10 +69,10 @@ async function loadVercelSandbox(): Promise<unknown> {
   }
 }
 
-async function loadCloudflareSandbox(): Promise<unknown> {
+function loadCloudflareSandboxSync(): unknown {
   const moduleName = '@cloudflare/sandbox'
   try {
-    return await import(/* @vite-ignore */ moduleName)
+    return _require(moduleName)
   }
   catch {
     throw new Error(`${moduleName} not installed. Add as peer dependency.`)
@@ -93,16 +93,35 @@ interface VercelSandboxSDK {
   }
 }
 
-// Cloudflare Sandbox v0.7.x types
-interface CloudflareSandboxInstance {
-  exec: (cmd: string, opts?: { timeout?: number }) => Promise<{ exitCode: number, stdout?: string, stderr?: string }>
-  writeFile: (path: string, content: string) => Promise<{ success: boolean }>
-  readFile: (path: string) => Promise<{ content: string }>
+// Re-export key types from @cloudflare/sandbox
+// These types are available when the package is installed
+export type {
+  CodeContext as CloudflareCodeContext,
+  ExecOptions as CloudflareExecOptions,
+  ExecResult as CloudflareExecResult,
+  ExecutionSession as CloudflareExecutionSession,
+  Process as CloudflareProcess,
+  ProcessOptions as CloudflareProcessOptions,
+  ProcessStatus as CloudflareProcessStatus,
+  SandboxOptions as CloudflareSandboxOptions,
+  SessionOptions as CloudflareSessionOptions,
+} from '@cloudflare/sandbox'
+
+// Cloudflare Sandbox SDK types (matches @cloudflare/sandbox v0.7+)
+interface CloudflareExecResult { success: boolean, exitCode: number, stdout: string, stderr: string, command: string, duration: number, timestamp: string, sessionId?: string }
+interface CloudflareWriteFileResult { success: boolean, path: string, timestamp: string, exitCode?: number }
+interface CloudflareReadFileResult { success: boolean, path: string, content: string, timestamp: string, exitCode?: number, encoding?: 'utf-8' | 'base64', isBinary?: boolean, mimeType?: string, size?: number }
+interface CloudflareSandboxStub {
+  exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string | undefined>, cwd?: string }) => Promise<CloudflareExecResult>
+  writeFile: (path: string, content: string, opts?: { encoding?: string }) => Promise<CloudflareWriteFileResult>
+  readFile: (path: string, opts?: { encoding?: string }) => Promise<CloudflareReadFileResult>
   destroy: () => Promise<void>
 }
 
 interface CloudflareSandboxSDK {
-  getSandbox: (namespace: unknown, id: string) => Promise<CloudflareSandboxInstance>
+  // getSandbox is synchronous - returns RPC stub directly
+  getSandbox: <T extends CloudflareSandboxStub>(ns: unknown, id: string, opts?: unknown) => T
+  Sandbox: unknown
 }
 
 class VercelSandbox implements Sandbox {
@@ -144,31 +163,31 @@ function shellQuote(arg: string): string {
 class CloudflareSandbox implements Sandbox {
   id: string
   provider: SandboxProvider = 'cloudflare'
-  private instance: CloudflareSandboxInstance
+  private stub: CloudflareSandboxStub
 
-  constructor(id: string, instance: CloudflareSandboxInstance) {
+  constructor(id: string, stub: CloudflareSandboxStub) {
     this.id = id
-    this.instance = instance
+    this.stub = stub
   }
 
   async exec(command: string, args: string[]): Promise<SandboxExecResult> {
     const quotedArgs = args.map(shellQuote).join(' ')
     const cmd = `${shellQuote(command)} ${quotedArgs}`
-    const result = await this.instance.exec(cmd)
-    return { ok: result.exitCode === 0, stdout: result.stdout ?? '', stderr: result.stderr ?? '', code: result.exitCode }
+    const result = await this.stub.exec(cmd)
+    return { ok: result.success, stdout: result.stdout, stderr: result.stderr, code: result.exitCode }
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    await this.instance.writeFile(path, content)
+    await this.stub.writeFile(path, content)
   }
 
   async readFile(path: string): Promise<string> {
-    const result = await this.instance.readFile(path)
+    const result = await this.stub.readFile(path)
     return result.content
   }
 
   async stop(): Promise<void> {
-    await this.instance.destroy()
+    await this.stub.destroy()
   }
 }
 
@@ -200,12 +219,16 @@ export async function createSandbox(options: SandboxOptions): Promise<Sandbox> {
  * Requires Durable Objects binding - only works within Workers/Pages context.
  * @param namespace - Durable Object namespace binding (e.g., env.SANDBOX)
  * @param sandboxId - Unique ID for the sandbox instance
+ * @param options - Optional sandbox configuration
+ * @param options.sleepAfter - Duration after which sandbox sleeps if idle (e.g., "10m", 600)
+ * @param options.keepAlive - Keep sandbox alive indefinitely (must call destroy() manually)
+ * @param options.normalizeId - Normalize sandbox ID to lowercase for preview URL compatibility
  */
-export async function createCloudflareSandbox(namespace: unknown, sandboxId?: string): Promise<Sandbox> {
-  const sdk = await loadCloudflareSandbox() as CloudflareSandboxSDK
+export function createCloudflareSandbox(namespace: unknown, sandboxId?: string, options?: { sleepAfter?: string | number, keepAlive?: boolean, normalizeId?: boolean }): Sandbox {
+  const sdk = loadCloudflareSandboxSync() as CloudflareSandboxSDK
   const id = sandboxId ?? `cloudflare-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-  const instance = await sdk.getSandbox(namespace, id)
-  return new CloudflareSandbox(id, instance)
+  const stub = sdk.getSandbox<CloudflareSandboxStub>(namespace, id, options)
+  return new CloudflareSandbox(id, stub)
 }
 
 export function isSandboxAvailable(provider: SandboxProvider): boolean {
