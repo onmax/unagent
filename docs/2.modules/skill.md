@@ -9,7 +9,16 @@ The skill module discovers and parses [agentskills.io](https://agentskills.io/sp
 ```ts
 import {
   discoverSkills,
+  discoverSkillsFromNodeModules,
+  extractSkillNames,
+  formatDetectedAgentIds,
+  formatSkillNames,
+  getAgentDisplayNames,
+  getBundledSkillSources,
   installSkill,
+  installSkillBatch,
+  listInstalledSkills,
+  listInstalledSkillsByAgent,
   parseSkillMd,
   toPromptXml,
   uninstallSkill,
@@ -266,6 +275,134 @@ if (result.success) {
 
 Both functions update the lockfile in each agent's skills directory to track installed skills.
 
+### installSkillBatch
+
+This function installs skills from multiple sources with progress callbacks.
+
+```ts
+import { installSkillBatch } from 'unagent/skill'
+
+const result = await installSkillBatch(
+  [
+    { source: 'owner/repo', skills: ['skill-a'], mode: 'copy' },
+    { source: '~/local-skills', mode: 'symlink' },
+  ],
+  {
+    onStart: source => console.log(`Installing from ${source.source}...`),
+    onSuccess: (source, result) => console.log(`Installed ${result.installed.length} skills`),
+    onError: (source, error) => console.error(`Failed: ${error}`),
+  },
+)
+
+// Errors are captured in results, not just via callbacks
+for (const entry of result.results) {
+  if (entry.error) {
+    console.error(`${entry.source.source}: ${entry.error}`)
+  }
+}
+```
+
+### listInstalledSkills
+
+This function lists all installed skills across detected agents.
+
+```ts
+import { listInstalledSkills } from 'unagent/skill'
+
+const skills = listInstalledSkills()
+
+for (const skill of skills) {
+  console.log(`${skill.name} installed in ${skill.agentName} at ${skill.path}`)
+}
+```
+
+### listInstalledSkillsByAgent
+
+This function groups installed skills by agent.
+
+```ts
+import { listInstalledSkillsByAgent } from 'unagent/skill'
+
+const byAgent = listInstalledSkillsByAgent()
+
+for (const [agentId, skills] of byAgent) {
+  console.log(`${agentId}: ${skills.map(s => s.name).join(', ')}`)
+}
+```
+
+## npm Package Discovery
+
+These functions discover skills bundled in `node_modules` packages.
+
+### discoverSkillsFromNodeModules
+
+This function scans `node_modules` for packages with a `skills/` directory.
+
+```ts
+import { discoverSkillsFromNodeModules } from 'unagent/skill'
+
+const packages = discoverSkillsFromNodeModules(process.cwd())
+
+for (const pkg of packages) {
+  console.log(`${pkg.packageName}: ${pkg.skills.map(s => s.name).join(', ')}`)
+}
+```
+
+### getBundledSkillSources
+
+This function returns bundled skills as `SkillSource` objects for use with `installSkillBatch`.
+
+```ts
+import { getBundledSkillSources, installSkillBatch } from 'unagent/skill'
+
+const sources = getBundledSkillSources(process.cwd())
+await installSkillBatch(sources.map(s => ({ ...s, mode: 'symlink' })))
+```
+
+## Formatting Utilities
+
+These functions format skill and agent information for display.
+
+### formatSkillNames
+
+This function formats skill names for display, returning `'all'` for items without specific skills.
+
+```ts
+import { formatSkillNames } from 'unagent/skill'
+
+formatSkillNames([{ skills: ['a', 'b'] }, { skills: [] }]) // "a, b, all"
+```
+
+### extractSkillNames
+
+This function extracts unique skill names from an array of items.
+
+```ts
+import { extractSkillNames } from 'unagent/skill'
+
+extractSkillNames([{ skills: ['a', 'b'] }, { skills: ['b', 'c'] }]) // ["a", "b", "c"]
+```
+
+### getAgentDisplayNames
+
+This function returns display-friendly agent names.
+
+```ts
+import { getAgentDisplayNames } from 'unagent/skill'
+
+getAgentDisplayNames() // ["Claude Code (claude-code)", "Cursor (cursor)"]
+```
+
+### formatDetectedAgentIds
+
+This function returns detected agent IDs as a comma-separated string.
+
+```ts
+import { formatDetectedAgentIds } from 'unagent/skill'
+
+formatDetectedAgentIds() // "claude-code, cursor"
+```
+
 ## Frontmatter Fields
 
 | Field | Type | Spec | Description |
@@ -309,4 +446,42 @@ interface UninstallSkillResult {
   success: boolean
   removed: Array<{ skill: string, agent: string, path: string }>
   errors: Array<{ skill: string, agent: string, error: string }>
+}
+
+interface SkillSource {
+  source: string
+  skills?: string[]
+  label?: string
+  mode?: 'symlink' | 'copy'
+}
+
+interface BatchInstallCallbacks {
+  onStart?: (source: SkillSource) => void
+  onSuccess?: (source: SkillSource, result: InstallSkillResult) => void
+  onError?: (source: SkillSource, error: string) => void
+}
+
+interface BatchInstallResult {
+  results: Array<{ source: SkillSource, result?: InstallSkillResult, error?: string }>
+  totalInstalled: number
+  totalErrors: number
+}
+
+interface InstalledSkill {
+  name: string
+  path: string
+  agent: string
+  agentName: string
+}
+
+interface NpmSkillPackage {
+  packageName: string
+  skillsDir: string
+  skills: DiscoveredSkill[]
+}
+
+interface BundledSkillSource {
+  source: string
+  skills: string[]
+  packageName: string
 }
