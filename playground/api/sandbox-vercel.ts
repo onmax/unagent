@@ -30,7 +30,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse):
       const chunks: Uint8Array[] = []
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done)
+          break
         chunks.push(value)
       }
       const streamContent = new TextDecoder().decode(new Uint8Array(chunks.flatMap(c => [...c])))

@@ -56,11 +56,11 @@ export interface WaitForPortOptions {
 export interface SandboxProcess {
   readonly id: string
   readonly command: string
-  kill(signal?: string): Promise<void>
-  logs(): Promise<{ stdout: string; stderr: string }>
-  wait(timeout?: number): Promise<{ exitCode: number }>
-  waitForLog(pattern: string | RegExp, timeout?: number): Promise<{ line: string }>
-  waitForPort(port: number, opts?: WaitForPortOptions): Promise<void>
+  kill: (signal?: string) => Promise<void>
+  logs: () => Promise<{ stdout: string, stderr: string }>
+  wait: (timeout?: number) => Promise<{ exitCode: number }>
+  waitForLog: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
+  waitForPort: (port: number, opts?: WaitForPortOptions) => Promise<void>
 }
 
 // === Provider Options ===
@@ -129,16 +129,16 @@ export interface CloudflareReadFileResult {
 }
 
 export interface CloudflareSandboxStub {
-  exec: (cmd: string, opts?: { timeout?: number; env?: Record<string, string | undefined>; cwd?: string; stream?: boolean; onOutput?: (data: string, stream: 'stdout' | 'stderr') => void }) => Promise<CloudflareExecResult>
+  exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string | undefined>, cwd?: string, stream?: boolean, onOutput?: (data: string, stream: 'stdout' | 'stderr') => void }) => Promise<CloudflareExecResult>
   writeFile: (path: string, content: string, opts?: { encoding?: string }) => Promise<CloudflareWriteFileResult>
   readFile: (path: string, opts?: { encoding?: string }) => Promise<CloudflareReadFileResult>
   readFileStream?: (path: string) => Promise<ReadableStream<Uint8Array>>
   mkdir?: (path: string, opts?: { recursive?: boolean }) => Promise<{ success: boolean }>
-  listFiles?: (path: string, opts?: { recursive?: boolean }) => Promise<{ files: Array<{ name: string; path: string; type: 'file' | 'directory'; size?: number; mtime?: string }> }>
+  listFiles?: (path: string, opts?: { recursive?: boolean }) => Promise<{ files: Array<{ name: string, path: string, type: 'file' | 'directory', size?: number, mtime?: string }> }>
   exists?: (path: string) => Promise<{ exists: boolean }>
   deleteFile?: (path: string) => Promise<{ success: boolean }>
   moveFile?: (src: string, dst: string) => Promise<{ success: boolean }>
-  startProcess?: (cmd: string, args?: string[], opts?: { cwd?: string; env?: Record<string, string> }) => Promise<CloudflareProcessInfo>
+  startProcess?: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareProcessInfo>
   destroy: () => Promise<void>
 }
 
@@ -146,8 +146,8 @@ export interface CloudflareProcessInfo {
   id: string
   command: string
   kill: (signal?: string) => Promise<void>
-  logs: () => Promise<{ stdout: string; stderr: string }>
+  logs: () => Promise<{ stdout: string, stderr: string }>
   wait: (timeout?: number) => Promise<{ exitCode: number }>
   waitForLog?: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
-  waitForPort?: (port: number, opts?: { timeout?: number; hostname?: string }) => Promise<void>
+  waitForPort?: (port: number, opts?: { timeout?: number, hostname?: string }) => Promise<void>
 }

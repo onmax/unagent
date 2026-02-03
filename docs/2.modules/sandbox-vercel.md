@@ -135,10 +135,10 @@ export default async function handler(req: Request) {
 ```ts
 interface VercelProviderOptions {
   name: 'vercel'
-  runtime?: string   // Default: 'node24'
-  timeout?: number   // Default: 300000 (5 min)
-  cpu?: number       // vCPU count
-  ports?: number[]   // Ports to expose (enables vercel.domain)
+  runtime?: string // Default: 'node24'
+  timeout?: number // Default: 300000 (5 min)
+  cpu?: number // vCPU count
+  ports?: number[] // Ports to expose (enables vercel.domain)
 }
 ```
 

@@ -2,6 +2,16 @@ packages:
   - docs
   - playground
 catalogs:
+  build:
+    tsdown: ^0.15.0
+  docs:
+    nuxt: ^4.3.0
+    undocs: ^0.4.16
+  lint:
+    '@antfu/eslint-config': ^4.0.0
+    eslint: ^9.0.0
+    lint-staged: ^16.2.7
+    simple-git-hooks: ^2.13.1
   prod:
     hookable: ^5.5.3
     pathe: ^2.0.3
@@ -11,22 +21,12 @@ catalogs:
     '@cloudflare/sandbox': ^0.7.0
     '@vercel/node': ^5.1.10
     '@vercel/sandbox': ^1.4.1
-  lint:
-    '@antfu/eslint-config': ^4.0.0
-    eslint: ^9.0.0
-    lint-staged: ^16.2.7
-    simple-git-hooks: ^2.13.1
-  build:
-    tsdown: ^0.15.0
+  script:
+    bumpp: ^9.0.0
   test:
     vitest: ^3.0.0
   types:
     '@types/node': ^25.1.0
     typescript: ^5.7.0
-  script:
-    bumpp: ^9.0.0
-  docs:
-    nuxt: ^4.3.0
-    undocs: ^0.4.16
 onlyBuiltDependencies:
   - simple-git-hooks

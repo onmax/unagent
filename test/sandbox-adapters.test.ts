@@ -1,10 +1,10 @@
+import type { CloudflareProcessInfo, CloudflareSandboxStub } from '../src/sandbox/types/common'
+import type { VercelCommandResult, VercelSandboxInstance } from '../src/sandbox/types/vercel'
 import { Readable } from 'node:stream'
 import { describe, expect, it, vi } from 'vitest'
 import { CloudflareSandboxAdapter } from '../src/sandbox/adapters/cloudflare'
-import { SandboxError } from '../src/sandbox/errors'
 import { VercelSandboxAdapter } from '../src/sandbox/adapters/vercel'
-import type { CloudflareProcessInfo, CloudflareSandboxStub } from '../src/sandbox/types/common'
-import type { VercelCommandResult, VercelSandboxInstance } from '../src/sandbox/types/vercel'
+import { SandboxError } from '../src/sandbox/errors'
 
 function createCloudflareStub(overrides: Partial<CloudflareSandboxStub> = {}): CloudflareSandboxStub {
   return {
@@ -17,8 +17,8 @@ function createCloudflareStub(overrides: Partial<CloudflareSandboxStub> = {}): C
       duration: 1,
       timestamp: new Date().toISOString(),
     }),
-    writeFile: async (path) => ({ success: true, path, timestamp: new Date().toISOString() }),
-    readFile: async (path) => ({ success: true, path, content: '', timestamp: new Date().toISOString() }),
+    writeFile: async path => ({ success: true, path, timestamp: new Date().toISOString() }),
+    readFile: async path => ({ success: true, path, content: '', timestamp: new Date().toISOString() }),
     destroy: async () => {},
     ...overrides,
   }

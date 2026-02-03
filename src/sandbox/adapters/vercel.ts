@@ -1,5 +1,5 @@
+import type { ProcessOptions, SandboxExecOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
 import type { NetworkPolicy, VercelCommandResult, VercelNamespace, VercelSandboxInstance, VercelSandboxMetadata, VercelSnapshot } from '../types/vercel'
-import type { SandboxExecOptions, ProcessOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
 import { Buffer } from 'node:buffer'
 import { Readable, Writable } from 'node:stream'
 import { NotSupportedError, SandboxError } from '../errors'
@@ -11,7 +11,7 @@ class VercelProcessHandle implements SandboxProcess {
   private cmdResult: VercelCommandResult
   private collectedStdout = ''
   private collectedStderr = ''
-  private logsGenerator?: AsyncGenerator<{ stream: 'stdout' | 'stderr'; data: string }>
+  private logsGenerator?: AsyncGenerator<{ stream: 'stdout' | 'stderr', data: string }>
   private logsPump?: Promise<void>
   private logsPumpDone = false
   private logsPumpError?: unknown
@@ -73,13 +73,15 @@ class VercelProcessHandle implements SandboxProcess {
     }
 
     return new Promise<boolean>((resolve) => {
-      const onEvent = () => {
+      let timeoutId: ReturnType<typeof setTimeout>
+
+      const onEvent = (): void => {
         clearTimeout(timeoutId)
         this.logEventWaiters = this.logEventWaiters.filter(waiter => waiter !== onEvent)
         resolve(true)
       }
 
-      const timeoutId = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         this.logEventWaiters = this.logEventWaiters.filter(waiter => waiter !== onEvent)
         resolve(false)
       }, timeoutMs)
@@ -98,7 +100,7 @@ class VercelProcessHandle implements SandboxProcess {
     return undefined
   }
 
-  async logs(): Promise<{ stdout: string; stderr: string }> {
+  async logs(): Promise<{ stdout: string, stderr: string }> {
     this.startLogsPump()
     await this.waitForLogEvent(10)
     return { stdout: this.collectedStdout, stderr: this.collectedStderr }
@@ -194,9 +196,9 @@ class VercelNamespaceImpl implements VercelNamespace {
   readonly native: VercelSandboxInstance
   private instance: VercelSandboxInstance
   private sandboxId: string
-  private _metadata: { runtime: string; createdAt: string }
+  private _metadata: { runtime: string, createdAt: string }
 
-  constructor(instance: VercelSandboxInstance, sandboxId: string, metadata: { runtime: string; createdAt: string }) {
+  constructor(instance: VercelSandboxInstance, sandboxId: string, metadata: { runtime: string, createdAt: string }) {
     this.native = instance
     this.instance = instance
     this.sandboxId = sandboxId
@@ -287,11 +289,12 @@ export class VercelSandboxAdapter extends BaseSandboxAdapter<'vercel'> {
     readFileStream: true,
     startProcess: true,
   }
+
   private instance: VercelSandboxInstance
   private _vercel?: VercelNamespace
-  private metadata: { runtime: string; createdAt: string }
+  private metadata: { runtime: string, createdAt: string }
 
-  constructor(id: string, instance: VercelSandboxInstance, metadata: { runtime: string; createdAt: string }) {
+  constructor(id: string, instance: VercelSandboxInstance, metadata: { runtime: string, createdAt: string }) {
     super()
     this.id = id
     this.instance = instance

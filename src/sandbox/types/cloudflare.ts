@@ -23,16 +23,16 @@ export interface SessionOptions {
 
 export interface CloudflareSession {
   id: string
-  exec(cmd: string, opts?: { timeout?: number; env?: Record<string, string>; cwd?: string }): Promise<{ stdout: string; stderr: string; exitCode: number }>
-  startProcess(cmd: string, args?: string[], opts?: { cwd?: string; env?: Record<string, string> }): Promise<CloudflareSessionProcess>
-  destroy(): Promise<void>
+  exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string>, cwd?: string }) => Promise<{ stdout: string, stderr: string, exitCode: number }>
+  startProcess: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareSessionProcess>
+  destroy: () => Promise<void>
 }
 
 export interface CloudflareSessionProcess {
   id: string
-  kill(signal?: string): Promise<void>
-  logs(): Promise<{ stdout: string; stderr: string }>
-  wait(timeout?: number): Promise<{ exitCode: number }>
+  kill: (signal?: string) => Promise<void>
+  logs: () => Promise<{ stdout: string, stderr: string }>
+  wait: (timeout?: number) => Promise<{ exitCode: number }>
 }
 
 // === Code Interpreter ===
@@ -82,31 +82,31 @@ export interface CloudflareNamespace {
   readonly native: CloudflareSandboxStub
 
   // Git
-  gitCheckout(url: string, opts?: GitCheckoutOptions): Promise<GitCheckoutResult>
+  gitCheckout: (url: string, opts?: GitCheckoutOptions) => Promise<GitCheckoutResult>
 
   // Sessions
-  createSession(opts?: SessionOptions): Promise<CloudflareSession>
-  getSession(id: string): Promise<CloudflareSession>
-  deleteSession(id: string): Promise<void>
+  createSession: (opts?: SessionOptions) => Promise<CloudflareSession>
+  getSession: (id: string) => Promise<CloudflareSession>
+  deleteSession: (id: string) => Promise<void>
 
   // Code interpreter
-  createCodeContext(opts?: CodeContextOptions): Promise<CodeContext>
-  runCode(code: string, opts?: RunCodeOptions): Promise<CodeExecutionResult>
-  listCodeContexts(): Promise<CodeContext[]>
-  deleteCodeContext(id: string): Promise<void>
+  createCodeContext: (opts?: CodeContextOptions) => Promise<CodeContext>
+  runCode: (code: string, opts?: RunCodeOptions) => Promise<CodeExecutionResult>
+  listCodeContexts: () => Promise<CodeContext[]>
+  deleteCodeContext: (id: string) => Promise<void>
 
   // Ports
-  exposePort(port: number, opts?: ExposePortOptions): Promise<{ url: string }>
-  unexposePort(port: number): Promise<void>
-  getExposedPorts(hostname?: string): Promise<ExposedPort[]>
+  exposePort: (port: number, opts?: ExposePortOptions) => Promise<{ url: string }>
+  unexposePort: (port: number) => Promise<void>
+  getExposedPorts: (hostname?: string) => Promise<ExposedPort[]>
 
   // Buckets
-  mountBucket(bucket: string, path: string, opts?: MountBucketOptions): Promise<void>
-  unmountBucket(path: string): Promise<void>
+  mountBucket: (bucket: string, path: string, opts?: MountBucketOptions) => Promise<void>
+  unmountBucket: (path: string) => Promise<void>
 
   // Env
-  setEnvVars(vars: Record<string, string | undefined>): Promise<void>
+  setEnvVars: (vars: Record<string, string | undefined>) => Promise<void>
 
   // WebSocket
-  wsConnect(request: Request, port: number): Promise<Response>
+  wsConnect: (request: Request, port: number) => Promise<Response>
 }

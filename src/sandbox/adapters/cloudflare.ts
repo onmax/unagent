@@ -1,5 +1,5 @@
-import type { CloudflareNamespace, CloudflareSession, CodeContext, CodeContextOptions, CodeExecutionResult, ExposePortOptions, ExposedPort, GitCheckoutOptions, GitCheckoutResult, MountBucketOptions, RunCodeOptions, SessionOptions } from '../types/cloudflare'
-import type { CloudflareSandboxStub, SandboxCapabilities, SandboxExecOptions, FileEntry, ListFilesOptions, ProcessOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
+import type { CloudflareNamespace, CloudflareSession, CodeContext, CodeContextOptions, CodeExecutionResult, ExposedPort, ExposePortOptions, GitCheckoutOptions, GitCheckoutResult, MountBucketOptions, RunCodeOptions, SessionOptions } from '../types/cloudflare'
+import type { CloudflareSandboxStub, FileEntry, ListFilesOptions, ProcessOptions, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
 import { NotSupportedError, SandboxError } from '../errors'
 import { shellQuote } from '../utils'
 import { BaseSandboxAdapter } from './base'
@@ -9,10 +9,10 @@ class CloudflareProcessHandle implements SandboxProcess {
   readonly command: string
   private processInfo: {
     kill: (signal?: string) => Promise<void>
-    logs: () => Promise<{ stdout: string; stderr: string }>
+    logs: () => Promise<{ stdout: string, stderr: string }>
     wait: (timeout?: number) => Promise<{ exitCode: number }>
     waitForLog?: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
-    waitForPort?: (port: number, opts?: { timeout?: number; hostname?: string }) => Promise<void>
+    waitForPort?: (port: number, opts?: { timeout?: number, hostname?: string }) => Promise<void>
   }
 
   constructor(id: string, command: string, processInfo: CloudflareProcessHandle['processInfo']) {
@@ -25,7 +25,7 @@ class CloudflareProcessHandle implements SandboxProcess {
     await this.processInfo.kill(signal)
   }
 
-  async logs(): Promise<{ stdout: string; stderr: string }> {
+  async logs(): Promise<{ stdout: string, stderr: string }> {
     return this.processInfo.logs()
   }
 
@@ -248,6 +248,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
       startProcess: !!this.stub.startProcess,
     }
   }
+
   private stub: CloudflareSandboxStub
   private _cloudflare?: CloudflareNamespace
 
@@ -271,10 +272,14 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
       env: opts?.env,
       cwd: opts?.cwd,
       stream: !!(opts?.onStdout || opts?.onStderr),
-      onOutput: (opts?.onStdout || opts?.onStderr) ? (data, stream) => {
-        if (stream === 'stdout' && opts?.onStdout) opts.onStdout(data)
-        if (stream === 'stderr' && opts?.onStderr) opts.onStderr(data)
-      } : undefined,
+      onOutput: (opts?.onStdout || opts?.onStderr)
+        ? (data, stream) => {
+            if (stream === 'stdout' && opts?.onStdout)
+              opts.onStdout(data)
+            if (stream === 'stderr' && opts?.onStderr)
+              opts.onStderr(data)
+          }
+        : undefined,
     })
     return { ok: result.success, stdout: result.stdout, stderr: result.stderr, code: result.exitCode }
   }
@@ -332,9 +337,9 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
     const processInfo = await this.stub.startProcess(cmd, args, opts)
     const processAny = processInfo as unknown as Record<string, unknown>
     const logs = typeof processAny.logs === 'function'
-      ? () => (processAny.logs as () => Promise<{ stdout: string; stderr: string }>)()
+      ? () => (processAny.logs as () => Promise<{ stdout: string, stderr: string }>)()
       : typeof processAny.getLogs === 'function'
-        ? () => (processAny.getLogs as () => Promise<{ stdout: string; stderr: string }>)()
+        ? () => (processAny.getLogs as () => Promise<{ stdout: string, stderr: string }>)()
         : undefined
     const wait = typeof processAny.wait === 'function'
       ? (timeout?: number) => (processAny.wait as (timeout?: number) => Promise<{ exitCode: number }>)(timeout)
@@ -366,7 +371,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
     if (!result.ok)
       throw new SandboxError(`Failed to list files: ${path}. ${result.stderr}`)
     // Parse ls output (simplified)
-    return result.stdout.split('\n').filter(Boolean).slice(1).map(line => {
+    return result.stdout.split('\n').filter(Boolean).slice(1).map((line) => {
       const parts = line.split(/\s+/)
       const name = parts[parts.length - 1] || ''
       const isDir = line.startsWith('d')

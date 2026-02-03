@@ -1,7 +1,7 @@
 import type { CloudflareNamespace } from '../types/cloudflare'
-import type { SandboxCapabilities, SandboxExecOptions, FileEntry, ListFilesOptions, ProcessOptions, SandboxExecResult, SandboxProcess, SandboxProvider } from '../types/common'
-import type { VercelNamespace } from '../types/vercel'
+import type { FileEntry, ListFilesOptions, ProcessOptions, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxProcess, SandboxProvider } from '../types/common'
 import type { Sandbox } from '../types/index'
+import type { VercelNamespace } from '../types/vercel'
 import { NotSupportedError } from '../errors'
 
 export abstract class BaseSandboxAdapter<P extends SandboxProvider = SandboxProvider> implements Sandbox<P> {

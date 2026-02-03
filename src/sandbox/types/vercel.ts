@@ -17,9 +17,9 @@ export interface VercelSandboxInstance {
     (params: VercelRunCommandParams & { detached: true }): Promise<VercelCommandResult>
     (params: VercelRunCommandParams): Promise<VercelCommandResult>
   }
-  writeFiles: (files: Array<{ path: string; content: Uint8Array }>, opts?: { signal?: AbortSignal }) => Promise<void>
-  readFileToBuffer: (opts: { path: string; cwd?: string }, opts2?: { signal?: AbortSignal }) => Promise<Uint8Array | null>
-  readFile: (opts: { path: string; cwd?: string }, opts2?: { signal?: AbortSignal }) => Promise<NodeJS.ReadableStream | null>
+  writeFiles: (files: Array<{ path: string, content: Uint8Array }>, opts?: { signal?: AbortSignal }) => Promise<void>
+  readFileToBuffer: (opts: { path: string, cwd?: string }, opts2?: { signal?: AbortSignal }) => Promise<Uint8Array | null>
+  readFile: (opts: { path: string, cwd?: string }, opts2?: { signal?: AbortSignal }) => Promise<NodeJS.ReadableStream | null>
   mkDir: (path: string, opts?: { signal?: AbortSignal }) => Promise<void>
   domain: (port: number) => string
   [Symbol.asyncDispose]: () => Promise<void>
@@ -29,7 +29,7 @@ export interface VercelCommandResult {
   exitCode: number
   stdout: () => Promise<string>
   stderr: () => Promise<string>
-  logs: () => AsyncGenerator<{ stream: 'stdout' | 'stderr'; data: string }>
+  logs: () => AsyncGenerator<{ stream: 'stdout' | 'stderr', data: string }>
   kill: () => Promise<void>
   wait: () => Promise<{ exitCode: number }>
 }
@@ -77,12 +77,12 @@ export interface VercelSandboxMetadata {
 
 export interface VercelNamespace {
   readonly native: VercelSandboxInstance
-  snapshot(): Promise<VercelSnapshot>
-  getSnapshot(id: string): Promise<VercelSnapshot>
-  listSnapshots(): Promise<{ snapshots: VercelSnapshot[] }>
-  deleteSnapshot(id: string): Promise<void>
-  domain(port: number): string
-  extendTimeout(durationMs: number): Promise<void>
-  updateNetworkPolicy(policy: NetworkPolicy): Promise<void>
-  getMetadata(): VercelSandboxMetadata
+  snapshot: () => Promise<VercelSnapshot>
+  getSnapshot: (id: string) => Promise<VercelSnapshot>
+  listSnapshots: () => Promise<{ snapshots: VercelSnapshot[] }>
+  deleteSnapshot: (id: string) => Promise<void>
+  domain: (port: number) => string
+  extendTimeout: (durationMs: number) => Promise<void>
+  updateNetworkPolicy: (policy: NetworkPolicy) => Promise<void>
+  getMetadata: () => VercelSandboxMetadata
 }

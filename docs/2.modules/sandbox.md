@@ -75,19 +75,19 @@ interface Sandbox {
   readonly supports: SandboxCapabilities
 
   // Execute commands
-  exec(cmd: string, args?: string[], opts?: SandboxExecOptions): Promise<SandboxExecResult>
+  exec: (cmd: string, args?: string[], opts?: SandboxExecOptions) => Promise<SandboxExecResult>
 
   // File operations
-  writeFile(path: string, content: string): Promise<void>
-  readFile(path: string): Promise<string>
-  mkdir(path: string, opts?: { recursive?: boolean }): Promise<void>
-  readFileStream(path: string): Promise<ReadableStream<Uint8Array>>
+  writeFile: (path: string, content: string) => Promise<void>
+  readFile: (path: string) => Promise<string>
+  mkdir: (path: string, opts?: { recursive?: boolean }) => Promise<void>
+  readFileStream: (path: string) => Promise<ReadableStream<Uint8Array>>
 
   // Background processes
-  startProcess(cmd: string, args?: string[], opts?: ProcessOptions): Promise<SandboxProcess>
+  startProcess: (cmd: string, args?: string[], opts?: ProcessOptions) => Promise<SandboxProcess>
 
   // Lifecycle
-  stop(): Promise<void>
+  stop: () => Promise<void>
 }
 ```
 
@@ -109,8 +109,8 @@ Execute commands with real-time output streaming:
 const result = await sandbox.exec('npm', ['install'], {
   cwd: '/app',
   timeout: 60_000,
-  onStdout: (data) => console.log('[stdout]', data),
-  onStderr: (data) => console.error('[stderr]', data),
+  onStdout: data => console.log('[stdout]', data),
+  onStderr: data => console.error('[stderr]', data),
 })
 ```
 
@@ -141,11 +141,11 @@ interface SandboxProcess {
   readonly id: string
   readonly command: string
 
-  kill(signal?: string): Promise<void>
-  logs(): Promise<{ stdout: string; stderr: string }>
-  wait(timeout?: number): Promise<{ exitCode: number }>
-  waitForLog(pattern: string | RegExp, timeout?: number): Promise<{ line: string }>
-  waitForPort(port: number, opts?: WaitForPortOptions): Promise<void>
+  kill: (signal?: string) => Promise<void>
+  logs: () => Promise<{ stdout: string, stderr: string }>
+  wait: (timeout?: number) => Promise<{ exitCode: number }>
+  waitForLog: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
+  waitForPort: (port: number, opts?: WaitForPortOptions) => Promise<void>
 }
 ```
 
@@ -185,8 +185,8 @@ These methods are fully supported on Cloudflare and throw `NotSupportedError` on
 
 ```ts
 // File operations
-await sandbox.listFiles('/app')           // Returns FileEntry[]
-await sandbox.exists('/app/file.txt')     // Returns boolean
+await sandbox.listFiles('/app') // Returns FileEntry[]
+await sandbox.exists('/app/file.txt') // Returns boolean
 await sandbox.deleteFile('/app/file.txt')
 await sandbox.moveFile('/app/a.txt', '/app/b.txt')
 ```

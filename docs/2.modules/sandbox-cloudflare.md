@@ -260,12 +260,12 @@ if (sandbox.supports.listFiles) {
 interface CloudflareProviderOptions {
   name: 'cloudflare'
   namespace: DurableObjectNamespace // Required
-  getSandbox?: typeof getSandbox    // Optional (auto-loaded if omitted)
-  sandboxId?: string                // Custom ID
+  getSandbox?: typeof getSandbox // Optional (auto-loaded if omitted)
+  sandboxId?: string // Custom ID
   cloudflare?: {
-    sleepAfter?: string | number    // Auto-sleep duration
-    keepAlive?: boolean             // Prevent auto-sleep
-    normalizeId?: boolean           // Normalize sandbox IDs
+    sleepAfter?: string | number // Auto-sleep duration
+    keepAlive?: boolean // Prevent auto-sleep
+    normalizeId?: boolean // Normalize sandbox IDs
   }
 }
 ```

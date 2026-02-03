@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createSandbox } from 'unagent/sandbox'
 
-async function createVercelSandboxWithRetry(maxAttempts = 3) {
+async function createVercelSandboxWithRetry(maxAttempts = 3): Promise<Awaited<ReturnType<typeof createSandbox>>> {
   let lastError: unknown
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
