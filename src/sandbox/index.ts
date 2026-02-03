@@ -116,11 +116,8 @@ type ResolvedProvider
   = | { name: 'vercel', runtime?: string, timeout?: number, cpu?: number }
     | { name: 'cloudflare', namespace?: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: CloudflareSandboxSDK['getSandbox'] }
 
-function resolveProvider(provider: SandboxProvider | 'auto' | { name: 'vercel', runtime?: string, timeout?: number, cpu?: number } | { name: 'cloudflare', namespace: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: CloudflareSandboxSDK['getSandbox'] } | undefined): ResolvedProvider {
-  if (provider && provider !== 'auto') {
-    if (typeof provider === 'string') {
-      return provider === 'cloudflare' ? { name: 'cloudflare' } : { name: 'vercel' }
-    }
+function resolveProvider(provider: { name: 'vercel', runtime?: string, timeout?: number, cpu?: number } | { name: 'cloudflare', namespace: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: CloudflareSandboxSDK['getSandbox'] } | undefined): ResolvedProvider {
+  if (provider) {
     return provider
   }
 

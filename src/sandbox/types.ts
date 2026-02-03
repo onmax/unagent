@@ -20,7 +20,7 @@ export interface CloudflareProviderOptions {
 export type SandboxProviderOptions = VercelProviderOptions | CloudflareProviderOptions
 
 export interface SandboxOptions {
-  provider?: SandboxProvider | 'auto' | SandboxProviderOptions
+  provider?: SandboxProviderOptions
 }
 
 export interface SandboxExecResult {
