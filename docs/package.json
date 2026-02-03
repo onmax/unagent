@@ -6,7 +6,7 @@
     "build": "undocs build"
   },
   "devDependencies": {
-    "nuxt": "catalog:",
-    "undocs": "catalog:"
+    "nuxt": "catalog:docs",
+    "undocs": "catalog:docs"
   }
 }

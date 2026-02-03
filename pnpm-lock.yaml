@@ -5,61 +5,68 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
-  default:
+  build:
+    tsdown:
+      specifier: ^0.15.0
+      version: 0.15.12
+  docs:
+    nuxt:
+      specifier: ^4.3.0
+      version: 4.3.0
+    undocs:
+      specifier: ^0.4.16
+      version: 0.4.16
+  lint:
     '@antfu/eslint-config':
       specifier: ^4.0.0
       version: 4.19.0
+    eslint:
+      specifier: ^9.0.0
+      version: 9.39.2
+    lint-staged:
+      specifier: ^16.2.7
+      version: 16.2.7
+    simple-git-hooks:
+      specifier: ^2.13.1
+      version: 2.13.1
+  prod:
+    hookable:
+      specifier: ^5.5.3
+      version: 5.5.3
+    pathe:
+      specifier: ^2.0.3
+      version: 2.0.3
+    std-env:
+      specifier: ^3.10.0
+      version: 3.10.0
+    yaml:
+      specifier: ^2.7.0
+      version: 2.8.2
+  sandbox:
     '@cloudflare/sandbox':
       specifier: ^0.7.0
       version: 0.7.0
-    '@types/node':
-      specifier: ^25.1.0
-      version: 25.1.0
     '@vercel/node':
       specifier: ^5.1.10
       version: 5.5.28
     '@vercel/sandbox':
       specifier: ^1.4.1
       version: 1.4.1
+  script:
     bumpp:
       specifier: ^9.0.0
       version: 9.11.1
-    eslint:
-      specifier: ^9.0.0
-      version: 9.39.2
-    hookable:
-      specifier: ^5.5.3
-      version: 5.5.3
-    lint-staged:
-      specifier: ^16.2.7
-      version: 16.2.7
-    nuxt:
-      specifier: ^4.3.0
-      version: 4.3.0
-    pathe:
-      specifier: ^2.0.3
-      version: 2.0.3
-    simple-git-hooks:
-      specifier: ^2.13.1
-      version: 2.13.1
-    std-env:
-      specifier: ^3.10.0
-      version: 3.10.0
-    tsdown:
-      specifier: ^0.15.0
-      version: 0.15.12
-    typescript:
-      specifier: ^5.7.0
-      version: 5.9.3
-    undocs:
-      specifier: ^0.4.16
-      version: 0.4.16
+  test:
     vitest:
       specifier: ^3.0.0
       version: 3.2.4
-    yaml:
-      specifier: ^2.7.0
-      version: 2.8.2
+  types:
+    '@types/node':
+      specifier: ^25.1.0
+      version: 25.1.0
+    typescript:
+      specifier: ^5.7.0
+      version: 5.9.3
 
 importers:
 
@@ -72,72 +79,72 @@ importers:
         specifier: '>=0.1.0'
         version: 1.4.1
       hookable:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 5.5.3
       pathe:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 2.0.3
       std-env:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 3.10.0
       unstorage:
         specifier: '>=1.10.0'
         version: 1.17.4(db0@0.3.4)(ioredis@5.9.2)
       yaml:
-        specifier: 'catalog:'
+        specifier: catalog:prod
         version: 2.8.2
     devDependencies:
       '@antfu/eslint-config':
-        specifier: 'catalog:'
+        specifier: catalog:lint
         version: 4.19.0(@vue/compiler-sfc@3.5.27)(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)(vitest@3.2.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))
       '@types/node':
-        specifier: 'catalog:'
+        specifier: catalog:types
         version: 25.1.0
       bumpp:
-        specifier: 'catalog:'
+        specifier: catalog:script
         version: 9.11.1
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:lint
         version: 9.39.2(jiti@2.6.1)
       lint-staged:
-        specifier: 'catalog:'
+        specifier: catalog:lint
         version: 16.2.7
       simple-git-hooks:
-        specifier: 'catalog:'
+        specifier: catalog:lint
         version: 2.13.1
       tsdown:
-        specifier: 'catalog:'
+        specifier: catalog:build
         version: 0.15.12(typescript@5.9.3)
       typescript:
-        specifier: 'catalog:'
+        specifier: catalog:types
         version: 5.9.3
       vitest:
-        specifier: 'catalog:'
+        specifier: catalog:test
         version: 3.2.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2)
 
   docs:
     devDependencies:
       nuxt:
-        specifier: 'catalog:'
+        specifier: catalog:docs
         version: 4.3.0(@parcel/watcher@2.5.6)(@types/node@25.1.0)(@vue/compiler-sfc@3.5.27)(cac@6.7.14)(db0@0.3.4)(eslint@9.39.2(jiti@2.6.1))(ioredis@5.9.2)(lightningcss@1.31.1)(magicast@0.5.1)(optionator@0.9.4)(rolldown@1.0.0-beta.45)(rollup@4.57.1)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(yaml@2.8.2)
       undocs:
-        specifier: 'catalog:'
+        specifier: catalog:docs
         version: 0.4.16(@parcel/watcher@2.5.6)(@tiptap/extensions@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))(@tiptap/y-tiptap@3.0.2(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.5)(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29))(@types/node@25.1.0)(@vue/compiler-sfc@3.5.27)(@vueuse/core@14.2.0(vue@3.5.27(typescript@5.9.3)))(cac@6.7.14)(change-case@5.4.4)(db0@0.3.4)(embla-carousel@8.6.0)(eslint@9.39.2(jiti@2.6.1))(ioredis@5.9.2)(lightningcss@1.31.1)(magicast@0.5.1)(optionator@0.9.4)(rolldown@1.0.0-beta.45)(rollup@4.57.1)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(vue-router@4.6.4(vue@3.5.27(typescript@5.9.3)))(yaml@2.8.2)(yjs@13.6.29)(zod@3.25.76)
 
   playground:
     dependencies:
       '@cloudflare/sandbox':
-        specifier: 'catalog:'
+        specifier: catalog:sandbox
         version: 0.7.0
       '@vercel/sandbox':
-        specifier: 'catalog:'
+        specifier: catalog:sandbox
         version: 1.4.1
       unagent:
         specifier: workspace:*
         version: link:..
     devDependencies:
       '@vercel/node':
-        specifier: 'catalog:'
+        specifier: catalog:sandbox
         version: 5.5.28(rollup@4.57.1)
 
 packages:

@@ -1,6 +1,8 @@
 {
-  "installCommand": "cd .. && pnpm install && pnpm build",
+  "installCommand": "cd .. && pnpm install",
+  "buildCommand": "cd .. && pnpm build",
+  "outputDirectory": ".",
   "functions": {
-    "api/sandbox.ts": { "maxDuration": 60 }
+    "api/*.ts": { "maxDuration": 60 }
   }
 }

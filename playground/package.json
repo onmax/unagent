@@ -9,11 +9,11 @@
     "deploy:cf": "wrangler deploy"
   },
   "dependencies": {
-    "@cloudflare/sandbox": "catalog:",
-    "@vercel/sandbox": "catalog:",
+    "@cloudflare/sandbox": "catalog:sandbox",
+    "@vercel/sandbox": "catalog:sandbox",
     "unagent": "workspace:*"
   },
   "devDependencies": {
-    "@vercel/node": "catalog:"
+    "@vercel/node": "catalog:sandbox"
   }
 }

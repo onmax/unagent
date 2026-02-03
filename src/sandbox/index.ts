@@ -1,101 +1,49 @@
-import type {
-  CloudflareSandboxOptions,
-  CloudflareSandboxStub,
-  DurableObjectNamespaceLike,
-  Sandbox,
-  SandboxExecResult,
-  SandboxOptions,
-  SandboxProvider,
-} from './types'
-import { Buffer } from 'node:buffer'
+import type { CloudflareSandbox, CloudflareSandboxOptions, CloudflareSandboxStub, CloudflareProviderOptions, DurableObjectNamespaceLike, Sandbox, SandboxOptions, VercelProviderOptions, VercelSandbox, VercelSandboxListItem, VercelSandboxSDK } from './types'
 import { provider as envProvider, isWorkerd } from 'std-env'
-import { CloudflareSandboxAdapter } from './adapters'
+import { CloudflareSandboxAdapter, VercelSandboxAdapter } from './adapters'
 
-export type { CloudflareSandboxOptions, DurableObjectNamespaceLike, Sandbox, SandboxExecResult, SandboxOptions, SandboxProvider } from './types'
+// Re-exports
+export type { CloudflareSandbox, CloudflareSandboxOptions, CloudflareNamespace, CloudflareProviderOptions, CloudflareSession, CodeContext, CodeExecutionResult, DurableObjectNamespaceLike, SandboxCapabilities, SandboxExecOptions, ExposedPort, FileEntry, GitCheckoutResult, ListFilesOptions, NetworkPolicy, ProcessOptions, Sandbox, SandboxExecResult, SandboxOptions, SandboxProcess, SandboxProvider, VercelNamespace, VercelProviderOptions, VercelSandbox, VercelSandboxMetadata, VercelSnapshot, WaitForPortOptions } from './types'
+export { NotSupportedError, SandboxError } from './errors'
 
-async function loadVercelSandbox(): Promise<unknown> {
+async function loadVercelSandbox(): Promise<VercelSandboxSDK> {
   const moduleName = '@vercel/sandbox'
   try {
-    return await import(moduleName)
+    return await import(moduleName) as VercelSandboxSDK
   }
   catch (e) {
     throw new Error(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${e instanceof Error ? e.message : e}`)
   }
 }
 
-async function loadCloudflareSandbox(): Promise<unknown> {
+async function loadCloudflareSandbox(): Promise<{ getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }> {
   const moduleName = '@cloudflare/sandbox'
   try {
-    return await import(moduleName)
+    return await import(moduleName) as { getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }
   }
   catch (e) {
     throw new Error(`${moduleName} load failed. Install it to use the Cloudflare provider. Original error: ${e instanceof Error ? e.message : e}`)
   }
 }
 
-// Vercel Sandbox v1.x types
-interface VercelSandboxInstance {
-  runCommand: (cmd: string, args: string[]) => Promise<{ exitCode: number, stdout: () => Promise<string>, stderr: () => Promise<string> }>
-  writeFiles: (files: Array<{ path: string, content: Uint8Array }>) => Promise<void>
-  readFileToBuffer: (opts: { path: string }) => Promise<Uint8Array>
-  [Symbol.asyncDispose]: () => Promise<void>
-}
-
-interface VercelSandboxSDK {
-  Sandbox: {
-    create: (options: { runtime: string, timeoutMs?: number, resources?: { vcpus?: number } }) => Promise<VercelSandboxInstance>
-  }
-}
-
-// Cloudflare Sandbox SDK types (matches @cloudflare/sandbox v0.7+)
-interface CloudflareSandboxSDK {
-  getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T
-  Sandbox: new (...args: unknown[]) => unknown
-}
-
-class VercelSandbox implements Sandbox {
-  id: string
-  provider: SandboxProvider = 'vercel'
-  private instance: VercelSandboxInstance
-
-  constructor(id: string, instance: VercelSandboxInstance) {
-    this.id = id
-    this.instance = instance
-  }
-
-  async exec(command: string, args: string[]): Promise<SandboxExecResult> {
-    const result = await this.instance.runCommand(command, args)
-    const [stdout, stderr] = await Promise.all([result.stdout(), result.stderr()])
-    return { ok: result.exitCode === 0, stdout, stderr, code: result.exitCode }
-  }
-
-  async writeFile(path: string, content: string): Promise<void> {
-    await this.instance.writeFiles([{ path, content: Buffer.from(content) }])
-  }
-
-  async readFile(path: string): Promise<string> {
-    const buffer = await this.instance.readFileToBuffer({ path })
-    return Buffer.from(buffer).toString()
-  }
-
-  async stop(): Promise<void> {
-    await this.instance[Symbol.asyncDispose]()
-  }
-}
-
+// Factory overloads for type inference
+export function createSandbox(opts: { provider: VercelProviderOptions }): Promise<VercelSandbox>
+export function createSandbox(opts: { provider: CloudflareProviderOptions }): Promise<CloudflareSandbox>
+export function createSandbox(opts?: SandboxOptions): Promise<Sandbox>
 export async function createSandbox(options: SandboxOptions = {}): Promise<Sandbox> {
   const resolved = resolveProvider(options.provider)
 
   if (resolved.name === 'vercel') {
     const id = `vercel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const { runtime, timeout, cpu } = resolved
-    const sdk = await loadVercelSandbox() as VercelSandboxSDK
+    const { runtime = 'node24', timeout = 300_000, cpu, ports } = resolved
+    const sdk = await loadVercelSandbox()
     const instance = await sdk.Sandbox.create({
-      runtime: runtime ?? 'node24',
-      timeoutMs: timeout ?? 300_000,
+      runtime,
+      timeout,
+      ports,
       ...(cpu && { resources: { vcpus: cpu } }),
     })
-    return new VercelSandbox(id, instance)
+    return new VercelSandboxAdapter(id, instance, { runtime, createdAt: new Date().toISOString() })
   }
 
   if (resolved.name === 'cloudflare') {
@@ -104,7 +52,7 @@ export async function createSandbox(options: SandboxOptions = {}): Promise<Sandb
 
     const { namespace, sandboxId, cloudflare, getSandbox: providedGetSandbox } = resolved
     const id = sandboxId ?? `cloudflare-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const getSandbox = providedGetSandbox ?? (await loadCloudflareSandbox() as CloudflareSandboxSDK).getSandbox
+    const getSandbox = providedGetSandbox ?? (await loadCloudflareSandbox()).getSandbox
     const stub = getSandbox(namespace, id, cloudflare)
     return new CloudflareSandboxAdapter(id, stub)
   }
@@ -112,11 +60,11 @@ export async function createSandbox(options: SandboxOptions = {}): Promise<Sandb
   throw new Error(`Unknown sandbox provider: ${(resolved as { name: string }).name}`)
 }
 
-type ResolvedProvider
-  = | { name: 'vercel', runtime?: string, timeout?: number, cpu?: number }
-    | { name: 'cloudflare', namespace?: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: CloudflareSandboxSDK['getSandbox'] }
+type ResolvedProvider =
+  | { name: 'vercel'; runtime?: string; timeout?: number; cpu?: number; ports?: number[] }
+  | { name: 'cloudflare'; namespace?: DurableObjectNamespaceLike; sandboxId?: string; cloudflare?: CloudflareSandboxOptions; getSandbox?: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }
 
-function resolveProvider(provider: { name: 'vercel', runtime?: string, timeout?: number, cpu?: number } | { name: 'cloudflare', namespace: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: CloudflareSandboxSDK['getSandbox'] } | undefined): ResolvedProvider {
+function resolveProvider(provider: VercelProviderOptions | CloudflareProviderOptions | undefined): ResolvedProvider {
   if (provider) {
     return provider
   }
@@ -134,4 +82,19 @@ function resolveProvider(provider: { name: 'vercel', runtime?: string, timeout?:
   }
 
   throw new Error('Unable to auto-detect sandbox provider. Pass { provider }.')
+}
+
+// === Static methods for Vercel ===
+export const VercelSandboxStatic = {
+  async list(): Promise<{ sandboxes: VercelSandboxListItem[] }> {
+    const sdk = await loadVercelSandbox()
+    return sdk.Sandbox.list()
+  },
+
+  async get(id: string): Promise<VercelSandbox | null> {
+    const sdk = await loadVercelSandbox()
+    const instance = await sdk.Sandbox.get(id)
+    if (!instance) return null
+    return new VercelSandboxAdapter(id, instance, { runtime: 'unknown', createdAt: 'unknown' })
+  },
 }

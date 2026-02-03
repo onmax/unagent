@@ -1,24 +1,32 @@
 packages:
   - docs
   - playground
-catalog:
-  '@antfu/eslint-config': ^4.0.0
-  '@cloudflare/sandbox': ^0.7.0
-  '@types/node': ^25.1.0
-  '@vercel/node': ^5.1.10
-  '@vercel/sandbox': ^1.4.1
-  bumpp: ^9.0.0
-  eslint: ^9.0.0
-  hookable: ^5.5.3
-  lint-staged: ^16.2.7
-  nuxt: ^4.3.0
-  pathe: ^2.0.3
-  simple-git-hooks: ^2.13.1
-  std-env: ^3.10.0
-  tsdown: ^0.15.0
-  typescript: ^5.7.0
-  undocs: ^0.4.16
-  vitest: ^3.0.0
-  yaml: ^2.7.0
+catalogs:
+  prod:
+    hookable: ^5.5.3
+    pathe: ^2.0.3
+    std-env: ^3.10.0
+    yaml: ^2.7.0
+  sandbox:
+    '@cloudflare/sandbox': ^0.7.0
+    '@vercel/node': ^5.1.10
+    '@vercel/sandbox': ^1.4.1
+  lint:
+    '@antfu/eslint-config': ^4.0.0
+    eslint: ^9.0.0
+    lint-staged: ^16.2.7
+    simple-git-hooks: ^2.13.1
+  build:
+    tsdown: ^0.15.0
+  test:
+    vitest: ^3.0.0
+  types:
+    '@types/node': ^25.1.0
+    typescript: ^5.7.0
+  script:
+    bumpp: ^9.0.0
+  docs:
+    nuxt: ^4.3.0
+    undocs: ^0.4.16
 onlyBuiltDependencies:
   - simple-git-hooks
