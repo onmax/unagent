@@ -85,7 +85,7 @@ Get path to agent's preferred skills directory.
 
 ```ts
 const skillsDir = getAgentSkillsDir(agents['claude-code'])
-// → "/Users/you/.claude/.agents/skills"
+// → "/Users/you/.claude/skills"
 ```
 
 ### `getAgentSkillsDirs(agent)`
@@ -94,7 +94,7 @@ Get all skills directories for an agent, with preferred path first.
 
 ```ts
 const skillsDirs = getAgentSkillsDirs(agents['claude-code'])
-// → ["/Users/you/.claude/.agents/skills", "/Users/you/.claude/skills"]
+// → ["/Users/you/.claude/skills", "/Users/you/.claude/.agents/skills"]
 ```
 
 ### `agentConfigExists(agent)`

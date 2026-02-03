@@ -34,12 +34,12 @@ describe('env/paths', () => {
     expect(paths.state).toBeDefined()
   })
 
-  it('getAgentSkillsDirs prefers .agents/skills then legacy skills', () => {
+  it('getAgentSkillsDirs prefers skills then legacy .agents/skills', () => {
     const config = getAgentConfig('claude-code')!
     const dirs = getAgentSkillsDirs(config).map(d => d.replace(/\\/g, '/'))
     expect(dirs.length).toBeGreaterThanOrEqual(2)
-    expect(dirs[0].endsWith('/.claude/.agents/skills')).toBe(true)
-    expect(dirs[1].endsWith('/.claude/skills')).toBe(true)
+    expect(dirs[0].endsWith('/.claude/skills')).toBe(true)
+    expect(dirs[1].endsWith('/.claude/.agents/skills')).toBe(true)
   })
 
   it('isCI is a boolean', () => {
