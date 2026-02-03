@@ -18,24 +18,15 @@ catalogs:
     eslint:
       specifier: ^9.0.0
       version: 9.39.2
-    hookable:
-      specifier: ^5.5.3
-      version: 5.5.3
     lint-staged:
       specifier: ^16.2.7
       version: 16.2.7
     nuxt:
       specifier: ^4.3.0
       version: 4.3.0
-    pathe:
-      specifier: ^2.0.3
-      version: 2.0.3
     simple-git-hooks:
       specifier: ^2.13.1
       version: 2.13.1
-    std-env:
-      specifier: ^3.10.0
-      version: 3.10.0
     tsdown:
       specifier: ^0.15.0
       version: 0.15.12
@@ -48,9 +39,6 @@ catalogs:
     vitest:
       specifier: ^3.0.0
       version: 3.2.4
-    yaml:
-      specifier: ^2.7.0
-      version: 2.8.2
 
 importers:
 
@@ -63,19 +51,19 @@ importers:
         specifier: '>=0.1.0'
         version: 1.4.1
       hookable:
-        specifier: 'catalog:'
+        specifier: ^5.5.3
         version: 5.5.3
       pathe:
-        specifier: 'catalog:'
+        specifier: ^2.0.3
         version: 2.0.3
       std-env:
-        specifier: 'catalog:'
+        specifier: ^3.10.0
         version: 3.10.0
       unstorage:
         specifier: '>=1.10.0'
         version: 1.17.4(db0@0.3.4)(ioredis@5.9.2)
       yaml:
-        specifier: 'catalog:'
+        specifier: ^2.7.0
         version: 2.8.2
     devDependencies:
       '@antfu/eslint-config':
