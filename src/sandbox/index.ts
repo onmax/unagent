@@ -9,7 +9,6 @@ export interface SandboxOptions {
   provider: SandboxProvider
   runtime?: string
   timeout?: number
-  memory?: number
   cpu?: number
 }
 
@@ -64,8 +63,8 @@ async function loadVercelSandbox(): Promise<unknown> {
   try {
     return await import(/* @vite-ignore */ moduleName)
   }
-  catch {
-    throw new Error(`${moduleName} not installed. Add as peer dependency: pnpm add ${moduleName}`)
+  catch (e) {
+    throw new Error(`${moduleName} load failed: ${e instanceof Error ? e.message : e}`)
   }
 }
 
@@ -74,8 +73,8 @@ function loadCloudflareSandboxSync(): unknown {
   try {
     return _require(moduleName)
   }
-  catch {
-    throw new Error(`${moduleName} not installed. Add as peer dependency.`)
+  catch (e) {
+    throw new Error(`${moduleName} load failed: ${e instanceof Error ? e.message : e}`)
   }
 }
 
@@ -93,20 +92,6 @@ interface VercelSandboxSDK {
   }
 }
 
-// Re-export key types from @cloudflare/sandbox
-// These types are available when the package is installed
-export type {
-  CodeContext as CloudflareCodeContext,
-  ExecOptions as CloudflareExecOptions,
-  ExecResult as CloudflareExecResult,
-  ExecutionSession as CloudflareExecutionSession,
-  Process as CloudflareProcess,
-  ProcessOptions as CloudflareProcessOptions,
-  ProcessStatus as CloudflareProcessStatus,
-  SandboxOptions as CloudflareSandboxOptions,
-  SessionOptions as CloudflareSessionOptions,
-} from '@cloudflare/sandbox'
-
 // Cloudflare Sandbox SDK types (matches @cloudflare/sandbox v0.7+)
 interface CloudflareExecResult { success: boolean, exitCode: number, stdout: string, stderr: string, command: string, duration: number, timestamp: string, sessionId?: string }
 interface CloudflareWriteFileResult { success: boolean, path: string, timestamp: string, exitCode?: number }
@@ -118,10 +103,12 @@ interface CloudflareSandboxStub {
   destroy: () => Promise<void>
 }
 
+export interface CloudflareSandboxOptions { sleepAfter?: string | number, keepAlive?: boolean, normalizeId?: boolean }
+/** DurableObjectNamespace shape - matches Cloudflare Workers runtime */
+export interface DurableObjectNamespaceLike { idFromName: (name: string) => unknown, get: (id: unknown) => unknown }
 interface CloudflareSandboxSDK {
-  // getSandbox is synchronous - returns RPC stub directly
-  getSandbox: <T extends CloudflareSandboxStub>(ns: unknown, id: string, opts?: unknown) => T
-  Sandbox: unknown
+  getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T
+  Sandbox: new (...args: unknown[]) => unknown
 }
 
 class VercelSandbox implements Sandbox {
@@ -171,18 +158,21 @@ class CloudflareSandbox implements Sandbox {
   }
 
   async exec(command: string, args: string[]): Promise<SandboxExecResult> {
-    const quotedArgs = args.map(shellQuote).join(' ')
-    const cmd = `${shellQuote(command)} ${quotedArgs}`
+    const cmd = args.length ? `${shellQuote(command)} ${args.map(shellQuote).join(' ')}` : shellQuote(command)
     const result = await this.stub.exec(cmd)
     return { ok: result.success, stdout: result.stdout, stderr: result.stderr, code: result.exitCode }
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    await this.stub.writeFile(path, content)
+    const result = await this.stub.writeFile(path, content)
+    if (!result.success)
+      throw new Error(`Failed to write file: ${path}`)
   }
 
   async readFile(path: string): Promise<string> {
     const result = await this.stub.readFile(path)
+    if (!result.success)
+      throw new Error(`Failed to read file: ${path}`)
     return result.content
   }
 
@@ -224,7 +214,7 @@ export async function createSandbox(options: SandboxOptions): Promise<Sandbox> {
  * @param options.keepAlive - Keep sandbox alive indefinitely (must call destroy() manually)
  * @param options.normalizeId - Normalize sandbox ID to lowercase for preview URL compatibility
  */
-export function createCloudflareSandbox(namespace: unknown, sandboxId?: string, options?: { sleepAfter?: string | number, keepAlive?: boolean, normalizeId?: boolean }): Sandbox {
+export function createCloudflareSandbox(namespace: DurableObjectNamespaceLike, sandboxId?: string, options?: CloudflareSandboxOptions): Sandbox {
   const sdk = loadCloudflareSandboxSync() as CloudflareSandboxSDK
   const id = sandboxId ?? `cloudflare-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const stub = sdk.getSandbox<CloudflareSandboxStub>(namespace, id, options)
