@@ -33,9 +33,31 @@ export function getAgentRulesPath(agent: AgentConfig): string | undefined {
 }
 
 export function getAgentSkillsDir(agent: AgentConfig): string | undefined {
-  if (!agent.skillsDir)
-    return undefined
-  return join(getAgentConfigDir(agent), agent.skillsDir)
+  return getAgentSkillsDirs(agent)[0]
+}
+
+export function getAgentSkillsDirs(agent: AgentConfig): string[] {
+  const dirs: string[] = []
+  if (agent.skillsDir)
+    dirs.push(agent.skillsDir)
+  if (agent.legacySkillsDirs && agent.legacySkillsDirs.length > 0)
+    dirs.push(...agent.legacySkillsDirs)
+
+  if (dirs.length === 0)
+    return []
+
+  const configDir = getAgentConfigDir(agent)
+  const seen = new Set<string>()
+  const resolved: string[] = []
+  for (const dir of dirs) {
+    const path = join(configDir, dir)
+    if (seen.has(path))
+      continue
+    seen.add(path)
+    resolved.push(path)
+  }
+
+  return resolved
 }
 
 export function agentConfigExists(agent: AgentConfig): boolean {

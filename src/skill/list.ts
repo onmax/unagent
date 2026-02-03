@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { detectInstalledAgents } from '../env'
-import { getAgentSkillsDir } from '../env/paths'
+import { getAgentSkillsDirs } from '../env/paths'
 import { discoverSkills } from './discover'
 
 export interface InstalledSkill {
@@ -18,18 +18,20 @@ export function listInstalledSkills(): InstalledSkill[] {
   const result: InstalledSkill[] = []
 
   for (const agent of agents) {
-    const skillsDir = getAgentSkillsDir(agent.config)
-    if (!skillsDir || !existsSync(skillsDir))
-      continue
+    const skillsDirs = getAgentSkillsDirs(agent.config)
+    for (const skillsDir of skillsDirs) {
+      if (!existsSync(skillsDir))
+        continue
 
-    const discovered = discoverSkills(skillsDir)
-    for (const skill of discovered) {
-      result.push({
-        name: skill.name,
-        path: skill.path,
-        agent: agent.id,
-        agentName: agent.config.name,
-      })
+      const discovered = discoverSkills(skillsDir)
+      for (const skill of discovered) {
+        result.push({
+          name: skill.name,
+          path: skill.path,
+          agent: agent.id,
+          agentName: agent.config.name,
+        })
+      }
     }
   }
 

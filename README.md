@@ -30,7 +30,9 @@ if (agent) {
 }
 
 // Discover skills
-const skills = discoverSkills('~/.claude/skills', { recursive: true })
+const skills = discoverSkills('~/.claude/.agents/skills', { recursive: true })
+
+// Legacy 'skills' directory remains supported for backward compatibility.
 
 // Parse source strings
 parseSource('unjs/unagent') // github

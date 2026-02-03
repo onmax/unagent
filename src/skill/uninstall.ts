@@ -1,7 +1,7 @@
 import type { ResolvedAgent } from './resolve'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'pathe'
-import { getAgentSkillsDir } from '../env/paths'
+import { getAgentSkillsDirs } from '../env/paths'
 import { isSymlink, removeSymlink } from '../link/symlink'
 import { readSkillLock, removeSkillFromLock, writeSkillLock } from '../lock'
 import { resolveTargetAgents } from './resolve'
@@ -40,7 +40,9 @@ export async function uninstallSkill(options: UninstallSkillOptions): Promise<Un
   for (const agent of targetAgents) {
     const result = uninstallSkillFromAgent(skillName, agent)
     if (result.success) {
-      removed.push({ skill: skillName, agent: agent.id, path: result.path! })
+      for (const path of result.paths || []) {
+        removed.push({ skill: skillName, agent: agent.id, path })
+      }
     }
     else if (result.error !== 'Skill not installed') {
       errors.push({ skill: skillName, agent: agent.id, error: result.error! })
@@ -50,11 +52,11 @@ export async function uninstallSkill(options: UninstallSkillOptions): Promise<Un
   return { success: errors.length === 0 && removed.length > 0, removed, errors }
 }
 
-interface UninstallFromAgentResult { success: boolean, path?: string, error?: string }
+interface UninstallFromAgentResult { success: boolean, paths?: string[], error?: string }
 
 function uninstallSkillFromAgent(skillName: string, agent: ResolvedAgent): UninstallFromAgentResult {
-  const skillsDir = getAgentSkillsDir(agent.config)
-  if (!skillsDir) {
+  const skillsDirs = getAgentSkillsDirs(agent.config)
+  if (skillsDirs.length === 0) {
     return { success: false, error: `Agent ${agent.id} does not support skills` }
   }
 
@@ -63,31 +65,39 @@ function uninstallSkillFromAgent(skillName: string, agent: ResolvedAgent): Unins
     return { success: false, error: `Invalid skill name: ${skillName}` }
   }
 
-  const skillPath = join(skillsDir, skillName)
+  const removedPaths: string[] = []
 
-  if (!existsSync(skillPath)) {
+  for (const skillsDir of skillsDirs) {
+    const skillPath = join(skillsDir, skillName)
+    if (!existsSync(skillPath))
+      continue
+
+    // Remove symlink or directory
+    if (isSymlink(skillPath)) {
+      if (!removeSymlink(skillPath)) {
+        return { success: false, error: 'Failed to remove symlink' }
+      }
+    }
+    else {
+      try {
+        rmSync(skillPath, { recursive: true, force: true })
+      }
+      catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : 'Failed to remove directory' }
+      }
+    }
+
+    // Update lockfile
+    const lock = readSkillLock(skillsDir)
+    const updated = removeSkillFromLock(lock, skillName)
+    writeSkillLock(skillsDir, updated)
+
+    removedPaths.push(skillPath)
+  }
+
+  if (removedPaths.length === 0) {
     return { success: false, error: 'Skill not installed' }
   }
 
-  // Remove symlink or directory
-  if (isSymlink(skillPath)) {
-    if (!removeSymlink(skillPath)) {
-      return { success: false, error: 'Failed to remove symlink' }
-    }
-  }
-  else {
-    try {
-      rmSync(skillPath, { recursive: true, force: true })
-    }
-    catch (e) {
-      return { success: false, error: e instanceof Error ? e.message : 'Failed to remove directory' }
-    }
-  }
-
-  // Update lockfile
-  const lock = readSkillLock(skillsDir)
-  const updated = removeSkillFromLock(lock, skillName)
-  writeSkillLock(skillsDir, updated)
-
-  return { success: true, path: skillPath }
+  return { success: true, paths: removedPaths }
 }

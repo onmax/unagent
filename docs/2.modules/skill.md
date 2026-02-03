@@ -121,7 +121,7 @@ The discovery functions find and load skills from the filesystem.
 This function scans a directory for skill directories containing `SKILL.md`.
 
 ```ts
-const skills = discoverSkills('~/.claude/skills', {
+const skills = discoverSkills('~/.claude/.agents/skills', {
   recursive: true, // Search nested directories
 })
 
@@ -131,6 +131,8 @@ for (const skill of skills) {
   console.log(skill.parsed) // ParsedSkill object
 }
 ```
+
+Legacy `skills/` directories remain supported for backward compatibility.
 
 ### filterSkills
 

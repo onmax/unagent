@@ -105,8 +105,8 @@ shortenPath('/Users/you/code/project/src/file.ts', '/Users/you/code/project')
 Expand `~` to home directory:
 
 ```ts
-expandPath('~/.claude/skills')
-// → "/Users/you/.claude/skills"
+expandPath('~/.claude/.agents/skills')
+// → "/Users/you/.claude/.agents/skills"
 
 expandPath('./relative')
 // → "/current/working/dir/relative"
