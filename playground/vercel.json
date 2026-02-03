@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/sandbox.ts": {
+      "maxDuration": 60
+    }
+  }
+}

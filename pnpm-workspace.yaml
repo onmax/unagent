@@ -1,5 +1,6 @@
 packages:
   - docs
+  - playground
 catalog:
   '@antfu/eslint-config': ^4.0.0
   '@types/node': ^25.1.0

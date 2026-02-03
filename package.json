@@ -57,10 +57,10 @@
     "unstorage": { "optional": true }
   },
   "dependencies": {
-    "hookable": "^5.5.3",
-    "pathe": "^2.0.3",
-    "std-env": "^3.10.0",
-    "yaml": "^2.7.0"
+    "hookable": "catalog:",
+    "pathe": "catalog:",
+    "std-env": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
