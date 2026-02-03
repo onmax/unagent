@@ -3,7 +3,10 @@ packages:
   - playground
 catalog:
   '@antfu/eslint-config': ^4.0.0
+  '@cloudflare/sandbox': ^0.7.0
   '@types/node': ^25.1.0
+  '@vercel/node': ^5.1.10
+  '@vercel/sandbox': ^1.4.1
   bumpp: ^9.0.0
   eslint: ^9.0.0
   hookable: ^5.5.3

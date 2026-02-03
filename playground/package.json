@@ -1,7 +1,7 @@
 {
   "name": "unagent-playground",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev:vercel": "vercel dev",
     "deploy:vercel": "vercel deploy",
@@ -9,10 +9,11 @@
     "deploy:cf": "wrangler deploy"
   },
   "dependencies": {
-    "@vercel/sandbox": "^1.4.1",
-    "@cloudflare/sandbox": "^0.7.0"
+    "@cloudflare/sandbox": "catalog:",
+    "@vercel/sandbox": "catalog:",
+    "unagent": "workspace:*"
   },
   "devDependencies": {
-    "@vercel/node": "^5.1.10"
+    "@vercel/node": "catalog:"
   }
 }

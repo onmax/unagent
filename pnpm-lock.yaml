@@ -9,9 +9,18 @@ catalogs:
     '@antfu/eslint-config':
       specifier: ^4.0.0
       version: 4.19.0
+    '@cloudflare/sandbox':
+      specifier: ^0.7.0
+      version: 0.7.0
     '@types/node':
       specifier: ^25.1.0
       version: 25.1.0
+    '@vercel/node':
+      specifier: ^5.1.10
+      version: 5.5.28
+    '@vercel/sandbox':
+      specifier: ^1.4.1
+      version: 1.4.1
     bumpp:
       specifier: ^9.0.0
       version: 9.11.1
@@ -118,14 +127,17 @@ importers:
   playground:
     dependencies:
       '@cloudflare/sandbox':
-        specifier: ^0.7.0
+        specifier: 'catalog:'
         version: 0.7.0
       '@vercel/sandbox':
-        specifier: ^1.4.1
+        specifier: 'catalog:'
         version: 1.4.1
+      unagent:
+        specifier: workspace:*
+        version: link:..
     devDependencies:
       '@vercel/node':
-        specifier: ^5.1.10
+        specifier: 'catalog:'
         version: 5.5.28(rollup@4.57.1)
 
 packages:

@@ -4,65 +4,27 @@ icon: i-lucide-box
 
 # sandbox
 
-Detect and create sandboxed execution environments.
+Create sandboxed execution environments with a minimal API.
 
 ```ts
-import { createSandbox, detectSandbox, isSandboxAvailable } from 'unagent/sandbox'
-```
-
-## Sandbox Detection
-
-### `detectSandbox()`
-
-Detect if running in a known sandbox environment.
-
-```ts
-const detection = detectSandbox()
-
-switch (detection.type) {
-  case 'cloudflare':
-    console.log('Running in Cloudflare Workers')
-    break
-  case 'vercel':
-    console.log(`Vercel env: ${detection.details?.env}`)
-    break
-  case 'docker':
-    console.log('Running in Docker')
-    break
-  case 'none':
-    console.log('No sandbox detected')
-}
-```
-
-Detection checks:
-- **cloudflare**: `CLOUDFLARE_WORKER` or `CF_PAGES` env vars
-- **vercel**: `VERCEL` or `VERCEL_ENV` env vars
-- **docker**: `DOCKER_CONTAINER` env var or `/.dockerenv` file
-
-### `isSandboxAvailable(provider)`
-
-Check if a sandbox provider SDK is installed.
-
-```ts
-if (isSandboxAvailable('vercel')) {
-  const sandbox = await createSandbox({ provider: 'vercel' })
-}
+import { createSandbox } from 'unagent/sandbox'
 ```
 
 ## Creating Sandboxes
 
 ### `createSandbox(options)`
 
-Create a sandboxed execution environment. Requires peer dependencies:
+Create a sandboxed execution environment. Install the provider SDK yourself:
 - Vercel: `@vercel/sandbox`
 - Cloudflare: `@cloudflare/sandbox`
 
 ```ts
 const sandbox = await createSandbox({
-  provider: 'vercel',
-  runtime: 'node24',
-  timeout: 300_000,
-  memory: 512,
+  provider: {
+    name: 'vercel',
+    runtime: 'node24',
+    timeout: 300_000,
+  },
 })
 
 // Execute commands
@@ -77,15 +39,41 @@ const content = await sandbox.readFile('/app/index.js')
 await sandbox.stop()
 ```
 
+### Cloudflare Workers
+
+Cloudflare requires a Durable Objects binding.
+
+```ts
+const sandbox = await createSandbox({
+  provider: {
+    name: 'cloudflare',
+    namespace: env.SANDBOX,
+    cloudflare: { sleepAfter: '10m' },
+  },
+})
+```
+
 ### Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | `'vercel' \| 'cloudflare'` | required | Sandbox provider |
-| `runtime` | `string` | `'node24'` (Vercel) / `'python'` (Cloudflare) | Runtime environment |
-| `timeout` | `number` | `300000` (Vercel) / `600000` (Cloudflare) | Execution timeout ms |
-| `memory` | `number` | - | Memory limit MB (Vercel only) |
-| `cpu` | `number` | - | CPU limit (Vercel only) |
+`provider` can be a string (`'vercel' | 'cloudflare' | 'auto'`) or a full object.
+For Cloudflare, the object form is required to pass the namespace.
+If you use `'auto'`, it will only work for Cloudflare when the namespace is provided via the object form.
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `provider` | `'vercel' \| 'cloudflare' \| 'auto' \| ProviderOptions` | Provider selection |
+
+#### ProviderOptions
+
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `'vercel' \| 'cloudflare'` | Provider name |
+| `runtime` | `string` | Vercel runtime (default: `node24`) |
+| `timeout` | `number` | Vercel timeout (ms, default: `300000`) |
+| `cpu` | `number` | Vercel CPU limit |
+| `namespace` | `DurableObjectNamespace` | Cloudflare DO binding |
+| `sandboxId` | `string` | Cloudflare sandbox id |
+| `cloudflare` | `CloudflareSandboxOptions` | Cloudflare SDK options |
 
 ## Sandbox Interface
 
@@ -111,38 +99,37 @@ interface SandboxExecResult {
 
 ```ts
 type SandboxProvider = 'vercel' | 'cloudflare'
-type SandboxType = 'docker' | 'cloudflare' | 'vercel' | 'none'
 
-interface SandboxDetection {
-  type: SandboxType
-  details?: Record<string, string>
+interface VercelProviderOptions {
+  name: 'vercel'
+  runtime?: string
+  timeout?: number
+  cpu?: number
+}
+
+interface CloudflareProviderOptions {
+  name: 'cloudflare'
+  namespace: DurableObjectNamespace
+  sandboxId?: string
+  cloudflare?: CloudflareSandboxOptions
 }
 
 interface SandboxOptions {
-  provider: SandboxProvider
-  runtime?: string
-  timeout?: number
-  memory?: number
-  cpu?: number
+  provider?: SandboxProvider | 'auto' | VercelProviderOptions | CloudflareProviderOptions
 }
 ```
 
 ## Example: Code Execution Agent
 
 ```ts
-import { createSandbox, isSandboxAvailable } from 'unagent/sandbox'
+import { createSandbox } from 'unagent/sandbox'
 
 async function executeCode(code: string, language: 'javascript' | 'python') {
-  const provider = language === 'python' ? 'cloudflare' : 'vercel'
+  const provider = language === 'python'
+    ? { name: 'cloudflare', namespace: env.SANDBOX }
+    : { name: 'vercel', timeout: 30_000 }
 
-  if (!isSandboxAvailable(provider)) {
-    throw new Error(`${provider} sandbox not available`)
-  }
-
-  const sandbox = await createSandbox({
-    provider,
-    timeout: 30_000,
-  })
+  const sandbox = await createSandbox({ provider })
 
   try {
     if (language === 'javascript') {
