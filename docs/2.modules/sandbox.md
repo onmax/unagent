@@ -4,155 +4,274 @@ icon: i-lucide-box
 
 # sandbox
 
-Detect and create sandboxed execution environments.
+Create sandboxed execution environments with a unified API across Vercel and Cloudflare.
 
 ```ts
-import { createSandbox, detectSandbox, isSandboxAvailable } from 'unagent/sandbox'
+import { createSandbox } from 'unagent/sandbox'
 ```
 
-## Sandbox Detection
+## Installation
 
-### `detectSandbox()`
+Install `unagent` and the provider SDK for your platform:
 
-Detect if running in a known sandbox environment.
-
-```ts
-const detection = detectSandbox()
-
-switch (detection.type) {
-  case 'cloudflare':
-    console.log('Running in Cloudflare Workers')
-    break
-  case 'vercel':
-    console.log(`Vercel env: ${detection.details?.env}`)
-    break
-  case 'docker':
-    console.log('Running in Docker')
-    break
-  case 'none':
-    console.log('No sandbox detected')
-}
+::code-group
+```bash [Vercel]
+pnpm add unagent @vercel/sandbox
 ```
-
-Detection checks:
-- **cloudflare**: `CLOUDFLARE_WORKER` or `CF_PAGES` env vars
-- **vercel**: `VERCEL` or `VERCEL_ENV` env vars
-- **docker**: `DOCKER_CONTAINER` env var or `/.dockerenv` file
-
-### `isSandboxAvailable(provider)`
-
-Check if a sandbox provider SDK is installed.
-
-```ts
-if (isSandboxAvailable('vercel')) {
-  const sandbox = await createSandbox({ provider: 'vercel' })
-}
+```bash [Cloudflare]
+pnpm add unagent @cloudflare/sandbox
 ```
+::
 
-## Creating Sandboxes
+## Quick Start
 
-### `createSandbox(options)`
-
-Create a sandboxed execution environment. Requires peer dependencies:
-- Vercel: `@vercel/sandbox`
-- Cloudflare: `@cloudflare/sandbox`
+### Vercel
 
 ```ts
 const sandbox = await createSandbox({
-  provider: 'vercel',
-  runtime: 'node24',
-  timeout: 300_000,
-  memory: 512,
+  provider: { name: 'vercel', runtime: 'node24', timeout: 300_000 },
 })
 
-// Execute commands
 const result = await sandbox.exec('node', ['-e', 'console.log("hello")'])
 console.log(result.stdout) // "hello"
 
-// File operations
-await sandbox.writeFile('/app/index.js', 'console.log("hi")')
-const content = await sandbox.readFile('/app/index.js')
-
-// Cleanup
 await sandbox.stop()
 ```
 
-### Options
+### Cloudflare Workers
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | `'vercel' \| 'cloudflare'` | required | Sandbox provider |
-| `runtime` | `string` | `'node24'` (Vercel) / `'python'` (Cloudflare) | Runtime environment |
-| `timeout` | `number` | `300000` (Vercel) / `600000` (Cloudflare) | Execution timeout ms |
-| `memory` | `number` | - | Memory limit MB (Vercel only) |
-| `cpu` | `number` | - | CPU limit (Vercel only) |
+Cloudflare requires a Durable Objects binding:
 
-## Sandbox Interface
+```ts
+import { getSandbox, Sandbox } from '@cloudflare/sandbox'
+import { createSandbox } from 'unagent/sandbox'
+
+export { Sandbox }
+
+export default {
+  async fetch(req: Request, env: Env) {
+    const sandbox = await createSandbox({
+      provider: { name: 'cloudflare', namespace: env.SANDBOX, getSandbox },
+    })
+
+    const result = await sandbox.exec('echo', ['hello'])
+    await sandbox.stop()
+
+    return Response.json(result)
+  },
+}
+```
+
+## Unified API
+
+The sandbox API provides a consistent interface for both providers:
+
+### Core Methods
 
 ```ts
 interface Sandbox {
-  id: string
-  provider: 'vercel' | 'cloudflare'
-  exec: (command: string, args: string[]) => Promise<SandboxExecResult>
+  readonly id: string
+  readonly provider: 'vercel' | 'cloudflare'
+  readonly supports: SandboxCapabilities
+
+  // Execute commands
+  exec: (cmd: string, args?: string[], opts?: SandboxExecOptions) => Promise<SandboxExecResult>
+
+  // File operations
   writeFile: (path: string, content: string) => Promise<void>
   readFile: (path: string) => Promise<string>
+  mkdir: (path: string, opts?: { recursive?: boolean }) => Promise<void>
+  readFileStream: (path: string) => Promise<ReadableStream<Uint8Array>>
+
+  // Background processes
+  startProcess: (cmd: string, args?: string[], opts?: ProcessOptions) => Promise<SandboxProcess>
+
+  // Lifecycle
   stop: () => Promise<void>
 }
+```
 
-interface SandboxExecResult {
-  ok: boolean
-  stdout: string
-  stderr: string
-  code: number | null
+### Capabilities
+
+Check provider support for optional features:
+
+```ts
+if (sandbox.supports.listFiles) {
+  const files = await sandbox.listFiles('/app')
 }
 ```
 
-## Types
+### Streaming Exec
+
+Execute commands with real-time output streaming:
 
 ```ts
-type SandboxProvider = 'vercel' | 'cloudflare'
-type SandboxType = 'docker' | 'cloudflare' | 'vercel' | 'none'
+const result = await sandbox.exec('npm', ['install'], {
+  cwd: '/app',
+  timeout: 60_000,
+  onStdout: data => console.log('[stdout]', data),
+  onStderr: data => console.error('[stderr]', data),
+})
+```
 
-interface SandboxDetection {
-  type: SandboxType
-  details?: Record<string, string>
-}
+### Background Processes
 
-interface SandboxOptions {
-  provider: SandboxProvider
-  runtime?: string
-  timeout?: number
-  memory?: number
-  cpu?: number
+Start long-running processes and interact with them:
+
+```ts
+const process = await sandbox.startProcess('npm', ['run', 'dev'])
+
+// Wait for server to start
+await process.waitForLog(/ready in \d+ms/)
+
+// Or wait for port
+await process.waitForPort(3000, { timeout: 30_000 })
+
+// Get logs
+const { stdout, stderr } = await process.logs()
+
+// Kill when done
+await process.kill()
+```
+
+### SandboxProcess Interface
+
+```ts
+interface SandboxProcess {
+  readonly id: string
+  readonly command: string
+
+  kill: (signal?: string) => Promise<void>
+  logs: () => Promise<{ stdout: string, stderr: string }>
+  wait: (timeout?: number) => Promise<{ exitCode: number }>
+  waitForLog: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
+  waitForPort: (port: number, opts?: WaitForPortOptions) => Promise<void>
 }
 ```
 
-## Example: Code Execution Agent
+## Provider-Specific Features
+
+Access provider-specific APIs through namespaces:
+
+::code-group
+```ts [Vercel]
+const sandbox = await createSandbox({
+  provider: { name: 'vercel' },
+})
+
+// Access Vercel-specific features
+const domain = sandbox.vercel.domain(3000)
+const metadata = sandbox.vercel.getMetadata()
+```
+
+```ts [Cloudflare]
+const sandbox = await createSandbox({
+  provider: { name: 'cloudflare', namespace: env.SANDBOX, getSandbox },
+})
+
+// Access Cloudflare-specific features
+const { url } = await sandbox.cloudflare.exposePort(8080, {
+  hostname: 'preview.example.com',
+})
+await sandbox.cloudflare.gitCheckout('https://github.com/user/repo')
+```
+::
+
+See [sandbox-vercel](/modules/sandbox-vercel) and [sandbox-cloudflare](/modules/sandbox-cloudflare) for provider-specific documentation.
+
+## Cloudflare-Only Methods
+
+These methods are fully supported on Cloudflare and throw `NotSupportedError` on Vercel:
 
 ```ts
-import { createSandbox, isSandboxAvailable } from 'unagent/sandbox'
+// File operations
+await sandbox.listFiles('/app') // Returns FileEntry[]
+await sandbox.exists('/app/file.txt') // Returns boolean
+await sandbox.deleteFile('/app/file.txt')
+await sandbox.moveFile('/app/a.txt', '/app/b.txt')
+```
 
-async function executeCode(code: string, language: 'javascript' | 'python') {
-  const provider = language === 'python' ? 'cloudflare' : 'vercel'
+## Type Inference
 
-  if (!isSandboxAvailable(provider)) {
-    throw new Error(`${provider} sandbox not available`)
+Factory overloads provide proper type inference:
+
+```ts
+// Typed as VercelSandbox
+const vercel = await createSandbox({
+  provider: { name: 'vercel' },
+})
+vercel.vercel.domain(3000) // ✓ typed
+
+// Typed as CloudflareSandbox
+const cf = await createSandbox({
+  provider: { name: 'cloudflare', namespace: env.SANDBOX, getSandbox },
+})
+cf.cloudflare.exposePort(8080, { hostname: 'preview.example.com' }) // ✓ typed
+```
+
+## Options
+
+### Vercel
+
+Provider-specific options apply only to their provider:
+
+```ts
+await createSandbox({
+  provider: { name: 'vercel', ports: [3000] },
+})
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | `'vercel'` | - | Provider name |
+| `runtime` | `string` | `'node24'` | Node.js runtime |
+| `timeout` | `number` | `300000` | Timeout in ms |
+| `cpu` | `number` | - | vCPU count |
+| `ports` | `number[]` | - | Ports to expose (enables `sandbox.vercel.domain(port)`) |
+
+### Cloudflare
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | `'cloudflare'` | - | Provider name |
+| `namespace` | `DurableObjectNamespace` | - | DO binding (required) |
+| `getSandbox` | `function` | auto | Optional override (auto-loaded from `@cloudflare/sandbox`) |
+| `sandboxId` | `string` | auto | Custom sandbox ID |
+| `cloudflare.sleepAfter` | `string\|number` | - | Auto-sleep duration |
+| `cloudflare.keepAlive` | `boolean` | - | Prevent auto-sleep |
+| `cloudflare.normalizeId` | `boolean` | - | Normalize sandbox IDs |
+
+## Error Handling
+
+```ts
+import { NotSupportedError, SandboxError } from 'unagent/sandbox'
+
+try {
+  await sandbox.listFiles('/app')
+}
+catch (e) {
+  if (e instanceof NotSupportedError) {
+    console.log('This feature is not supported on', e.message)
   }
+}
+```
 
+## Example: Code Execution Service
+
+```ts
+import { createSandbox } from 'unagent/sandbox'
+
+async function runCode(code: string, language: 'js' | 'python') {
   const sandbox = await createSandbox({
-    provider,
-    timeout: 30_000,
+    provider: { name: 'vercel', timeout: 30_000 },
   })
 
   try {
-    if (language === 'javascript') {
-      await sandbox.writeFile('/app/code.js', code)
-      return await sandbox.exec('node', ['/app/code.js'])
-    }
-    else {
-      await sandbox.writeFile('/app/code.py', code)
-      return await sandbox.exec('python', ['/app/code.py'])
-    }
+    const ext = language === 'python' ? 'py' : 'js'
+    const cmd = language === 'python' ? 'python3' : 'node'
+
+    await sandbox.writeFile(`/app/code.${ext}`, code)
+    return await sandbox.exec(cmd, [`/app/code.${ext}`])
   }
   finally {
     await sandbox.stop()

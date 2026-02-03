@@ -57,21 +57,21 @@
     "unstorage": { "optional": true }
   },
   "dependencies": {
-    "hookable": "catalog:",
-    "pathe": "catalog:",
-    "std-env": "catalog:",
-    "yaml": "catalog:"
+    "hookable": "catalog:prod",
+    "pathe": "catalog:prod",
+    "std-env": "catalog:prod",
+    "yaml": "catalog:prod"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "catalog:",
-    "@types/node": "catalog:",
-    "bumpp": "catalog:",
-    "eslint": "catalog:",
-    "lint-staged": "catalog:",
-    "simple-git-hooks": "catalog:",
-    "tsdown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "@antfu/eslint-config": "catalog:lint",
+    "@types/node": "catalog:types",
+    "bumpp": "catalog:script",
+    "eslint": "catalog:lint",
+    "lint-staged": "catalog:lint",
+    "simple-git-hooks": "catalog:lint",
+    "tsdown": "catalog:build",
+    "typescript": "catalog:types",
+    "vitest": "catalog:test"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

@@ -1,0 +1,17 @@
+{
+  "name": "unagent-playground",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "ba6e044dfdaaffec3cac45e9feccd237",
+  "containers": [{
+    "class_name": "Sandbox",
+    "image": "./Dockerfile.sandbox",
+    "instance_type": "lite",
+    "max_instances": 5
+  }],
+  "durable_objects": {
+    "bindings": [{ "name": "SANDBOX", "class_name": "Sandbox" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Sandbox"] }]
+}
