@@ -123,7 +123,7 @@ export class VercelWorkflowAdapter extends BaseWorkflowAdapter {
     return new VercelWorkflowRunAdapter(run)
   }
 
-  get vercel(): VercelWorkflowNamespace {
+  override get vercel(): VercelWorkflowNamespace {
     return { api: this.api, workflow: this.workflowDefinition }
   }
 }

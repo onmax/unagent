@@ -1,8 +1,10 @@
 import type { DurableObjectNamespaceLike } from 'unagent/sandbox'
+import type { VectorDocument, VectorizeIndexBinding, VectorSearchOptions } from 'unagent/vector'
 import type { CloudflareWorkflowBindingLike } from 'unagent/workflow'
 import { getSandbox, Sandbox } from '@cloudflare/sandbox'
 import { WorkflowEntrypoint } from 'cloudflare:workers'
 import { createSandbox } from 'unagent/sandbox'
+import { createCloudflareVectorAdapter } from 'unagent/vector/adapters/cloudflare'
 import { createWorkflow } from 'unagent/workflow'
 
 export { Sandbox }
@@ -10,6 +12,51 @@ export { Sandbox }
 interface Env {
   SANDBOX: DurableObjectNamespaceLike
   MY_WORKFLOW: CloudflareWorkflowBindingLike
+  VECTORIZE: VectorizeIndexBinding
+}
+
+const VECTOR_DIMENSIONS = 32
+
+const DEFAULT_VECTOR_DOCS: VectorDocument[] = [
+  { id: 'doc-1', content: 'Hello world from Unagent vector demo.', metadata: { tag: 'demo', source: 'playground' } },
+  { id: 'doc-2', content: 'Vector search lets you find similar text quickly.', metadata: { tag: 'demo', source: 'playground' } },
+  { id: 'doc-3', content: 'Cloudflare Vectorize works great with Workers.', metadata: { tag: 'cloudflare', source: 'playground' } },
+]
+
+function hashToVector(text: string): number[] {
+  const vec = new Float32Array(VECTOR_DIMENSIONS)
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    const idx = i % VECTOR_DIMENSIONS
+    vec[idx] += (code % 31) / 31
+  }
+  let norm = 0
+  for (let i = 0; i < vec.length; i++) {
+    norm += vec[i] * vec[i]
+  }
+  norm = Math.sqrt(norm) || 1
+  for (let i = 0; i < vec.length; i++) {
+    vec[i] = vec[i] / norm
+  }
+  return Array.from(vec)
+}
+
+const embeddings = {
+  async resolve() {
+    return {
+      embedder: async (texts: string[]) => texts.map(hashToVector),
+      dimensions: VECTOR_DIMENSIONS,
+    }
+  },
+}
+
+let vectorClientPromise: ReturnType<typeof createCloudflareVectorAdapter> | null = null
+
+function getVectorClient(env: Env): ReturnType<typeof createCloudflareVectorAdapter> {
+  if (!vectorClientPromise) {
+    vectorClientPromise = createCloudflareVectorAdapter(env.VECTORIZE, embeddings)
+  }
+  return vectorClientPromise
 }
 
 export class DemoWorkflow extends WorkflowEntrypoint {
@@ -90,11 +137,46 @@ export default {
     </div>
   </section>
 
+  <section>
+    <h2>Vector</h2>
+    <label for="vector-query">Query</label>
+    <input id="vector-query" type="text" value="hello world" />
+
+    <label for="vector-docs">Docs (JSON)</label>
+    <textarea id="vector-docs" rows="6">[
+  { "id": "doc-1", "content": "Hello world from Unagent vector demo.", "metadata": { "tag": "demo" } },
+  { "id": "doc-2", "content": "Vector search lets you find similar text quickly.", "metadata": { "tag": "demo" } },
+  { "id": "doc-3", "content": "Cloudflare Vectorize works great with Workers.", "metadata": { "tag": "cloudflare" } }
+]</textarea>
+
+    <label for="vector-options">Search Options (JSON)</label>
+    <textarea id="vector-options" rows="4">{
+  "limit": 5,
+  "returnContent": true,
+  "returnMetadata": true
+}</textarea>
+
+    <label for="vector-ids">IDs (comma-separated)</label>
+    <input id="vector-ids" type="text" value="doc-1,doc-2" />
+
+    <div class="buttons">
+      <button onclick="vectorIndex()">index</button>
+      <button onclick="vectorSearch()">search</button>
+      <button onclick="vectorRemove()">remove</button>
+      <button onclick="vectorClear()">clear</button>
+      <button onclick="call('/api/vector/supports')">supports</button>
+    </div>
+  </section>
+
   <div id="logs"></div>
   <script>
     const logs = document.getElementById('logs');
     const runIdInput = document.getElementById('workflow-run-id');
     const payloadInput = document.getElementById('workflow-payload');
+    const vectorQueryInput = document.getElementById('vector-query');
+    const vectorDocsInput = document.getElementById('vector-docs');
+    const vectorOptionsInput = document.getElementById('vector-options');
+    const vectorIdsInput = document.getElementById('vector-ids');
 
     async function call(endpoint, options = {}) {
       const time = new Date().toLocaleTimeString();
@@ -116,6 +198,14 @@ export default {
       }
     }
     function clearLogs() { logs.innerHTML = ''; }
+
+    async function postJson(endpoint, body) {
+      return call(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
 
     async function workflowStart() {
       let payload = {};
@@ -165,6 +255,40 @@ export default {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ runId })
       });
+    }
+
+    async function vectorIndex() {
+      let docs = [];
+      try {
+        docs = vectorDocsInput.value ? JSON.parse(vectorDocsInput.value) : [];
+      } catch (error) {
+        await postJson('/api/vector/index', { error: 'Invalid docs JSON: ' + error.message });
+        return;
+      }
+      await postJson('/api/vector/index', { docs });
+    }
+
+    async function vectorSearch() {
+      let options = {};
+      try {
+        options = vectorOptionsInput.value ? JSON.parse(vectorOptionsInput.value) : {};
+      } catch (error) {
+        await postJson('/api/vector/search', { error: 'Invalid options JSON: ' + error.message });
+        return;
+      }
+      const query = vectorQueryInput.value || '';
+      await postJson('/api/vector/search', { query, options });
+    }
+
+    async function vectorRemove() {
+      const ids = vectorIdsInput.value
+        ? vectorIdsInput.value.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+      await postJson('/api/vector/remove', { ids });
+    }
+
+    async function vectorClear() {
+      await postJson('/api/vector/clear', {});
     }
   </script>
 </body>
@@ -243,6 +367,27 @@ export default {
     // Workflow capabilities
     if (path === '/api/workflow/supports') {
       return handleWorkflowSupports(env)
+    }
+
+    // Vector supports
+    if (path === '/api/vector/supports') {
+      return handleVectorSupports(env)
+    }
+
+    if (path === '/api/vector/index') {
+      return handleVectorIndex(env, req)
+    }
+
+    if (path === '/api/vector/search') {
+      return handleVectorSearch(env, req)
+    }
+
+    if (path === '/api/vector/remove') {
+      return handleVectorRemove(env, req)
+    }
+
+    if (path === '/api/vector/clear') {
+      return handleVectorClear(env)
     }
 
     return new Response('Not found', { status: 404 })
@@ -663,6 +808,132 @@ async function handleWorkflowSupports(env: Env): Promise<Response> {
     return Response.json({
       provider: 'cloudflare',
       supports: workflow.supports,
+      elapsed: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    })
+  }
+  catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : String(error), elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 500 })
+  }
+}
+
+async function handleVectorSupports(env: Env): Promise<Response> {
+  const start = Date.now()
+  try {
+    const vector = await getVectorClient(env)
+    return Response.json({
+      provider: 'cloudflare',
+      supports: vector.supports,
+      elapsed: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    })
+  }
+  catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : String(error), elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 500 })
+  }
+}
+
+async function handleVectorIndex(env: Env, req: Request): Promise<Response> {
+  const start = Date.now()
+  try {
+    const body = await readJson(req)
+    const docsInput = Array.isArray(body?.docs) ? body.docs : Array.isArray(body) ? body : DEFAULT_VECTOR_DOCS
+    const docs: VectorDocument[] = docsInput.map((doc: any, idx: number) => ({
+      id: doc?.id ?? `doc-${idx + 1}`,
+      content: doc?.content ?? String(doc ?? ''),
+      metadata: doc?.metadata,
+    }))
+
+    const vector = await getVectorClient(env)
+    const result = await vector.index(docs)
+
+    return Response.json({
+      provider: 'cloudflare',
+      count: result.count,
+      ids: docs.map(d => d.id),
+      elapsed: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    })
+  }
+  catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : String(error), elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 500 })
+  }
+}
+
+async function handleVectorSearch(env: Env, req: Request): Promise<Response> {
+  const start = Date.now()
+  try {
+    const body = await readJson(req)
+    const query = typeof body?.query === 'string'
+      ? body.query
+      : typeof body?.q === 'string'
+        ? body.q
+        : 'hello world'
+
+    let options: VectorSearchOptions = {}
+    if (body?.options && typeof body.options === 'object') {
+      options = body.options
+    }
+    else if (body && typeof body === 'object') {
+      const { query: _query, q: _q, docs: _docs, ids: _ids, ...rest } = body
+      options = rest
+    }
+
+    const vector = await getVectorClient(env)
+    const results = await vector.search(query, options)
+
+    return Response.json({
+      provider: 'cloudflare',
+      query,
+      results,
+      elapsed: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    })
+  }
+  catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : String(error), elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 500 })
+  }
+}
+
+async function handleVectorRemove(env: Env, req: Request): Promise<Response> {
+  const start = Date.now()
+  try {
+    const body = await readJson(req)
+    const ids = Array.isArray(body?.ids) ? body.ids : Array.isArray(body) ? body : []
+
+    if (!ids.length) {
+      return Response.json({ error: 'Missing ids', elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 400 })
+    }
+
+    const vector = await getVectorClient(env)
+    if (!vector.remove) {
+      return Response.json({ error: 'remove() is not supported', elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 400 })
+    }
+
+    const result = await vector.remove(ids)
+    return Response.json({
+      provider: 'cloudflare',
+      count: result.count,
+      elapsed: Date.now() - start,
+      timestamp: new Date().toISOString(),
+    })
+  }
+  catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : String(error), elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 500 })
+  }
+}
+
+async function handleVectorClear(env: Env): Promise<Response> {
+  const start = Date.now()
+  try {
+    const vector = await getVectorClient(env)
+    if (!vector.clear) {
+      return Response.json({ error: 'clear() is not supported', elapsed: Date.now() - start, timestamp: new Date().toISOString() }, { status: 400 })
+    }
+    await vector.clear()
+    return Response.json({
+      provider: 'cloudflare',
+      cleared: true,
       elapsed: Date.now() - start,
       timestamp: new Date().toISOString(),
     })
