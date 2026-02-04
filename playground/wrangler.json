@@ -13,5 +13,14 @@
   "durable_objects": {
     "bindings": [{ "name": "SANDBOX", "class_name": "Sandbox" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Sandbox"] }]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Sandbox"] }],
+  "workflows": [{
+    "name": "unagent-playground-workflow",
+    "binding": "MY_WORKFLOW",
+    "class_name": "DemoWorkflow"
+  }],
+  "vectorize": [{
+    "binding": "VECTORIZE",
+    "index_name": "unagent-playground-vector"
+  }]
 }

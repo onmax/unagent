@@ -1,0 +1,60 @@
+---
+icon: i-simple-icons-cloudflare
+---
+
+# vector-cloudflare
+
+Cloudflare Vectorize provider for `unagent/vector`.
+
+## Setup
+
+```ts
+import { createVector } from 'unagent/vector'
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const vector = await createVector({
+  provider: {
+    name: 'cloudflare',
+    binding: env.VECTORIZE,
+    embeddings: openai({ model: 'text-embedding-3-small' }),
+  },
+})
+```
+
+## Namespace
+
+```ts
+const binding = vector.cloudflare.binding
+```
+
+## Limitations
+
+- `clear()` is not supported by Vectorize (use Wrangler CLI).
+
+## Playground + Vectorize
+
+1. Create the Vectorize index with matching dimensions and metric:
+
+```bash
+wrangler vectorize create unagent-playground-vector --dimensions=32 --metric=cosine
+```
+
+2. Ensure `playground/wrangler.json` includes:
+
+```json
+{
+  "vectorize": [{ "binding": "VECTORIZE", "index_name": "unagent-playground-vector" }]
+}
+```
+
+3. Deploy the worker and run the optional smoke test:
+
+```bash
+VECTORIZE_TEST_URL=https://your-worker.example.workers.dev pnpm playground:vectorize:smoke
+```
+
+Or run the full e2e harness (will include Cloudflare if `VECTORIZE_TEST_URL` is set):
+
+```bash
+VECTORIZE_TEST_URL=https://your-worker.example.workers.dev pnpm playground:vector:e2e
+```

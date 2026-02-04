@@ -1,0 +1,280 @@
+---
+icon: i-lucide-vector-square
+---
+
+# vector
+
+Unified vector database adapters with a text-first API and optional embeddings.
+
+```ts
+import { createVector } from 'unagent/vector'
+```
+
+## Installation
+
+Install `unagent` and the provider SDK(s) you need:
+
+::code-group
+```bash [Cloudflare]
+pnpm add unagent
+```
+```bash [Upstash]
+pnpm add unagent @upstash/vector
+```
+```bash [Pinecone]
+pnpm add unagent @pinecone-database/pinecone
+```
+```bash [Qdrant]
+pnpm add unagent @qdrant/js-client-rest
+```
+```bash [Weaviate]
+pnpm add unagent weaviate-client
+```
+```bash [pgvector]
+pnpm add unagent pg
+```
+```bash [libsql]
+pnpm add unagent @libsql/client
+```
+```bash [sqlite-vec]
+pnpm add unagent sqlite-vec
+```
+::
+
+If you use built-in embedding adapters, also install their SDKs (see Embeddings below).
+
+## Quick Start
+
+### Cloudflare Vectorize
+
+```ts
+import { createVector } from 'unagent/vector'
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const vector = await createVector({
+  provider: {
+    name: 'cloudflare',
+    binding: env.VECTORIZE,
+    embeddings: openai({ model: 'text-embedding-3-small' }),
+  },
+})
+
+await vector.index([{ id: '1', content: 'hello world' }])
+const results = await vector.search('hello', { limit: 5, returnContent: true })
+```
+
+### Upstash Vector
+
+```ts
+import { createVector } from 'unagent/vector'
+
+const vector = await createVector({
+  provider: {
+    name: 'upstash',
+    url: process.env.UPSTASH_VECTOR_URL!,
+    token: process.env.UPSTASH_VECTOR_TOKEN!,
+    namespace: 'chunks',
+  },
+})
+
+await vector.index([{ id: '1', content: 'hello world' }])
+const results = await vector.search('hello')
+```
+
+### pgvector
+
+```ts
+import { createVector } from 'unagent/vector'
+import { ollama } from 'unagent/vector/embeddings/ollama'
+
+const vector = await createVector({
+  provider: {
+    name: 'pgvector',
+    url: process.env.DATABASE_URL!,
+    embeddings: ollama({ model: 'nomic-embed-text' }),
+    metric: 'cosine',
+  },
+})
+```
+
+### libsql / Turso
+
+```ts
+import { createVector } from 'unagent/vector'
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const vector = await createVector({
+  provider: {
+    name: 'libsql',
+    url: 'libsql://your-db.turso.io',
+    authToken: process.env.TURSO_AUTH_TOKEN,
+    embeddings: openai(),
+  },
+})
+```
+
+### sqlite-vec (Node 22.5+)
+
+```ts
+import { createVector } from 'unagent/vector'
+import { transformersJs } from 'unagent/vector/embeddings/transformers-js'
+
+const vector = await createVector({
+  provider: {
+    name: 'sqlite-vec',
+    path: 'vectors.db',
+    embeddings: transformersJs({ model: 'bge-small-en-v1.5' }),
+  },
+})
+```
+
+### Pinecone
+
+```ts
+import { createVector } from 'unagent/vector'
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const vector = await createVector({
+  provider: {
+    name: 'pinecone',
+    apiKey: process.env.PINECONE_API_KEY!,
+    host: process.env.PINECONE_HOST!,
+    namespace: 'chunks',
+    embeddings: openai({ model: 'text-embedding-3-small' }),
+  },
+})
+```
+
+### Qdrant
+
+```ts
+import { createVector } from 'unagent/vector'
+import { ollama } from 'unagent/vector/embeddings/ollama'
+
+const vector = await createVector({
+  provider: {
+    name: 'qdrant',
+    url: 'http://localhost:6333',
+    collection: 'vectors',
+    embeddings: ollama({ model: 'nomic-embed-text' }),
+  },
+})
+```
+
+### Weaviate
+
+```ts
+import { createVector } from 'unagent/vector'
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const vector = await createVector({
+  provider: {
+    name: 'weaviate',
+    host: 'localhost',
+    port: 8080,
+    grpcPort: 50051,
+    embeddings: openai(),
+  },
+})
+```
+
+## VectorClient API
+
+```ts
+interface VectorClient {
+  readonly provider: 'cloudflare' | 'upstash' | 'pgvector' | 'libsql' | 'sqlite-vec' | 'pinecone' | 'qdrant' | 'weaviate'
+  readonly supports: VectorCapabilities
+
+  index: (docs: VectorDocument[]) => Promise<{ count: number }>
+  search: (query: string, options?: VectorSearchOptions) => Promise<VectorSearchResult[]>
+  remove?: (ids: string[]) => Promise<{ count: number }>
+  clear?: () => Promise<void>
+  close?: () => Promise<void>
+}
+```
+
+### Capabilities
+
+```ts
+if (vector.supports.clear) {
+  await vector.clear?.()
+}
+```
+
+## Search Options
+
+```ts
+const results = await vector.search('hello', {
+  limit: 10,
+  returnContent: true,
+  returnMetadata: true,
+  returnMeta: true,
+  filter: { tag: 'demo' },
+})
+```
+
+- `returnContent`: includes a snippet in `result.content`.
+- `returnMetadata`: includes `result.metadata` if available.
+- `returnMeta`: enables `_meta.highlights` when `returnContent` is true.
+
+## Embeddings
+
+### Custom EmbeddingConfig
+
+```ts
+import type { EmbeddingConfig } from 'unagent/vector'
+
+const embeddings: EmbeddingConfig = {
+  async resolve() {
+    return {
+      dimensions: 8,
+      embedder: async texts => texts.map(() => [0, 0, 0, 0, 0, 0, 0, 0]),
+    }
+  },
+}
+```
+
+### Built-in adapters
+
+- `openai`
+- `cohere`
+- `google`
+- `mistral`
+- `ollama`
+- `transformersJs`
+
+```ts
+import { openai } from 'unagent/vector/embeddings/openai'
+
+const embeddings = openai({ model: 'text-embedding-3-small' })
+```
+
+## E2E Testing
+
+Run the playground-backed e2e harness (skips providers missing env/deps):
+
+```bash
+pnpm playground:vector:e2e
+```
+
+### Required env vars (optional per provider)
+
+| Provider | Env vars |
+| --- | --- |
+| Cloudflare | `VECTORIZE_TEST_URL` |
+| Upstash | `UPSTASH_VECTOR_URL`/`UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_TOKEN`/`UPSTASH_VECTOR_REST_TOKEN` |
+| Pinecone | `PINECONE_API_KEY`, `PINECONE_HOST` (or `PINECONE_INDEX`) |
+| Qdrant | `QDRANT_URL` (or set `VECTOR_E2E_DOCKER=1`) |
+| Weaviate | `WEAVIATE_URL` (or set `VECTOR_E2E_DOCKER=1`) |
+| pgvector | `PGVECTOR_URL` (or set `VECTOR_E2E_DOCKER=1`) |
+| libsql | `LIBSQL_URL` (optional, defaults to local file) |
+| sqlite-vec | `SQLITE_VEC_PATH` (optional, defaults to local file) |
+
+Note: the Dockerized compose binds `5433` (pgvector), `6333` (qdrant), and `8080/50051` (weaviate) on localhost. Override with env vars if you prefer different ports.
+
+Example with Dockerized pgvector and Cloudflare worker:
+
+```bash
+VECTOR_E2E_DOCKER=1 VECTORIZE_TEST_URL=https://your-worker.example.workers.dev pnpm playground:vector:e2e
+```
+See provider-specific docs for details.

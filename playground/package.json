@@ -3,6 +3,9 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "next build",
+    "start": "next start",
+    "dev:next": "next dev",
     "dev:vercel": "vercel dev",
     "deploy:vercel": "vercel deploy",
     "dev:cf": "wrangler dev",
@@ -11,7 +14,11 @@
   "dependencies": {
     "@cloudflare/sandbox": "catalog:sandbox",
     "@vercel/sandbox": "catalog:sandbox",
-    "unagent": "workspace:*"
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "unagent": "workspace:*",
+    "workflow": "catalog:"
   },
   "devDependencies": {
     "@vercel/node": "catalog:sandbox"

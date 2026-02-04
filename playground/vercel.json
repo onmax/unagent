@@ -1,8 +1,6 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
   "installCommand": "cd .. && pnpm install",
-  "buildCommand": "cd .. && pnpm build",
-  "outputDirectory": ".",
-  "functions": {
-    "api/*.ts": { "maxDuration": 60 }
-  }
+  "buildCommand": "cd .. && pnpm build && cd playground && pnpm build"
 }
