@@ -32,6 +32,8 @@ if (agent) {
 // Discover skills
 const skills = discoverSkills('~/.claude/skills', { recursive: true })
 
+// The ".agents/skills" directory may also be supported for some agents.
+
 // Parse source strings
 parseSource('unjs/unagent') // github
 parseSource('github:user/repo#main') // github with ref

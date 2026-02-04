@@ -132,6 +132,8 @@ for (const skill of skills) {
 }
 ```
 
+The `.agents/skills` directory may also be supported for some agents.
+
 ### filterSkills
 
 This function filters skills by name, description, or tags.

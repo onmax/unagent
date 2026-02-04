@@ -3,6 +3,7 @@ export interface AgentConfig {
   configDir: string
   rulesFile?: string
   skillsDir?: string
+  legacySkillsDirs?: string[]
   envDetect?: string[]
   description?: string
 }
@@ -13,6 +14,7 @@ export const agents: Record<string, AgentConfig> = {
     configDir: '~/.claude',
     rulesFile: 'CLAUDE.md',
     skillsDir: 'skills',
+    legacySkillsDirs: ['.agents/skills'],
     envDetect: ['CLAUDE_CODE', 'CLAUDE_CODE_ENTRY'],
     description: 'Anthropic\'s official CLI for Claude',
   },
@@ -87,6 +89,7 @@ export const agents: Record<string, AgentConfig> = {
     configDir: '~/.amp',
     rulesFile: 'amp.md',
     skillsDir: 'skills',
+    legacySkillsDirs: ['.agents/skills'],
     envDetect: ['AMP_SESSION'],
     description: 'Sourcegraph\'s AI coding agent',
   },
