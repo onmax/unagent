@@ -82,20 +82,20 @@ export class UpstashVectorAdapter extends BaseVectorAdapter {
     return mapped.slice(0, limit)
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.indexClient.delete(ids, { namespace: this.namespace })
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.indexClient.reset({ namespace: this.namespace })
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     // no-op
   }
 
-  get upstash(): UpstashVectorNamespace {
+  override get upstash(): UpstashVectorNamespace {
     return { index: this.indexClient, namespace: this.namespace }
   }
 }

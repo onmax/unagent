@@ -157,7 +157,7 @@ export class CloudflareWorkflowAdapter extends BaseWorkflowAdapter {
     return new CloudflareWorkflowRunAdapter(instance)
   }
 
-  async startBatch(items: WorkflowBatchItem[]): Promise<WorkflowRun[]> {
+  override async startBatch(items: WorkflowBatchItem[]): Promise<WorkflowRun[]> {
     if (!this.binding.createBatch) {
       throw new NotSupportedError('startBatch', 'cloudflare')
     }
@@ -173,7 +173,7 @@ export class CloudflareWorkflowAdapter extends BaseWorkflowAdapter {
     return new CloudflareWorkflowRunAdapter(instance)
   }
 
-  get cloudflare(): CloudflareWorkflowNamespace {
+  override get cloudflare(): CloudflareWorkflowNamespace {
     return { binding: this.binding }
   }
 }

@@ -101,20 +101,20 @@ export class PineconeVectorAdapter extends BaseVectorAdapter {
     return mapped.slice(0, limit)
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.indexClient.deleteMany({ ids, namespace: this.namespace })
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.indexClient.deleteAll({ namespace: this.namespace })
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     // no-op
   }
 
-  get pinecone(): PineconeNamespace {
+  override get pinecone(): PineconeNamespace {
     return { index: this.indexClient, namespace: this.namespace }
   }
 }

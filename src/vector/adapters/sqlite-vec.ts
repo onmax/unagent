@@ -174,7 +174,7 @@ export class SqliteVecAdapter extends BaseVectorAdapter {
     }).filter(Boolean) as VectorSearchResult[]
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     this.db.prepare('BEGIN').run()
 
     try {
@@ -195,16 +195,16 @@ export class SqliteVecAdapter extends BaseVectorAdapter {
     }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     this.db.exec('DELETE FROM vectors')
     this.db.exec('DELETE FROM vector_metadata')
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     this.db.close?.()
   }
 
-  get sqliteVec(): SqliteVecNamespace {
+  override get sqliteVec(): SqliteVecNamespace {
     return { db: this.db }
   }
 }

@@ -181,23 +181,23 @@ export class WeaviateVectorAdapter extends BaseVectorAdapter {
     return mapped.slice(0, limit)
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.ensureCollection()
     const collection = this.client.collections.get(this.collection)
     await Promise.all(ids.map(id => collection.data.deleteById(this.normalizeId(id))))
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.client.collections.delete(this.collection)
     this.ready = false
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     await this.client.close()
   }
 
-  get weaviate(): WeaviateNamespace {
+  override get weaviate(): WeaviateNamespace {
     return { client: this.client, collection: this.collection }
   }
 }

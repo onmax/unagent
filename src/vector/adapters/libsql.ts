@@ -117,7 +117,7 @@ export class LibsqlAdapter extends BaseVectorAdapter {
     })
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     for (const id of ids) {
       await this.client.execute({
         sql: 'DELETE FROM vectors WHERE id = ?',
@@ -127,15 +127,15 @@ export class LibsqlAdapter extends BaseVectorAdapter {
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.client.execute('DELETE FROM vectors')
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     this.client.close()
   }
 
-  get libsql(): LibsqlNamespace {
+  override get libsql(): LibsqlNamespace {
     return { client: this.client }
   }
 }

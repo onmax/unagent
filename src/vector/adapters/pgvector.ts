@@ -138,7 +138,7 @@ export class PgvectorAdapter extends BaseVectorAdapter {
     })
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.pool.query(
       `DELETE FROM ${this.table} WHERE id = ANY($1)`,
       [ids],
@@ -146,15 +146,15 @@ export class PgvectorAdapter extends BaseVectorAdapter {
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.pool.query(`DELETE FROM ${this.table}`)
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     await this.pool.end()
   }
 
-  get pgvector(): PgvectorNamespace {
+  override get pgvector(): PgvectorNamespace {
     return { pool: this.pool }
   }
 }

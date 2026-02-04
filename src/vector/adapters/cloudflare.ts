@@ -97,16 +97,16 @@ export class CloudflareVectorAdapter extends BaseVectorAdapter {
     return mapped.slice(0, limit)
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.binding.deleteByIds(ids)
     return { count: ids.length }
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     // no-op
   }
 
-  get cloudflare(): CloudflareVectorNamespace {
+  override get cloudflare(): CloudflareVectorNamespace {
     return { binding: this.binding }
   }
 }

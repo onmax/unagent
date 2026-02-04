@@ -149,22 +149,22 @@ export class QdrantVectorAdapter extends BaseVectorAdapter {
     return mapped.slice(0, limit)
   }
 
-  async remove(ids: string[]): Promise<{ count: number }> {
+  override async remove(ids: string[]): Promise<{ count: number }> {
     await this.ensureCollection()
     await this.client.delete(this.collection, { points: ids.map(id => this.normalizeId(id)) })
     return { count: ids.length }
   }
 
-  async clear(): Promise<void> {
+  override async clear(): Promise<void> {
     await this.client.deleteCollection(this.collection)
     this.ready = false
   }
 
-  async close(): Promise<void> {
+  override async close(): Promise<void> {
     // no-op
   }
 
-  get qdrant(): QdrantNamespace {
+  override get qdrant(): QdrantNamespace {
     return { client: this.client, collection: this.collection }
   }
 }
