@@ -5,7 +5,7 @@
 
 Unified primitives for AI coding agents.
 
-- Detect 45+ AI coding agents by env vars or config
+- Detect 40+ AI coding agents by env vars or config
 - Discover and parse markdown-based skill files
 - Parse GitHub/GitLab URLs, owner/repo shortcuts, local paths
 - Clone repos, manage temp dirs, check git status
@@ -42,7 +42,9 @@ parseSource('./local/path') // local
 
 ## Documentation
 
-[unagent.onmax.me](https://unagent.onmax.me)
+- [Docs home](https://unagent.unjs.io)
+- [Getting started](https://unagent.unjs.io/guide)
+- [Modules](https://unagent.unjs.io/modules)
 
 ## License
 

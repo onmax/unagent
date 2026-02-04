@@ -10,8 +10,13 @@ catalogs:
   build:
     tsdown: ^0.15.0
   docs:
+    '@iconify-json/ph': ^1.2.2
+    '@iconify-json/simple-icons': ^1.2.69
+    '@iconify-json/vscode-icons': ^1.2.40
+    '@nuxtjs/mdc': ^0.20.0
     nuxt: ^4.3.0
     undocs: ^0.4.16
+    unist-util-visit: ^5.1.0
   lint:
     '@antfu/eslint-config': ^4.0.0
     eslint: ^9.0.0

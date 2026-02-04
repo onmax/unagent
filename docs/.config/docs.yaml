@@ -33,3 +33,6 @@ landing:
     - title: Git Operations
       description: 'Clone repos, manage temp dirs, check status'
       icon: i-lucide-git-branch
+redirects:
+  /blog: /
+  /blog/**: /
