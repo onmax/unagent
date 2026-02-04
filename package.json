@@ -8,34 +8,120 @@
   "license": "MIT",
   "funding": "https://github.com/sponsors/onmax",
   "homepage": "https://unagent.onmax.me",
-  "repository": { "type": "git", "url": "https://github.com/onmax/unagent" },
-  "keywords": ["unjs", "agent", "ai", "skills", "claude", "cursor", "windsurf"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/onmax/unagent"
+  },
+  "keywords": [
+    "unjs",
+    "agent",
+    "ai",
+    "skills",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./context": { "types": "./dist/context/index.d.ts", "default": "./dist/context/index.js" },
-    "./env": { "types": "./dist/env/index.d.ts", "default": "./dist/env/index.js" },
-    "./exec": { "types": "./dist/exec/index.d.ts", "default": "./dist/exec/index.js" },
-    "./fs": { "types": "./dist/fs/index.d.ts", "default": "./dist/fs/index.js" },
-    "./git": { "types": "./dist/git/index.d.ts", "default": "./dist/git/index.js" },
-    "./hooks": { "types": "./dist/hooks/index.d.ts", "default": "./dist/hooks/index.js" },
-    "./link": { "types": "./dist/link/index.d.ts", "default": "./dist/link/index.js" },
-    "./lock": { "types": "./dist/lock/index.d.ts", "default": "./dist/lock/index.js" },
-    "./registry": { "types": "./dist/registry/index.d.ts", "default": "./dist/registry/index.js" },
-    "./sandbox": { "types": "./dist/sandbox/index.d.ts", "default": "./dist/sandbox/index.js" },
-    "./workflow": { "types": "./dist/workflow/index.d.ts", "default": "./dist/workflow/index.js" },
-    "./skill": { "types": "./dist/skill/index.d.ts", "default": "./dist/skill/index.js" },
-    "./source": { "types": "./dist/source/index.d.ts", "default": "./dist/source/index.js" },
-    "./stop": { "types": "./dist/stop/index.d.ts", "default": "./dist/stop/index.js" },
-    "./stream": { "types": "./dist/stream/index.d.ts", "default": "./dist/stream/index.js" },
-    "./tool": { "types": "./dist/tool/index.d.ts", "default": "./dist/tool/index.js" },
-    "./usage": { "types": "./dist/usage/index.d.ts", "default": "./dist/usage/index.js" },
-    "./utils": { "types": "./dist/utils/index.d.ts", "default": "./dist/utils/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./context": {
+      "types": "./dist/context/index.d.ts",
+      "default": "./dist/context/index.js"
+    },
+    "./env": {
+      "types": "./dist/env/index.d.ts",
+      "default": "./dist/env/index.js"
+    },
+    "./exec": {
+      "types": "./dist/exec/index.d.ts",
+      "default": "./dist/exec/index.js"
+    },
+    "./fs": {
+      "types": "./dist/fs/index.d.ts",
+      "default": "./dist/fs/index.js"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.ts",
+      "default": "./dist/git/index.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "default": "./dist/hooks/index.js"
+    },
+    "./link": {
+      "types": "./dist/link/index.d.ts",
+      "default": "./dist/link/index.js"
+    },
+    "./lock": {
+      "types": "./dist/lock/index.d.ts",
+      "default": "./dist/lock/index.js"
+    },
+    "./registry": {
+      "types": "./dist/registry/index.d.ts",
+      "default": "./dist/registry/index.js"
+    },
+    "./sandbox": {
+      "types": "./dist/sandbox/index.d.ts",
+      "default": "./dist/sandbox/index.js"
+    },
+    "./workflow": {
+      "types": "./dist/workflow/index.d.ts",
+      "default": "./dist/workflow/index.js"
+    },
+    "./skill": {
+      "types": "./dist/skill/index.d.ts",
+      "default": "./dist/skill/index.js"
+    },
+    "./source": {
+      "types": "./dist/source/index.d.ts",
+      "default": "./dist/source/index.js"
+    },
+    "./stop": {
+      "types": "./dist/stop/index.d.ts",
+      "default": "./dist/stop/index.js"
+    },
+    "./stream": {
+      "types": "./dist/stream/index.d.ts",
+      "default": "./dist/stream/index.js"
+    },
+    "./tool": {
+      "types": "./dist/tool/index.d.ts",
+      "default": "./dist/tool/index.js"
+    },
+    "./usage": {
+      "types": "./dist/usage/index.d.ts",
+      "default": "./dist/usage/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
+    },
+    "./vector": {
+      "types": "./dist/vector/index.d.ts",
+      "default": "./dist/vector/index.js"
+    },
+    "./vector/adapters/*": {
+      "types": "./dist/vector/adapters/*.d.ts",
+      "default": "./dist/vector/adapters/*.js"
+    },
+    "./vector/embeddings": {
+      "types": "./dist/vector/embeddings/index.d.ts",
+      "default": "./dist/vector/embeddings/index.js"
+    },
+    "./vector/embeddings/*": {
+      "types": "./dist/vector/embeddings/*.d.ts",
+      "default": "./dist/vector/embeddings/*.js"
+    }
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -43,19 +129,83 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
+    "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "release": "bumpp",
     "prepare": "simple-git-hooks",
     "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {
+    "@ai-sdk/cohere": ">=0.0.0",
+    "@ai-sdk/google": ">=0.0.0",
+    "@ai-sdk/mistral": ">=0.0.0",
+    "@ai-sdk/openai": ">=0.0.0",
     "@cloudflare/sandbox": ">=0.1.0",
+    "@huggingface/transformers": ">=0.0.0",
+    "@libsql/client": ">=0.0.0",
+    "@pinecone-database/pinecone": ">=0.0.0",
+    "@qdrant/js-client-rest": ">=0.0.0",
+    "@upstash/vector": ">=1.0.0",
     "@vercel/sandbox": ">=0.1.0",
-    "unstorage": ">=1.10.0"
+    "ai": ">=3.0.0",
+    "ollama-ai-provider-v2": ">=0.0.0",
+    "pg": ">=8.0.0",
+    "sqlite-vec": ">=0.0.0",
+    "unstorage": ">=1.10.0",
+    "weaviate-client": ">=0.0.0"
   },
   "peerDependenciesMeta": {
-    "@cloudflare/sandbox": { "optional": true },
-    "@vercel/sandbox": { "optional": true },
-    "unstorage": { "optional": true }
+    "@ai-sdk/cohere": {
+      "optional": true
+    },
+    "@ai-sdk/google": {
+      "optional": true
+    },
+    "@ai-sdk/mistral": {
+      "optional": true
+    },
+    "@ai-sdk/openai": {
+      "optional": true
+    },
+    "@cloudflare/sandbox": {
+      "optional": true
+    },
+    "@huggingface/transformers": {
+      "optional": true
+    },
+    "@libsql/client": {
+      "optional": true
+    },
+    "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@qdrant/js-client-rest": {
+      "optional": true
+    },
+    "@upstash/vector": {
+      "optional": true
+    },
+    "@vercel/sandbox": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    },
+    "ollama-ai-provider-v2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "sqlite-vec": {
+      "optional": true
+    },
+    "unstorage": {
+      "optional": true
+    },
+    "weaviate-client": {
+      "optional": true
+    }
   },
   "dependencies": {
     "hookable": "catalog:prod",
@@ -65,14 +215,21 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:lint",
+    "@libsql/client": "catalog:vector",
+    "@pinecone-database/pinecone": "catalog:vector",
+    "@qdrant/js-client-rest": "catalog:vector",
     "@types/node": "catalog:types",
+    "@upstash/vector": "catalog:vector",
     "bumpp": "catalog:script",
     "eslint": "catalog:lint",
     "lint-staged": "catalog:lint",
+    "pg": "catalog:vector",
     "simple-git-hooks": "catalog:lint",
+    "sqlite-vec": "catalog:vector",
     "tsdown": "catalog:build",
     "typescript": "catalog:types",
-    "vitest": "catalog:test"
+    "vitest": "catalog:test",
+    "weaviate-client": "catalog:vector"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

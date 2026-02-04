@@ -56,6 +56,18 @@ describe('sandbox/detectSandbox', () => {
 })
 
 describe('sandbox/isSandboxAvailable', () => {
+  const originalRequire = (globalThis as { require?: { resolve?: (id: string) => string } }).require
+
+  beforeEach(() => {
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: (id: string) => id,
+    }
+  })
+
+  afterEach(() => {
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = originalRequire
+  })
+
   it('returns true for vercel when package installed', () => {
     expect(isSandboxAvailable('vercel')).toBe(true)
   })

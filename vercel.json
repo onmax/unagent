@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm -C docs build",
+  "outputDirectory": "docs/.docs/.output/public",
+  "framework": null
+}

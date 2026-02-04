@@ -23,8 +23,7 @@ export function detectWorkflow(): WorkflowDetectionResult {
 export function isWorkflowAvailable(provider: WorkflowProvider): boolean {
   if (provider === 'vercel') {
     try {
-      const globalResolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
-      const resolver = globalResolver ?? (typeof require !== 'undefined' ? require.resolve : undefined)
+      const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
       if (!resolver)
         return false
       resolver('workflow/api')
@@ -59,20 +58,9 @@ async function resolveModulePath(moduleName: string): Promise<string> {
   }
 
   try {
-    if (typeof require !== 'undefined' && require.resolve) {
-      return require.resolve(moduleName)
-    }
-  }
-  catch {
-    // ignore
-  }
-
-  try {
-    if (typeof process !== 'undefined') {
-      const { createRequire } = await import('node:module')
-      const resolver = createRequire(import.meta.url)
-      return resolver.resolve(moduleName, { paths: [process.cwd()] })
-    }
+    const resolver = (import.meta as { resolve?: (id: string) => string }).resolve
+    if (resolver)
+      return resolver(moduleName)
   }
   catch {
     // ignore

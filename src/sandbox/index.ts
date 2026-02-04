@@ -23,12 +23,15 @@ export function detectSandbox(): SandboxDetectionResult {
 
 export function isSandboxAvailable(provider: 'vercel' | 'cloudflare'): boolean {
   try {
+    const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
+    if (!resolver)
+      return false
     if (provider === 'vercel') {
-      require.resolve('@vercel/sandbox')
+      resolver('@vercel/sandbox')
       return true
     }
     if (provider === 'cloudflare') {
-      require.resolve('@cloudflare/sandbox')
+      resolver('@cloudflare/sandbox')
       return true
     }
   }
