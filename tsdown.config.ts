@@ -13,6 +13,7 @@ export default defineConfig({
     'src/lock/index.ts',
     'src/registry/index.ts',
     'src/sandbox/index.ts',
+    'src/workflow/index.ts',
     'src/skill/index.ts',
     'src/source/index.ts',
     'src/stop/index.ts',

@@ -23,6 +23,7 @@
     "./lock": { "types": "./dist/lock/index.d.ts", "default": "./dist/lock/index.js" },
     "./registry": { "types": "./dist/registry/index.d.ts", "default": "./dist/registry/index.js" },
     "./sandbox": { "types": "./dist/sandbox/index.d.ts", "default": "./dist/sandbox/index.js" },
+    "./workflow": { "types": "./dist/workflow/index.d.ts", "default": "./dist/workflow/index.js" },
     "./skill": { "types": "./dist/skill/index.d.ts", "default": "./dist/skill/index.js" },
     "./source": { "types": "./dist/source/index.d.ts", "default": "./dist/source/index.js" },
     "./stop": { "types": "./dist/stop/index.d.ts", "default": "./dist/stop/index.js" },
