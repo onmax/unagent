@@ -1,13 +1,15 @@
 import type { WorkflowClient, WorkflowDetectionResult, WorkflowOptions, WorkflowProvider, WorkflowProviderOptions } from './types'
 import type { CloudflareWorkflowProviderOptions } from './types/cloudflare'
+import type { OpenWorkflowProviderOptions } from './types/openworkflow'
 import type { VercelWorkflowAPI, VercelWorkflowProviderOptions } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
-import { assertCloudflareBinding, CloudflareWorkflowAdapter, VercelWorkflowAdapter } from './adapters'
+import { assertCloudflareBinding, CloudflareWorkflowAdapter, OpenWorkflowAdapter, VercelWorkflowAdapter } from './adapters'
 import { WorkflowError } from './errors'
 
 export { NotSupportedError, WorkflowError } from './errors'
-export type { WorkflowBatchItem, WorkflowCapabilities, WorkflowClient, WorkflowDetectionResult, WorkflowOptions, WorkflowProvider, WorkflowProviderOptions, WorkflowRun, WorkflowRunState, WorkflowRunStatus, WorkflowStartOptions } from './types'
+export type { WorkflowBatchItem, WorkflowCapabilities, WorkflowClient, WorkflowDetectionResult, WorkflowOptions, WorkflowProvider, WorkflowProviderOptions, WorkflowResultOptions, WorkflowRun, WorkflowRunState, WorkflowRunStatus, WorkflowStartOptions } from './types'
 export type { CloudflareWorkflowBindingLike, CloudflareWorkflowInstanceLike, CloudflareWorkflowNamespace, CloudflareWorkflowProviderOptions, CloudflareWorkflowStatusLike } from './types/cloudflare'
+export type { OpenWorkflowNamespace, OpenWorkflowProviderOptions, OpenWorkflowRunLike, OpenWorkflowWorkflowLike } from './types/openworkflow'
 export type { VercelWorkflowAPI, VercelWorkflowNamespace, VercelWorkflowProviderOptions, VercelWorkflowRunLike, VercelWorkflowStartOptions } from './types/vercel'
 
 export function detectWorkflow(): WorkflowDetectionResult {
@@ -42,6 +44,19 @@ export function isWorkflowAvailable(provider: WorkflowProvider): boolean {
         return true
     }
     return false
+  }
+
+  if (provider === 'openworkflow') {
+    try {
+      const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
+      if (!resolver)
+        return false
+      resolver('openworkflow')
+      return true
+    }
+    catch {
+      return false
+    }
   }
 
   return false
@@ -130,6 +145,14 @@ export async function createWorkflow(options: WorkflowOptions = {}): Promise<Wor
     const { binding } = resolved as CloudflareWorkflowProviderOptions
     assertCloudflareBinding(binding)
     return new CloudflareWorkflowAdapter(binding)
+  }
+
+  if (resolved.name === 'openworkflow') {
+    const { workflow, ow, getRun } = resolved as OpenWorkflowProviderOptions
+    if (!workflow) {
+      throw new WorkflowError('OpenWorkflow workflow definition is required. Pass { provider: { name: \"openworkflow\", workflow } }.')
+    }
+    return new OpenWorkflowAdapter(workflow, { ow, getRun })
   }
 
   throw new WorkflowError(`Unknown workflow provider: ${(resolved as { name: string }).name}`)

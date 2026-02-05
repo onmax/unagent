@@ -74,6 +74,20 @@ class VercelWorkflowRunAdapter implements WorkflowRun {
     return result
   }
 
+  async result(): Promise<unknown> {
+    if (this.run.returnValue !== undefined) {
+      return await (typeof this.run.returnValue === 'function'
+        ? this.run.returnValue()
+        : this.run.returnValue)
+    }
+
+    const status = await this.status()
+    if (status.output !== undefined)
+      return status.output
+
+    throw new WorkflowError('Vercel returnValue is not available')
+  }
+
   async stop(): Promise<void> {
     await this.run.cancel()
   }

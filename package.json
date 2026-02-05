@@ -139,6 +139,7 @@
     "test": "vitest",
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
+    "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",
     "release": "bumpp",
     "prepare": "simple-git-hooks",
     "prepublishOnly": "pnpm run build"
@@ -160,6 +161,7 @@
     "@vercel/sandbox": ">=0.1.0",
     "ai": ">=3.0.0",
     "ollama-ai-provider-v2": ">=0.0.0",
+    "openworkflow": ">=0.0.0",
     "pg": ">=8.0.0",
     "sqlite-vec": ">=0.0.0",
     "unstorage": ">=1.10.0",
@@ -212,6 +214,9 @@
       "optional": true
     },
     "ollama-ai-provider-v2": {
+      "optional": true
+    },
+    "openworkflow": {
       "optional": true
     },
     "pg": {

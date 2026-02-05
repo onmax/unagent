@@ -1,7 +1,8 @@
 import type { CloudflareWorkflowProviderOptions } from './cloudflare'
+import type { OpenWorkflowProviderOptions } from './openworkflow'
 import type { VercelWorkflowProviderOptions } from './vercel'
 
-export type WorkflowProvider = 'vercel' | 'cloudflare'
+export type WorkflowProvider = 'vercel' | 'cloudflare' | 'openworkflow'
 
 export type WorkflowRunState = 'queued' | 'running' | 'paused' | 'waiting' | 'completed' | 'failed' | 'cancelled' | 'terminated' | 'unknown'
 
@@ -26,10 +27,15 @@ export interface WorkflowRun {
   readonly provider: WorkflowProvider
   status: () => Promise<WorkflowRunStatus>
   stop: () => Promise<void>
+  result?: (options?: WorkflowResultOptions) => Promise<unknown>
   pause?: () => Promise<void>
   resume?: () => Promise<void>
   restart?: () => Promise<void>
   sendEvent?: (event: unknown) => Promise<void>
+}
+
+export interface WorkflowResultOptions {
+  timeoutMs?: number
 }
 
 export interface WorkflowStartOptions {
@@ -50,7 +56,7 @@ export interface WorkflowClient {
   startBatch?: (items: WorkflowBatchItem[]) => Promise<WorkflowRun[]>
 }
 
-export type WorkflowProviderOptions = VercelWorkflowProviderOptions | CloudflareWorkflowProviderOptions
+export type WorkflowProviderOptions = VercelWorkflowProviderOptions | CloudflareWorkflowProviderOptions | OpenWorkflowProviderOptions
 
 export interface WorkflowOptions {
   provider?: WorkflowProviderOptions

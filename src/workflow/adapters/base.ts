@@ -1,5 +1,6 @@
 import type { CloudflareWorkflowNamespace } from '../types/cloudflare'
 import type { WorkflowBatchItem, WorkflowCapabilities, WorkflowClient, WorkflowProvider, WorkflowRun, WorkflowStartOptions } from '../types/common'
+import type { OpenWorkflowNamespace } from '../types/openworkflow'
 import type { VercelWorkflowNamespace } from '../types/vercel'
 import { NotSupportedError } from '../errors'
 
@@ -20,5 +21,9 @@ export abstract class BaseWorkflowAdapter implements WorkflowClient {
 
   get cloudflare(): CloudflareWorkflowNamespace {
     throw new NotSupportedError('cloudflare namespace', this.provider)
+  }
+
+  get openworkflow(): OpenWorkflowNamespace {
+    throw new NotSupportedError('openworkflow namespace', this.provider)
   }
 }

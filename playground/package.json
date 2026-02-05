@@ -13,8 +13,10 @@
   },
   "dependencies": {
     "@cloudflare/sandbox": "catalog:sandbox",
+    "@openworkflow/backend-postgres": "catalog:",
     "@vercel/sandbox": "catalog:sandbox",
     "next": "catalog:",
+    "openworkflow": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "unagent": "workspace:*",

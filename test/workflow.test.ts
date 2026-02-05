@@ -74,6 +74,22 @@ describe('workflow/isWorkflowAvailable', () => {
     expect(isWorkflowAvailable('vercel')).toBe(true)
   })
 
+  it('returns false when openworkflow cannot be resolved', () => {
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: () => {
+        throw new Error('missing')
+      },
+    }
+    expect(isWorkflowAvailable('openworkflow')).toBe(false)
+  })
+
+  it('returns true when openworkflow resolves', () => {
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: () => 'openworkflow',
+    }
+    expect(isWorkflowAvailable('openworkflow')).toBe(true)
+  })
+
   it('returns true for cloudflare when runtime env is present', () => {
     process.env = { ...originalEnv, CLOUDFLARE_WORKER: '1' }
     expect(isWorkflowAvailable('cloudflare')).toBe(true)

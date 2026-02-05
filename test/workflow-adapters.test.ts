@@ -1,8 +1,10 @@
 import type { CloudflareWorkflowBindingLike, CloudflareWorkflowInstanceLike } from '../src/workflow/types/cloudflare'
+import type { OpenWorkflowRunLike, OpenWorkflowWorkflowLike } from '../src/workflow/types/openworkflow'
 import type { VercelWorkflowAPI, VercelWorkflowRunLike } from '../src/workflow/types/vercel'
 import { describe, expect, it, vi } from 'vitest'
 
 import { CloudflareWorkflowAdapter } from '../src/workflow/adapters/cloudflare'
+import { OpenWorkflowAdapter } from '../src/workflow/adapters/openworkflow'
 import { VercelWorkflowAdapter } from '../src/workflow/adapters/vercel'
 
 function createVercelRun(overrides: Partial<VercelWorkflowRunLike> = {}): VercelWorkflowRunLike {
@@ -24,6 +26,15 @@ function createCloudflareInstance(overrides: Partial<CloudflareWorkflowInstanceL
     restart: async () => {},
     terminate: async () => {},
     sendEvent: async () => {},
+    ...overrides,
+  }
+}
+
+function createOpenWorkflowRun(overrides: Partial<OpenWorkflowRunLike> = {}): OpenWorkflowRunLike {
+  return {
+    workflowRun: { id: 'ow-1', status: 'queued' },
+    result: async () => ({ ok: true }),
+    cancel: async () => {},
     ...overrides,
   }
 }
@@ -73,6 +84,9 @@ describe('workflow adapters (vercel)', () => {
     const status = await started.status()
     expect(status.state).toBe('completed')
     expect(status.output).toEqual({ result: 'done' })
+
+    const result = await started.result?.()
+    expect(result).toEqual({ result: 'done' })
   })
 
   it('throws when startBatch is called', async () => {
@@ -82,6 +96,17 @@ describe('workflow adapters (vercel)', () => {
     })
 
     await expect(adapter.startBatch([{ payload: { id: 1 } }])).rejects.toThrow()
+  })
+
+  it('throws when result is unavailable', async () => {
+    const run = createVercelRun({ returnValue: undefined })
+    const adapter = new VercelWorkflowAdapter('notify-users', {
+      start: async () => run,
+      getRun: async () => run,
+    })
+
+    const started = await adapter.start()
+    await expect(started.result?.()).rejects.toThrow()
   })
 })
 
@@ -154,5 +179,82 @@ describe('workflow adapters (cloudflare)', () => {
     const status = await run.status()
     expect(status.state).toBe('failed')
     expect(status.error).toBe('boom')
+  })
+})
+
+describe('workflow adapters (openworkflow)', () => {
+  it('starts, gets status, and stops a workflow run', async () => {
+    const run = createOpenWorkflowRun({ workflowRun: { id: 'ow-1', status: 'running' } })
+    const workflow: OpenWorkflowWorkflowLike = {
+      run: vi.fn(async () => run),
+    }
+
+    const adapter = new OpenWorkflowAdapter(workflow)
+    const started = await adapter.start({ userId: '123' })
+    expect(started.provider).toBe('openworkflow')
+
+    const status = await started.status()
+    expect(status.state).toBe('running')
+
+    const cancelSpy = vi.fn(async () => {})
+    const stoppable = createOpenWorkflowRun({ workflowRun: { id: 'ow-2', status: 'running' }, cancel: cancelSpy })
+    const adapterStop = new OpenWorkflowAdapter({
+      run: async () => stoppable,
+    })
+
+    const runToStop = await adapterStop.start()
+    await runToStop.stop()
+    expect(cancelSpy).toHaveBeenCalled()
+  })
+
+  it('normalizes sleeping status and returns output on completion', async () => {
+    const sleeping = createOpenWorkflowRun({ workflowRun: { id: 'ow-3', status: 'sleeping' } })
+    const completed = createOpenWorkflowRun({
+      workflowRun: { id: 'ow-4', status: 'completed' },
+      result: async () => ({ result: 'done' }),
+    })
+
+    const adapterSleeping = new OpenWorkflowAdapter({ run: async () => sleeping })
+    const runSleeping = await adapterSleeping.start()
+    const statusSleeping = await runSleeping.status()
+    expect(statusSleeping.state).toBe('waiting')
+
+    const adapterCompleted = new OpenWorkflowAdapter({ run: async () => completed })
+    const runCompleted = await adapterCompleted.start()
+    const statusCompleted = await runCompleted.status()
+    expect(statusCompleted.state).toBe('completed')
+    expect(statusCompleted.output).toEqual({ result: 'done' })
+
+    const result = await runCompleted.result?.({ timeoutMs: 5000 })
+    expect(result).toEqual({ result: 'done' })
+  })
+
+  it('starts batch workflows and uses getRun when provided', async () => {
+    const runA = createOpenWorkflowRun({ workflowRun: { id: 'ow-a', status: 'queued' } })
+    const runB = createOpenWorkflowRun({ workflowRun: { id: 'ow-b', status: 'queued' } })
+    const workflow: OpenWorkflowWorkflowLike = {
+      run: vi.fn()
+        .mockResolvedValueOnce(runA)
+        .mockResolvedValueOnce(runB),
+    }
+
+    const adapter = new OpenWorkflowAdapter(workflow, {
+      getRun: async (id: string) => (id === 'ow-a' ? runA : null),
+    })
+
+    const batch = await adapter.startBatch([{ payload: { id: 1 } }, { payload: { id: 2 } }])
+    expect(batch).toHaveLength(2)
+
+    const fetched = await adapter.get('ow-a')
+    expect(fetched?.id).toBe('ow-a')
+
+    const missing = await adapter.get('missing')
+    expect(missing).toBeNull()
+  })
+
+  it('returns null from get when getRun is not provided', async () => {
+    const adapter = new OpenWorkflowAdapter({ run: async () => createOpenWorkflowRun() })
+    const fetched = await adapter.get('ow-1')
+    expect(fetched).toBeNull()
   })
 })
