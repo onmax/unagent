@@ -1,7 +1,7 @@
 {
   "name": "unagent",
   "type": "module",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "packageManager": "pnpm@10.28.2",
   "description": "Unified agent primitives for AI coding agents",
   "author": "Maximilian Conradt <https://github.com/onmax>",
