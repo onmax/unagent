@@ -6,7 +6,12 @@
     "build": "undocs build"
   },
   "devDependencies": {
+    "@iconify-json/ph": "catalog:docs",
+    "@iconify-json/simple-icons": "catalog:docs",
+    "@iconify-json/vscode-icons": "catalog:docs",
+    "@nuxtjs/mdc": "catalog:docs",
     "nuxt": "catalog:docs",
-    "undocs": "catalog:docs"
+    "undocs": "catalog:docs",
+    "unist-util-visit": "catalog:docs"
   }
 }
