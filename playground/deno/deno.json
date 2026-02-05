@@ -1,0 +1,14 @@
+{
+  "name": "unagent-playground",
+  "exports": "./main.ts",
+  "tasks": {
+    "dev": "deno run --allow-env --allow-net --allow-read main.ts"
+  },
+  "imports": {
+    "@deno/sandbox": "jsr:@deno/sandbox@^0.10.0"
+  },
+  "deploy": {
+    "org": "onmax",
+    "app": "unagent"
+  }
+}
