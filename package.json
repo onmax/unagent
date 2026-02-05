@@ -126,6 +126,10 @@
     "./vector/embeddings/*": {
       "types": "./dist/vector/embeddings/*.d.ts",
       "default": "./dist/vector/embeddings/*.js"
+    },
+    "./vercel": {
+      "types": "./dist/vercel/index.d.ts",
+      "default": "./dist/vercel/index.js"
     }
   },
   "main": "./dist/index.js",

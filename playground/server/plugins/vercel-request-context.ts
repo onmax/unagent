@@ -1,6 +1,6 @@
 import { getRequestHeaders } from 'h3'
 import { defineNitroPlugin } from 'nitropack/runtime'
-import { ensureVercelRequestContext } from 'unagent'
+import { ensureVercelRequestContext } from 'unagent/vercel'
 
 export default defineNitroPlugin(async (nitroApp) => {
   if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
@@ -33,4 +33,3 @@ export default defineNitroPlugin(async (nitroApp) => {
     als.enterWith({ headers })
   })
 })
-

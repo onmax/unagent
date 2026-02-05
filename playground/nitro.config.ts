@@ -4,6 +4,7 @@ export default defineNitroConfig({
   // Keep a flat layout in `playground/` (no `server/` prefix).
   srcDir: '.',
   scanDirs: ['routes'],
+  plugins: ['~/server/plugins/vercel-request-context'],
 
   compatibilityDate: '2026-02-05',
 

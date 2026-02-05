@@ -46,6 +46,7 @@ export default defineConfig({
     'src/vector/embeddings/transformers-js.ts',
     'src/vector/embeddings/resolve.ts',
     'src/vector/embeddings/model-info.ts',
+    'src/vercel/index.ts',
   ],
   format: 'esm',
   dts: true,
