@@ -4,10 +4,10 @@ packages:
   - playground/nuxt
 catalog:
   '@openworkflow/backend-postgres': ^0.6.0
-  next: ^16.1.6
+  '@vercel/queue': ^0.0.0-alpha.36
+  h3: ^1.15.5
+  nitropack: ^2.13.1
   openworkflow: ^0.6.6
-  react: ^19.2.4
-  react-dom: ^19.2.4
   workflow: ^4.1.0-beta.52
 catalogs:
   build:

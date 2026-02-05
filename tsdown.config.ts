@@ -12,6 +12,7 @@ export default defineConfig({
     'src/link/index.ts',
     'src/lock/index.ts',
     'src/registry/index.ts',
+    'src/queue/index.ts',
     'src/sandbox/index.ts',
     'src/workflow/index.ts',
     'src/skill/index.ts',

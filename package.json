@@ -63,6 +63,10 @@
       "types": "./dist/registry/index.d.ts",
       "default": "./dist/registry/index.js"
     },
+    "./queue": {
+      "types": "./dist/queue/index.d.ts",
+      "default": "./dist/queue/index.js"
+    },
     "./sandbox": {
       "types": "./dist/sandbox/index.d.ts",
       "default": "./dist/sandbox/index.js"
@@ -158,6 +162,7 @@
     "@pinecone-database/pinecone": ">=0.0.0",
     "@qdrant/js-client-rest": ">=0.0.0",
     "@upstash/vector": ">=1.0.0",
+    "@vercel/queue": ">=0.0.0-0",
     "@vercel/sandbox": ">=0.1.0",
     "ai": ">=3.0.0",
     "ollama-ai-provider-v2": ">=0.0.0",
@@ -205,6 +210,9 @@
       "optional": true
     },
     "@upstash/vector": {
+      "optional": true
+    },
+    "@vercel/queue": {
       "optional": true
     },
     "@vercel/sandbox": {

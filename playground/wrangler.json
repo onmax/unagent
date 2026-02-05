@@ -19,6 +19,12 @@
     "binding": "MY_WORKFLOW",
     "class_name": "DemoWorkflow"
   }],
+  "queues": {
+    "producers": [{
+      "binding": "MY_QUEUE",
+      "queue": "unagent-playground-queue"
+    }]
+  },
   "vectorize": [{
     "binding": "VECTORIZE",
     "index_name": "unagent-playground-vector"

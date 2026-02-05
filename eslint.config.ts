@@ -4,6 +4,15 @@ export default antfu({
   type: 'lib',
   typescript: true,
   pnpm: true,
+  ignores: [
+    'playground/.nitro/**',
+    'playground/.output/**',
+    'playground/.vercel/**',
+    'playground/.wrangler/**',
+    'playground/legacy/**',
+    'playground/nuxt/**',
+    'playground/server/plugins/**',
+  ],
   rules: {
     'node/prefer-global/process': 'off',
     'no-control-regex': 'off',

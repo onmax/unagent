@@ -1,0 +1,29 @@
+import { defineNitroConfig } from 'nitropack/config'
+
+export default defineNitroConfig({
+  // Keep a flat layout in `playground/` (no `server/` prefix).
+  srcDir: '.',
+  scanDirs: ['routes'],
+
+  compatibilityDate: '2026-02-05',
+
+  cloudflare: {
+    nodeCompat: true,
+  },
+
+  vercel: {
+    config: {
+      functions: {
+        __fallback: {
+          experimentalTriggers: [
+            {
+              type: 'queue/v1beta',
+              topic: 'unagent-playground',
+              consumer: 'playground',
+            },
+          ],
+        },
+      },
+    },
+  },
+})

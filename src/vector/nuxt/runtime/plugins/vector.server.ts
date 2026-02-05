@@ -1,5 +1,6 @@
 import type { VectorProviderName } from '../../../_providers'
-import { defineNuxtPlugin, useVector } from '#imports'
+import { defineNuxtPlugin } from '#imports'
+import { useVector } from '../composables/useVector.server'
 
 const vectorNuxtPlugin: ReturnType<typeof defineNuxtPlugin> = defineNuxtPlugin(() => {
   return {

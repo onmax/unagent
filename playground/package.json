@@ -3,22 +3,22 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "start": "next start",
-    "dev:next": "next dev",
-    "dev:vercel": "vercel dev",
-    "deploy:vercel": "vercel deploy",
-    "dev:cf": "wrangler dev",
-    "deploy:cf": "wrangler deploy"
+    "dev": "nitro dev",
+    "build:vercel": "nitro build --preset vercel",
+    "build:cf": "nitro build --preset cloudflare_module",
+    "dev:vercel": "vercel dev --yes",
+    "deploy:vercel": "vercel deploy .. --yes",
+    "dev:cf": "pnpm build:cf && wrangler dev",
+    "deploy:cf": "pnpm build:cf && wrangler deploy"
   },
   "dependencies": {
     "@cloudflare/sandbox": "catalog:sandbox",
     "@openworkflow/backend-postgres": "catalog:",
+    "@vercel/queue": "catalog:",
     "@vercel/sandbox": "catalog:sandbox",
-    "next": "catalog:",
+    "h3": "catalog:",
+    "nitropack": "catalog:",
     "openworkflow": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "unagent": "workspace:*",
     "workflow": "catalog:"
   },

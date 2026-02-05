@@ -1,5 +1,7 @@
 .vercel
 .env*.local
 .next
+.nitro
+.output
 app/.well-known
 .wrangler
