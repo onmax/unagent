@@ -13,7 +13,7 @@ export class CloudflareQueueAdapter extends BaseQueueAdapter {
     this.binding = binding
   }
 
-  async send<T = unknown>(payload: T, options: QueueSendOptions<T> = {}): Promise<QueueSendResult> {
+  async send<T = unknown>(payload: T, options: QueueSendOptions = {}): Promise<QueueSendResult> {
     const { contentType } = options
     await this.binding.send(payload, contentType ? { contentType } : undefined)
     return {}

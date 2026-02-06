@@ -6,7 +6,32 @@ export * from './git'
 export * from './hooks'
 export * from './link'
 export * from './lock'
-export * from './queue'
+export { createQueue, detectQueue, isQueueAvailable, QueueError, NotSupportedError as QueueNotSupportedError } from './queue'
+export type {
+  CloudflareQueueBatchMessage,
+  CloudflareQueueBindingLike,
+  CloudflareQueueClient,
+  CloudflareQueueContentType,
+  CloudflareQueueNamespace,
+  CloudflareQueueProviderOptions,
+  CloudflareQueueSendBatchOptions,
+  CloudflareQueueSendOptions,
+  QueueBatchMessage,
+  QueueCapabilities,
+  QueueClient,
+  QueueDetectionResult,
+  QueueOptions,
+  QueueProvider,
+  QueueProviderOptions,
+  QueueSendBatchOptions,
+  QueueSendOptions,
+  QueueSendResult,
+  VercelQueueClient,
+  VercelQueueNamespace,
+  VercelQueueProviderOptions,
+  VercelQueueSDK,
+  VercelQueueSendOptions,
+} from './queue'
 export * from './registry'
 export { createSandbox, detectSandbox, isSandboxAvailable, SandboxError, NotSupportedError as SandboxNotSupportedError } from './sandbox'
 export type { CloudflareNamespace, CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSession, CodeContext, CodeExecutionResult, DenoNamespace, DenoProviderOptions, DenoSandbox, DenoSandboxOptions, DurableObjectNamespaceLike, ExposedPort, FileEntry, GitCheckoutResult, ListFilesOptions, NetworkPolicy, ProcessOptions, Sandbox, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxOptions, SandboxProcess, SandboxProvider, VercelNamespace, VercelProviderOptions, VercelSandbox, VercelSandboxMetadata, VercelSnapshot, WaitForPortOptions } from './sandbox'

@@ -10,7 +10,7 @@ export interface QueueClient<P extends QueueProvider = QueueProvider> {
   readonly provider: P
   readonly supports: QueueCapabilities
 
-  send: <T = unknown>(payload: T, options?: QueueSendOptions<T>) => Promise<QueueSendResult>
+  send: <T = unknown>(payload: T, options?: QueueSendOptions) => Promise<QueueSendResult>
   sendBatch?: (messages: QueueBatchMessage[], options?: QueueSendBatchOptions) => Promise<void>
 
   readonly vercel: P extends 'vercel' ? VercelQueueNamespace : never

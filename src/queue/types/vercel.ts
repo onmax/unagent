@@ -7,7 +7,7 @@ export interface VercelQueueSendOptions {
 }
 
 export interface VercelQueueSDK {
-  send: <T = unknown>(topicName: string, payload: T, options?: VercelQueueSendOptions<T>) => Promise<{ messageId: string }>
+  send: <T = unknown>(topicName: string, payload: T, options?: VercelQueueSendOptions) => Promise<{ messageId: string }>
 }
 
 export interface VercelQueueNamespace {

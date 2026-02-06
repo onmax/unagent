@@ -8,7 +8,7 @@ export abstract class BaseQueueAdapter implements QueueClient {
   abstract readonly provider: QueueProvider
   abstract readonly supports: QueueCapabilities
 
-  abstract send<T = unknown>(payload: T, options?: QueueSendOptions<T>): Promise<QueueSendResult>
+  abstract send<T = unknown>(payload: T, options?: QueueSendOptions): Promise<QueueSendResult>
 
   async sendBatch(_messages: QueueBatchMessage[], _options?: QueueSendBatchOptions): Promise<void> {
     throw new NotSupportedError('sendBatch', this.provider)

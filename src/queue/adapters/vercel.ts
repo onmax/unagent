@@ -17,7 +17,7 @@ export class VercelQueueAdapter extends BaseQueueAdapter {
     this.sdk = sdk
   }
 
-  async send<T = unknown>(payload: T, options: QueueSendOptions<T> = {}): Promise<QueueSendResult> {
+  async send<T = unknown>(payload: T, options: QueueSendOptions = {}): Promise<QueueSendResult> {
     const { contentType: _contentType, ...vercelOptions } = options
     const { messageId } = await this.sendFn(this.topic, payload, vercelOptions)
     return { messageId }
