@@ -9,7 +9,6 @@ export default antfu({
     'playground/.output/**',
     'playground/.vercel/**',
     'playground/.wrangler/**',
-    'playground/legacy/**',
     'playground/nuxt/**',
     'playground/server/plugins/**',
   ],
