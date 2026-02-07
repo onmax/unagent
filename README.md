@@ -44,7 +44,7 @@ parseSource('./local/path') // local
 
 - [Docs home](https://unagent.unjs.io)
 - [Getting started](https://unagent.unjs.io/guide)
-- [Modules](https://unagent.unjs.io/modules)
+- [Core](https://unagent.unjs.io/core)
 
 ## License
 

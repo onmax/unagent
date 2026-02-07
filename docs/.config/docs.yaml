@@ -36,3 +36,20 @@ landing:
 redirects:
   /blog: /
   /blog/**: /
+  /modules: /core
+  /modules/core/context: /core/context
+  /modules/core/env: /core/env
+  /modules/core/exec: /core/exec
+  /modules/core/fs: /core/fs
+  /modules/core/git: /core/git
+  /modules/core/hooks: /core/hooks
+  /modules/core/link: /core/link
+  /modules/core/lock: /core/lock
+  /modules/core/registry: /core/registry
+  /modules/core/skill: /core/skill
+  /modules/core/source: /core/source
+  /modules/core/stop: /core/stop
+  /modules/core/stream: /core/stream
+  /modules/core/tool: /core/tool
+  /modules/core/usage: /core/usage
+  /modules/utilities/utils: /core/utils
