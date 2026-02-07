@@ -1,7 +1,6 @@
 packages:
   - docs
   - playground
-  - playground/nuxt
 catalog:
   '@openworkflow/backend-postgres': ^0.6.0
   '@vercel/queue': ^0.0.0-alpha.36
@@ -16,8 +15,6 @@ catalogs:
     '@iconify-json/ph': ^1.2.2
     '@iconify-json/simple-icons': ^1.2.69
     '@iconify-json/vscode-icons': ^1.2.40
-    '@nuxt/kit': ^4.3.0
-    '@nuxt/schema': ^4.3.0
     '@nuxtjs/mdc': ^0.20.0
     nuxt: ^4.3.0
     undocs: ^0.4.16

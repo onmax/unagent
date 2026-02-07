@@ -85,15 +85,3 @@ declare module '@huggingface/transformers' {
   export const env: { cacheDir?: string }
   export function pipeline(task: string, model: string, opts?: any): Promise<any>
 }
-
-declare module 'nitropack/runtime' {
-  export function defineNitroPlugin(handler: (nitroApp: any) => void): any
-  export function useRuntimeConfig(): any
-}
-
-declare module '#imports' {
-  export function defineNuxtPlugin(handler: (...args: any[]) => any): any
-  export function useRequestEvent(): any
-  export function useRuntimeConfig(): any
-  export function useVector(providerName?: string): Promise<any>
-}

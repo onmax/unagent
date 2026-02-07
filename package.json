@@ -59,14 +59,6 @@
       "types": "./dist/vector/index.d.ts",
       "default": "./dist/vector/index.js"
     },
-    "./vector/nitro": {
-      "types": "./dist/vector/nitro/index.d.ts",
-      "default": "./dist/vector/nitro/index.js"
-    },
-    "./vector/nuxt": {
-      "types": "./dist/vector/nuxt/module.d.ts",
-      "default": "./dist/vector/nuxt/module.js"
-    },
     "./vector/adapters/*": {
       "types": "./dist/vector/adapters/*.d.ts",
       "default": "./dist/vector/adapters/*.js"
@@ -113,8 +105,6 @@
     "@deno/sandbox": ">=0.1.0",
     "@huggingface/transformers": ">=0.0.0",
     "@libsql/client": ">=0.0.0",
-    "@nuxt/kit": ">=4.0.0",
-    "@nuxt/schema": ">=4.0.0",
     "@pinecone-database/pinecone": ">=0.0.0",
     "@qdrant/js-client-rest": ">=0.0.0",
     "@upstash/qstash": ">=0.0.0",
@@ -152,12 +142,6 @@
       "optional": true
     },
     "@libsql/client": {
-      "optional": true
-    },
-    "@nuxt/kit": {
-      "optional": true
-    },
-    "@nuxt/schema": {
       "optional": true
     },
     "@pinecone-database/pinecone": {
@@ -209,8 +193,6 @@
   "devDependencies": {
     "@antfu/eslint-config": "catalog:lint",
     "@libsql/client": "catalog:vector",
-    "@nuxt/kit": "catalog:docs",
-    "@nuxt/schema": "catalog:docs",
     "@pinecone-database/pinecone": "catalog:vector",
     "@qdrant/js-client-rest": "catalog:vector",
     "@types/node": "catalog:types",

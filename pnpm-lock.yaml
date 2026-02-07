@@ -38,12 +38,6 @@ catalogs:
     '@iconify-json/vscode-icons':
       specifier: ^1.2.40
       version: 1.2.40
-    '@nuxt/kit':
-      specifier: ^4.3.0
-      version: 4.3.0
-    '@nuxt/schema':
-      specifier: ^4.3.0
-      version: 4.3.0
     '@nuxtjs/mdc':
       specifier: ^0.20.0
       version: 0.20.0
@@ -195,12 +189,6 @@ importers:
       '@libsql/client':
         specifier: catalog:vector
         version: 0.17.0
-      '@nuxt/kit':
-        specifier: catalog:docs
-        version: 4.3.0(magicast@0.5.1)
-      '@nuxt/schema':
-        specifier: catalog:docs
-        version: 4.3.0
       '@pinecone-database/pinecone':
         specifier: catalog:vector
         version: 7.0.0
@@ -301,15 +289,6 @@ importers:
       '@vercel/node':
         specifier: catalog:sandbox
         version: 5.5.28(@swc/core@1.15.3(@swc/helpers@0.5.18))(rollup@4.57.1)
-
-  playground/nuxt:
-    dependencies:
-      nuxt:
-        specifier: catalog:docs
-        version: 4.3.0(@libsql/client@0.17.0)(@parcel/watcher@2.5.6)(@types/node@25.1.0)(@vercel/functions@3.4.1(@aws-sdk/credential-provider-web-identity@3.972.4))(@vue/compiler-sfc@3.5.27)(cac@6.7.14)(db0@0.3.4(@libsql/client@0.17.0))(eslint@9.39.2(jiti@2.6.1))(ioredis@5.9.2)(lightningcss@1.31.1)(magicast@0.5.1)(optionator@0.9.4)(rolldown@1.0.0-beta.45)(rollup@4.57.1)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(yaml@2.8.2)
-      unagent:
-        specifier: workspace:*
-        version: link:../..
 
 packages:
 
@@ -11499,7 +11478,7 @@ snapshots:
       structured-clone-es: 1.0.0
       tinyglobby: 0.2.15
       vite: 7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2)
-      vite-plugin-inspect: 11.3.3(@nuxt/kit@4.3.0)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))
+      vite-plugin-inspect: 11.3.3(@nuxt/kit@4.3.0(magicast@0.5.1))(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))
       vite-plugin-vue-tracer: 1.2.0(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
       which: 5.0.0
       ws: 8.19.0
@@ -20407,7 +20386,7 @@ snapshots:
       optionator: 0.9.4
       typescript: 5.9.3
 
-  vite-plugin-inspect@11.3.3(@nuxt/kit@4.3.0)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-inspect@11.3.3(@nuxt/kit@4.3.0(magicast@0.5.1))(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       ansis: 4.2.0
       debug: 4.4.3(supports-color@8.1.1)
