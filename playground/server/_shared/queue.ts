@@ -4,6 +4,8 @@ import { getCloudflareEnv, getProvider } from './provider'
 export const VERCEL_QUEUE_TOPIC = 'unagent-playground'
 export const VERCEL_QUEUE_CONSUMER = 'playground'
 
+const memoryStore = { messages: [] as any[] }
+
 export async function createPlaygroundQueue(event: any): Promise<{ provider: string, queue: any }> {
   const provider = getProvider(event)
   if (provider === 'cloudflare') {
@@ -23,5 +25,8 @@ export async function createPlaygroundQueue(event: any): Promise<{ provider: str
     }
   }
 
-  throw new Error('Queue is not available on this runtime')
+  return {
+    provider,
+    queue: await createQueue({ provider: { name: 'memory', store: memoryStore } }),
+  }
 }

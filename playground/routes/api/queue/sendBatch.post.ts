@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
   await queue.sendBatch?.(messages, options)
   return {
     provider,
+    queueProvider: queue.provider,
     ok: true,
     count: messages.length,
     elapsed: Date.now() - start,

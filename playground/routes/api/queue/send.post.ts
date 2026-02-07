@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     provider,
+    queueProvider: queue.provider,
     ...(provider === 'vercel' ? { topic: VERCEL_QUEUE_TOPIC } : {}),
     ...result,
     elapsed: Date.now() - start,
