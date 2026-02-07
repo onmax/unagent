@@ -1,15 +1,23 @@
 import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions } from './types'
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
+import type { MemoryQueueProviderOptions } from './types/memory'
+import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
-import { CloudflareQueueAdapter, VercelQueueAdapter } from './adapters'
+import { CloudflareQueueAdapter, MemoryQueueAdapter, QStashQueueAdapter, VercelQueueAdapter } from './adapters'
+import { createCloudflareQueueBatchHandler } from './cloudflare-consumer'
 import { QueueError } from './errors'
+import { verifyQStashSignature } from './qstash'
 
 export { NotSupportedError, QueueError } from './errors'
-export type { CloudflareQueueClient, QueueClient, VercelQueueClient } from './types'
-export type { CloudflareQueueBatchMessage, CloudflareQueueBindingLike, CloudflareQueueContentType, CloudflareQueueNamespace, CloudflareQueueProviderOptions, CloudflareQueueSendBatchOptions, CloudflareQueueSendOptions } from './types/cloudflare'
+export { createCloudflareQueueBatchHandler }
+export { verifyQStashSignature }
+export type { CloudflareQueueClient, MemoryQueueClient, QStashQueueClient, QueueClient, VercelQueueClient } from './types'
+export type { CloudflareQueueBatchMessage, CloudflareQueueBindingLike, CloudflareQueueContentType, CloudflareQueueMessage, CloudflareQueueMessageBatch, CloudflareQueueNamespace, CloudflareQueueProviderOptions, CloudflareQueueRetryOptions, CloudflareQueueSendBatchOptions, CloudflareQueueSendOptions } from './types/cloudflare'
 export type { QueueBatchMessage, QueueCapabilities, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from './types/common'
-export type { VercelQueueNamespace, VercelQueueProviderOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
+export type { MemoryQueueNamespace, MemoryQueueProviderOptions, MemoryQueueStore, MemoryQueueStoreItem } from './types/memory'
+export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/qstash'
+export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
 
 export function detectQueue(): QueueDetectionResult {
   if (process.env.CLOUDFLARE_WORKER)
@@ -48,6 +56,12 @@ export function isQueueAvailable(provider: QueueProvider): boolean {
   if (provider === 'vercel')
     return canResolve('@vercel/queue')
 
+  if (provider === 'qstash')
+    return typeof fetch === 'function'
+
+  if (provider === 'memory')
+    return true
+
   return false
 }
 
@@ -82,6 +96,8 @@ function resolveProvider(provider?: QueueProviderOptions): QueueProviderOptions 
 
 export function createQueue(opts: { provider: VercelQueueProviderOptions }): Promise<QueueClient<'vercel'>>
 export function createQueue(opts: { provider: CloudflareQueueProviderOptions }): Promise<QueueClient<'cloudflare'>>
+export function createQueue(opts: { provider: QStashQueueProviderOptions }): Promise<QueueClient<'qstash'>>
+export function createQueue(opts: { provider: MemoryQueueProviderOptions }): Promise<QueueClient<'memory'>>
 export function createQueue(opts?: QueueOptions): Promise<QueueClient>
 export async function createQueue(options: QueueOptions = {}): Promise<QueueClient> {
   const resolved = resolveProvider(options.provider)
@@ -98,9 +114,21 @@ export async function createQueue(options: QueueOptions = {}): Promise<QueueClie
     if (!topic)
       throw new QueueError('Vercel queue topic is required. Pass { provider: { name: "vercel", topic } }.')
     const sdk = await loadVercelQueue()
-    if (typeof sdk.send !== 'function')
-      throw new QueueError('@vercel/queue send export is not available')
-    return new VercelQueueAdapter(topic, sdk.send, sdk)
+    return new VercelQueueAdapter(topic, sdk)
+  }
+
+  if (resolved.name === 'qstash') {
+    const { token, destination, apiUrl } = resolved as QStashQueueProviderOptions
+    if (!token)
+      throw new QueueError('[qstash] token is required')
+    if (!destination)
+      throw new QueueError('[qstash] destination is required')
+    return new QStashQueueAdapter(token, destination, apiUrl)
+  }
+
+  if (resolved.name === 'memory') {
+    const { store } = resolved as MemoryQueueProviderOptions
+    return new MemoryQueueAdapter(store)
   }
 
   throw new QueueError(`Unknown queue provider: ${(resolved as { name: string }).name}`)

@@ -6,16 +6,27 @@ export * from './git'
 export * from './hooks'
 export * from './link'
 export * from './lock'
-export { createQueue, detectQueue, isQueueAvailable, QueueError, NotSupportedError as QueueNotSupportedError } from './queue'
+export { createCloudflareQueueBatchHandler, createQueue, detectQueue, isQueueAvailable, QueueError, NotSupportedError as QueueNotSupportedError, verifyQStashSignature } from './queue'
 export type {
   CloudflareQueueBatchMessage,
   CloudflareQueueBindingLike,
   CloudflareQueueClient,
   CloudflareQueueContentType,
+  CloudflareQueueMessage,
+  CloudflareQueueMessageBatch,
   CloudflareQueueNamespace,
   CloudflareQueueProviderOptions,
+  CloudflareQueueRetryOptions,
   CloudflareQueueSendBatchOptions,
   CloudflareQueueSendOptions,
+  MemoryQueueClient,
+  MemoryQueueNamespace,
+  MemoryQueueProviderOptions,
+  MemoryQueueStore,
+  MemoryQueueStoreItem,
+  QStashQueueClient,
+  QStashQueueNamespace,
+  QStashQueueProviderOptions,
   QueueBatchMessage,
   QueueCapabilities,
   QueueClient,
@@ -27,8 +38,12 @@ export type {
   QueueSendOptions,
   QueueSendResult,
   VercelQueueClient,
+  VercelQueueHandleCallbackOptions,
+  VercelQueueMessageHandler,
   VercelQueueNamespace,
+  VercelQueueParsedCallbackRequest,
   VercelQueueProviderOptions,
+  VercelQueueReceiveOptions,
   VercelQueueSDK,
   VercelQueueSendOptions,
 } from './queue'

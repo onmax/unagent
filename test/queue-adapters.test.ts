@@ -12,8 +12,8 @@ describe('queue adapters (cloudflare)', () => {
     }
 
     const adapter = new CloudflareQueueAdapter(binding)
-    await adapter.send({ hello: 'world' }, { contentType: 'json' })
-    expect(binding.send).toHaveBeenCalledWith({ hello: 'world' }, { contentType: 'json' })
+    await adapter.send({ hello: 'world' }, { contentType: 'json', delaySeconds: 5 })
+    expect(binding.send).toHaveBeenCalledWith({ hello: 'world' }, { contentType: 'json', delaySeconds: 5 })
 
     await adapter.sendBatch([{ body: 'hello', contentType: 'text' }], { delaySeconds: 10 })
     expect(binding.sendBatch).toHaveBeenCalledWith([{ body: 'hello', contentType: 'text' }], { delaySeconds: 10 })
@@ -25,8 +25,8 @@ describe('queue adapters (cloudflare)', () => {
 describe('queue adapters (vercel)', () => {
   it('sends messages with a bound topic', async () => {
     const send = vi.fn(async () => ({ messageId: 'msg-1' }))
-    const sdk = { send }
-    const adapter = new VercelQueueAdapter('my-topic', send, sdk)
+    const sdk = { send } as any
+    const adapter = new VercelQueueAdapter('my-topic', sdk)
 
     const res = await adapter.send({ ok: true }, { delaySeconds: 5, contentType: 'json' })
     expect(res.messageId).toBe('msg-1')

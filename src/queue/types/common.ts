@@ -1,7 +1,9 @@
 import type { CloudflareQueueContentType, CloudflareQueueProviderOptions } from './cloudflare'
+import type { MemoryQueueProviderOptions } from './memory'
+import type { QStashQueueProviderOptions } from './qstash'
 import type { VercelQueueProviderOptions } from './vercel'
 
-export type QueueProvider = 'vercel' | 'cloudflare'
+export type QueueProvider = 'vercel' | 'cloudflare' | 'qstash' | 'memory'
 
 export interface QueueCapabilities {
   sendBatch: boolean
@@ -29,7 +31,7 @@ export interface QueueSendBatchOptions {
   delaySeconds?: number
 }
 
-export type QueueProviderOptions = VercelQueueProviderOptions | CloudflareQueueProviderOptions
+export type QueueProviderOptions = VercelQueueProviderOptions | CloudflareQueueProviderOptions | QStashQueueProviderOptions | MemoryQueueProviderOptions
 
 export interface QueueOptions {
   provider?: QueueProviderOptions
