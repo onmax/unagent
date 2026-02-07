@@ -4,3 +4,6 @@ node_modules
 dist
 .vercel
 .env*.local
+
+# Prevent accidental cache folders from `undocs dev` arg mistakes (host/port folders)
+*/.docs/
