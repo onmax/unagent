@@ -2,8 +2,8 @@ import type { ResolvedAgent } from './resolve'
 import { existsSync, rmSync } from 'node:fs'
 import { join } from 'pathe'
 import { getAgentSkillsDirs } from '../env/paths'
-import { isSymlink, removeSymlink } from '../link/symlink'
-import { readSkillLock, removeSkillFromLock, writeSkillLock } from '../lock'
+import { isSymlink, removeSymlink } from './_internal/link/symlink'
+import { readSkillLock, removeSkillFromLock, writeSkillLock } from './_internal/lock'
 import { resolveTargetAgents } from './resolve'
 
 const SKILL_NAME_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/

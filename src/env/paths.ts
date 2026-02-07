@@ -1,9 +1,8 @@
 import type { AgentConfig } from './agents'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'pathe'
+import { join, normalize, resolve } from 'pathe'
 import { hasTTY, isCI } from 'std-env'
-import { expandPath } from '../utils/path'
 
 export interface XDGPaths {
   data: string
@@ -68,3 +67,10 @@ export { hasTTY, isCI }
 
 /** @deprecated Use `hasTTY` from std-env instead */
 export const isTTY: boolean = hasTTY
+
+export function expandPath(filepath: string): string {
+  if (filepath.startsWith('~')) {
+    return `${normalize(homedir())}${filepath.slice(1)}`
+  }
+  return resolve(filepath)
+}

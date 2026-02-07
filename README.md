@@ -7,10 +7,8 @@ Unified primitives for AI coding agents.
 
 - Detect 40+ AI coding agents by env vars or config
 - Discover and parse markdown-based skill files
-- Parse GitHub/GitLab URLs, owner/repo shortcuts, local paths
-- Clone repos, manage temp dirs, check git status
-- Copy directories, create symlinks safely
-- Track installed skills with lockfile and hashes
+- Install/uninstall skills from local paths or git sources
+- Track installed skills with a lockfile and hashes
 
 ## Install
 
@@ -21,7 +19,7 @@ npm install unagent
 ## Usage
 
 ```ts
-import { detectCurrentAgent, discoverSkills, parseSource } from 'unagent'
+import { detectCurrentAgent, discoverSkills, installSkill } from 'unagent'
 
 // Detect which agent is running
 const agent = detectCurrentAgent()
@@ -32,12 +30,9 @@ if (agent) {
 // Discover skills
 const skills = discoverSkills('~/.claude/skills', { recursive: true })
 
-// The ".agents/skills" directory may also be supported for some agents.
-
-// Parse source strings
-parseSource('unjs/unagent') // github
-parseSource('github:user/repo#main') // github with ref
-parseSource('./local/path') // local
+// Install skills (local or git sources)
+await installSkill({ source: 'unjs/unagent' })
+await installSkill({ source: './local/skills', mode: 'symlink' })
 ```
 
 ## Documentation

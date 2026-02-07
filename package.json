@@ -27,41 +27,13 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./context": {
-      "types": "./dist/context/index.d.ts",
-      "default": "./dist/context/index.js"
-    },
     "./env": {
       "types": "./dist/env/index.d.ts",
       "default": "./dist/env/index.js"
     },
-    "./exec": {
-      "types": "./dist/exec/index.d.ts",
-      "default": "./dist/exec/index.js"
-    },
     "./fs": {
       "types": "./dist/fs/index.d.ts",
       "default": "./dist/fs/index.js"
-    },
-    "./git": {
-      "types": "./dist/git/index.d.ts",
-      "default": "./dist/git/index.js"
-    },
-    "./hooks": {
-      "types": "./dist/hooks/index.d.ts",
-      "default": "./dist/hooks/index.js"
-    },
-    "./link": {
-      "types": "./dist/link/index.d.ts",
-      "default": "./dist/link/index.js"
-    },
-    "./lock": {
-      "types": "./dist/lock/index.d.ts",
-      "default": "./dist/lock/index.js"
-    },
-    "./registry": {
-      "types": "./dist/registry/index.d.ts",
-      "default": "./dist/registry/index.js"
     },
     "./queue": {
       "types": "./dist/queue/index.d.ts",
@@ -79,29 +51,9 @@
       "types": "./dist/skill/index.d.ts",
       "default": "./dist/skill/index.js"
     },
-    "./source": {
-      "types": "./dist/source/index.d.ts",
-      "default": "./dist/source/index.js"
-    },
-    "./stop": {
-      "types": "./dist/stop/index.d.ts",
-      "default": "./dist/stop/index.js"
-    },
-    "./stream": {
-      "types": "./dist/stream/index.d.ts",
-      "default": "./dist/stream/index.js"
-    },
-    "./tool": {
-      "types": "./dist/tool/index.d.ts",
-      "default": "./dist/tool/index.js"
-    },
     "./usage": {
       "types": "./dist/usage/index.d.ts",
       "default": "./dist/usage/index.js"
-    },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "default": "./dist/utils/index.js"
     },
     "./vector": {
       "types": "./dist/vector/index.d.ts",

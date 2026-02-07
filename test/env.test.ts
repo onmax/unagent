@@ -1,5 +1,6 @@
+import { homedir } from 'node:os'
 import { describe, expect, it } from 'vitest'
-import { agents, detectInstalledAgents, getAgentConfig, getAgentIds, getAgentSkillsDirs, getXDGPaths, isCI } from '../src/env'
+import { agents, detectInstalledAgents, expandPath, getAgentConfig, getAgentIds, getAgentSkillsDirs, getXDGPaths, isCI } from '../src/env'
 
 describe('env/agents', () => {
   it('has 40+ agent configs', () => {
@@ -40,6 +41,11 @@ describe('env/paths', () => {
     expect(dirs.length).toBeGreaterThanOrEqual(2)
     expect(dirs[0].endsWith('/.claude/skills')).toBe(true)
     expect(dirs[1].endsWith('/.claude/.agents/skills')).toBe(true)
+  })
+
+  it('expandPath expands ~', () => {
+    const home = homedir().replace(/\\/g, '/')
+    expect(expandPath('~/test').replace(/\\/g, '/')).toBe(`${home}/test`)
   })
 
   it('isCI is a boolean', () => {
