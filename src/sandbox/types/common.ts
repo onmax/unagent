@@ -75,12 +75,19 @@ export interface DurableObjectNamespaceLike {
   get: (id: unknown) => unknown
 }
 
+export interface VercelSandboxCredentials {
+  token: string
+  teamId: string
+  projectId: string
+}
+
 export interface VercelProviderOptions {
   name: 'vercel'
   runtime?: string
   timeout?: number
   cpu?: number
   ports?: number[]
+  credentials?: VercelSandboxCredentials
 }
 
 export interface CloudflareProviderOptions {

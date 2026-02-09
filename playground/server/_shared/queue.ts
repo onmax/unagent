@@ -1,13 +1,14 @@
 import { createQueue } from 'unagent/queue'
-import { getCloudflareEnv, getProvider } from './provider'
+import { getCloudflareEnv } from './provider'
+
+export type QueueProvider = 'cloudflare' | 'vercel' | 'qstash' | 'memory'
 
 export const VERCEL_QUEUE_TOPIC = 'unagent-playground'
 export const VERCEL_QUEUE_CONSUMER = 'playground'
 
 const memoryStore = { messages: [] as any[] }
 
-export async function createPlaygroundQueue(event: any): Promise<{ provider: string, queue: any }> {
-  const provider = getProvider(event)
+export async function createPlaygroundQueue(event: any, provider: QueueProvider, extra?: { destination?: string }): Promise<{ provider: string, queue: any }> {
   if (provider === 'cloudflare') {
     const env = getCloudflareEnv(event)
     if (!env)
@@ -22,6 +23,18 @@ export async function createPlaygroundQueue(event: any): Promise<{ provider: str
     return {
       provider,
       queue: await createQueue({ provider: { name: 'vercel', topic: VERCEL_QUEUE_TOPIC } }),
+    }
+  }
+
+  if (provider === 'qstash') {
+    const token = process.env.QSTASH_TOKEN
+    if (!token)
+      throw new Error('Missing QSTASH_TOKEN')
+    const destination = extra?.destination || process.env.QSTASH_DESTINATION || ''
+    const apiUrl = process.env.QSTASH_API_URL
+    return {
+      provider,
+      queue: await createQueue({ provider: { name: 'qstash', token, destination, ...(apiUrl ? { apiUrl } : {}) } }),
     }
   }
 

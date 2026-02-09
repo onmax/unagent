@@ -2,11 +2,18 @@ packages:
   - docs
   - playground
 catalog:
+  '@nuxt/ui': ^4.4.0
   '@openworkflow/backend-postgres': ^0.6.0
   '@vercel/queue': ^0.0.0-alpha.36
+  '@vitejs/plugin-vue': ^5
+  '@vueuse/core': ^12
   h3: ^1.15.5
   nitropack: ^2.13.1
   openworkflow: ^0.6.6
+  tailwindcss: ^4
+  vite: ^6
+  vue: ^3
+  vue-router: ^4
   workflow: ^4.1.0-beta.52
 catalogs:
   build:

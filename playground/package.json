@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "nitro dev",
+    "dev:app": "vite dev app --config app/vite.config.ts",
+    "build:app": "vite build app --config app/vite.config.ts",
     "build:vercel": "nitro build --preset vercel",
-    "build:cf": "nitro build --preset cloudflare_module",
+    "build:cf": "pnpm build:app && nitro build --preset cloudflare_module",
     "dev:vercel": "vercel dev --yes",
     "deploy:vercel": "vercel deploy .. --yes",
     "dev:cf": "pnpm build:cf && wrangler dev",
@@ -23,6 +25,13 @@
     "workflow": "catalog:"
   },
   "devDependencies": {
-    "@vercel/node": "catalog:sandbox"
+    "@nuxt/ui": "catalog:",
+    "@vercel/node": "catalog:sandbox",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "tailwindcss": "catalog:",
+    "vite": "catalog:",
+    "vue": "catalog:",
+    "vue-router": "catalog:"
   }
 }

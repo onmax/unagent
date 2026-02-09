@@ -1,8 +1,9 @@
 import { createSandbox } from 'unagent/sandbox'
-import { getCloudflareEnv, getProvider } from './provider'
+import { getCloudflareEnv } from './provider'
 
-export async function createPlaygroundSandbox(event: any, opts?: { ports?: number[] }): Promise<{ provider: string, sandbox: any }> {
-  const provider = getProvider(event)
+export type SandboxProvider = 'cloudflare' | 'vercel' | 'deno'
+
+export async function createPlaygroundSandbox(event: any, provider: SandboxProvider, opts?: { ports?: number[] }): Promise<{ provider: string, sandbox: any }> {
   if (provider === 'cloudflare') {
     const env = getCloudflareEnv(event)
     if (!env)
@@ -15,6 +16,10 @@ export async function createPlaygroundSandbox(event: any, opts?: { ports?: numbe
   }
 
   if (provider === 'vercel') {
+    const token = process.env.VERCEL_TOKEN
+    const teamId = process.env.VERCEL_TEAM_ID
+    const projectId = process.env.VERCEL_PROJECT_ID
+    const credentials = token && teamId && projectId ? { token, teamId, projectId } : undefined
     return {
       provider,
       sandbox: await createSandbox({
@@ -23,10 +28,18 @@ export async function createPlaygroundSandbox(event: any, opts?: { ports?: numbe
           runtime: 'node24',
           timeout: 30_000,
           ...(opts?.ports ? { ports: opts.ports } : {}),
+          ...(credentials ? { credentials } : {}),
         },
       }),
     }
   }
 
-  throw new Error('Sandbox is not available on this runtime')
+  if (provider === 'deno') {
+    return {
+      provider,
+      sandbox: await createSandbox({ provider: { name: 'deno' } }),
+    }
+  }
+
+  throw new Error(`Sandbox provider "${provider}" is not supported`)
 }
