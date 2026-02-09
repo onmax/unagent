@@ -15,6 +15,7 @@ const featureIcons: Record<string, string> = {
   workflow: 'i-lucide-git-branch',
   queue: 'i-lucide-mail',
   vector: 'i-lucide-search',
+  cron: 'i-lucide-clock',
 }
 
 const sidebarLinks = computed(() => {

@@ -35,6 +35,10 @@
       "types": "./dist/fs/index.d.ts",
       "default": "./dist/fs/index.js"
     },
+    "./cron": {
+      "types": "./dist/cron/index.d.ts",
+      "default": "./dist/cron/index.js"
+    },
     "./queue": {
       "types": "./dist/queue/index.d.ts",
       "default": "./dist/queue/index.js"
