@@ -1,4 +1,4 @@
-import type { CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSandboxStub, DenoProviderOptions, DenoSandbox, DenoSandboxSDK, DurableObjectNamespaceLike, Sandbox, SandboxOptions, VercelProviderOptions, VercelSandbox, VercelSandboxListItem, VercelSandboxSDK } from './types'
+import type { CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSandboxStub, DenoProviderOptions, DenoSandbox, DenoSandboxSDK, DurableObjectNamespaceLike, Sandbox, SandboxOptions, VercelProviderOptions, VercelSandbox, VercelSandboxCredentials, VercelSandboxListItem, VercelSandboxSDK } from './types'
 import { provider as envProvider, isWorkerd } from 'std-env'
 import { CloudflareSandboxAdapter, DenoSandboxAdapter, VercelSandboxAdapter } from './adapters'
 
@@ -48,7 +48,7 @@ export function isSandboxAvailable(provider: 'vercel' | 'cloudflare' | 'deno'): 
 }
 
 // Re-exports
-export type { CloudflareNamespace, CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSession, CodeContext, CodeExecutionResult, DenoNamespace, DenoProviderOptions, DenoSandbox, DenoSandboxOptions, DurableObjectNamespaceLike, ExposedPort, FileEntry, GitCheckoutResult, ListFilesOptions, NetworkPolicy, ProcessOptions, Sandbox, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxOptions, SandboxProcess, SandboxProvider, VercelNamespace, VercelProviderOptions, VercelSandbox, VercelSandboxMetadata, VercelSnapshot, WaitForPortOptions } from './types'
+export type { CloudflareNamespace, CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSession, CodeContext, CodeExecutionResult, DenoNamespace, DenoProviderOptions, DenoSandbox, DenoSandboxOptions, DurableObjectNamespaceLike, ExposedPort, FileEntry, GitCheckoutResult, ListFilesOptions, NetworkPolicy, ProcessOptions, Sandbox, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxOptions, SandboxProcess, SandboxProvider, VercelNamespace, VercelProviderOptions, VercelSandbox, VercelSandboxCredentials, VercelSandboxMetadata, VercelSnapshot, WaitForPortOptions } from './types'
 
 async function loadVercelSandbox(): Promise<VercelSandboxSDK> {
   const moduleName = '@vercel/sandbox'
@@ -90,13 +90,14 @@ export async function createSandbox(options: SandboxOptions = {}): Promise<Sandb
 
   if (resolved.name === 'vercel') {
     const id = `vercel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const { runtime = 'node24', timeout = 300_000, cpu, ports } = resolved
+    const { runtime = 'node24', timeout = 300_000, cpu, ports, credentials } = resolved
     const sdk = await loadVercelSandbox()
     const instance = await sdk.Sandbox.create({
       runtime,
       timeout,
       ports,
       ...(cpu && { resources: { vcpus: cpu } }),
+      ...(credentials && { token: credentials.token, teamId: credentials.teamId, projectId: credentials.projectId }),
     })
     return new VercelSandboxAdapter(id, instance, { runtime, createdAt: new Date().toISOString() })
   }
@@ -123,7 +124,7 @@ export async function createSandbox(options: SandboxOptions = {}): Promise<Sandb
 }
 
 type ResolvedProvider
-  = | { name: 'vercel', runtime?: string, timeout?: number, cpu?: number, ports?: number[] }
+  = | { name: 'vercel', runtime?: string, timeout?: number, cpu?: number, ports?: number[], credentials?: VercelSandboxCredentials }
     | { name: 'cloudflare', namespace?: DurableObjectNamespaceLike, sandboxId?: string, cloudflare?: CloudflareSandboxOptions, getSandbox?: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }
     | DenoProviderOptions
 

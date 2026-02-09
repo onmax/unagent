@@ -8,6 +8,10 @@ export default defineNitroConfig({
 
   compatibilityDate: '2026-02-05',
 
+  rollupConfig: {
+    external: ['pg-native'],
+  },
+
   cloudflare: {
     nodeCompat: true,
   },

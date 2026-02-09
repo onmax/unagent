@@ -47,6 +47,9 @@ export interface VercelCreateOptions {
   timeout?: number
   resources?: { vcpus?: number }
   ports?: number[]
+  token?: string
+  teamId?: string
+  projectId?: string
 }
 
 export interface VercelSandboxListItem {

@@ -5,3 +5,6 @@
 .output
 app/.well-known
 .wrangler
+public/
+app/auto-imports.d.ts
+app/components.d.ts
