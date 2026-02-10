@@ -44,11 +44,17 @@ export function getRatesForModel(modelId: string): CostRates | undefined {
   if (MODEL_PRICING[modelId])
     return MODEL_PRICING[modelId]
 
-  // fuzzy match: check if any key is contained in modelId
+  // fuzzy match: choose the most specific (longest) match to avoid short keys shadowing.
+  let bestKey: string | undefined
+  let bestRates: CostRates | undefined
   for (const [key, rates] of Object.entries(MODEL_PRICING)) {
-    if (modelId.includes(key) || key.includes(modelId))
-      return rates
+    if (modelId.includes(key) || key.includes(modelId)) {
+      if (!bestKey || key.length > bestKey.length) {
+        bestKey = key
+        bestRates = rates
+      }
+    }
   }
 
-  return undefined
+  return bestRates
 }

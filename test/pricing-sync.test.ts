@@ -10,12 +10,14 @@ describe('pricing sync', () => {
     const models = mod.parseModelsFromJson(json)
     const pricing = mod.buildPricing(models)
 
-    expect(pricing.get('gpt-4o')).toEqual({
+    expect(pricing.get('openai/gpt-4o')).toEqual({
       inputCostPerMillionTokens: 2.5,
       outputCostPerMillionTokens: 10,
       cacheReadCostPerMillionTokens: undefined,
       cacheWriteCostPerMillionTokens: undefined,
     })
+
+    expect(pricing.has('gpt-4o')).toBe(false)
 
     expect(pricing.get('openai/gpt-4o-mini')).toEqual({
       inputCostPerMillionTokens: 0.15,

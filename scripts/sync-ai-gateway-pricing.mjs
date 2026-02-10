@@ -62,11 +62,7 @@ export function buildPricing(models) {
       cacheWriteCostPerMillionTokens: toNumber(pricing?.input_cache_write) != null ? toNumber(pricing?.input_cache_write) * 1_000_000 : undefined,
     }
 
-    const slug = String(id).includes('/') ? String(id).split('/').pop() : String(id)
-
     out.set(id, rates)
-    if (slug && !out.has(slug))
-      out.set(slug, rates)
   }
 
   return out
