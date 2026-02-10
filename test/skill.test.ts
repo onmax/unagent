@@ -1,4 +1,5 @@
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'pathe'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { discoverSkills, extractSkillName, filterSkills, installSkill, parseSkillMd, toPromptXml, uninstallSkill, validateSkill, validateSkillMd } from '../src/skill'
@@ -151,6 +152,36 @@ Content`)
     expect(skills[0].name).toBe('nested-skill')
   })
 
+  it('expands ~ in discovery path', () => {
+    const oldHome = process.env.HOME
+    const oldUserProfile = process.env.USERPROFILE
+
+    const home = mkdtempSync(join(tmpdir(), 'unagent-home-'))
+    process.env.HOME = home
+    process.env.USERPROFILE = home
+
+    try {
+      const skillsBase = join(home, 'my-skills')
+      const skillDir = join(skillsBase, 'my-skill')
+      mkdirSync(skillDir, { recursive: true })
+      writeFileSync(join(skillDir, 'SKILL.md'), `---
+name: my-skill
+description: Test skill
+---
+Content`)
+
+      const skills = discoverSkills('~/my-skills')
+      expect(skills).toHaveLength(1)
+      expect(skills[0].name).toBe('my-skill')
+      expect(skills[0].path).toBe(skillDir)
+    }
+    finally {
+      process.env.HOME = oldHome
+      process.env.USERPROFILE = oldUserProfile
+      rmSync(home, { recursive: true, force: true })
+    }
+  })
+
   it('filterSkills filters by name', () => {
     const skills = [
       { name: 'vue', path: '/a', parsed: { frontmatter: { name: 'vue', description: '' }, content: '', raw: '' } },
@@ -228,6 +259,33 @@ Instructions here`)
     expect(result).toBeDefined()
     expect(Array.isArray(result.installed)).toBe(true)
     expect(Array.isArray(result.errors)).toBe(true)
+  })
+
+  it('resolves relative local sources against cwd', async () => {
+    const oldHome = process.env.HOME
+    const oldUserProfile = process.env.USERPROFILE
+
+    const home = mkdtempSync(join(tmpdir(), 'unagent-home-install-'))
+    process.env.HOME = home
+    process.env.USERPROFILE = home
+
+    try {
+      const cwd = targetDir
+      const result = await installSkill({
+        source: '../source',
+        cwd,
+        skills: ['test-skill'],
+        agents: ['claude-code'],
+      })
+
+      // We only care that resolution did not produce a "No skills found" error.
+      expect(result.errors.some(e => e.error.includes('No skills found'))).toBe(false)
+    }
+    finally {
+      process.env.HOME = oldHome
+      process.env.USERPROFILE = oldUserProfile
+      rmSync(home, { recursive: true, force: true })
+    }
   })
 
   it('returns error for non-existent skill', async () => {

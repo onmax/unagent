@@ -1,7 +1,7 @@
 import type { DiscoveredSkill } from './discover'
 import type { ResolvedAgent } from './resolve'
 import { rmSync } from 'node:fs'
-import { join } from 'pathe'
+import { isAbsolute, join, normalize, resolve } from 'pathe'
 import { expandPath, getAgentSkillsDir } from '../env/paths'
 import { cloneToTemp, isTempDir } from './_internal/git/clone'
 import { copyDirectory } from './_internal/link/copy'
@@ -17,6 +17,7 @@ export interface InstallSkillOptions {
   source: string
   skills?: string[]
   agents?: string[]
+  /** Reserved for future local/project installs (currently ignored). */
   global?: boolean
   cwd?: string
   mode?: 'symlink' | 'copy'
@@ -32,7 +33,8 @@ export interface InstallSkillResult {
 }
 
 export async function installSkill(options: InstallSkillOptions): Promise<InstallSkillResult> {
-  const { source, skills: skillNames, agents: agentIds, global: isGlobal = true, cwd = process.cwd(), mode = 'symlink' } = options
+  const { source, skills: skillNames, agents: agentIds, mode = 'symlink' } = options
+  const cwd = options.cwd ?? process.cwd()
 
   const installed: InstallSkillResultEntry[] = []
   const errors: InstallSkillErrorEntry[] = []
@@ -40,11 +42,25 @@ export async function installSkill(options: InstallSkillOptions): Promise<Instal
   // 1. Parse source
   const parsed = parseSource(source)
   let skillsDir: string
-  let shouldCleanup = false
+  let cloneRoot: string | undefined
+
+  function isPathWithin(child: string, parent: string): boolean {
+    const p = normalize(parent).replace(/\/+$/, '')
+    const c = normalize(child)
+    return c === p || c.startsWith(`${p}/`)
+  }
+
+  function resolveLocalSourcePath(raw: string): string {
+    if (raw.startsWith('~'))
+      return expandPath(raw)
+    if (isAbsolute(raw))
+      return normalize(raw)
+    return resolve(cwd, raw)
+  }
 
   // 2. Resolve source directory
   if (parsed.isLocal) {
-    skillsDir = expandPath(parsed.raw)
+    skillsDir = resolveLocalSourcePath(parsed.raw)
   }
   else {
     // Clone to temp
@@ -58,15 +74,25 @@ export async function installSkill(options: InstallSkillOptions): Promise<Instal
     if (!result.success) {
       return { success: false, installed, errors: [{ skill: '*', agent: '*', error: result.error || 'Failed to clone' }] }
     }
-    skillsDir = parsed.path ? join(result.path, parsed.path) : result.path
-    shouldCleanup = true
+
+    cloneRoot = result.path
+    skillsDir = cloneRoot
+
+    if (parsed.path) {
+      const candidate = resolve(cloneRoot, parsed.path)
+      if (!isPathWithin(candidate, cloneRoot)) {
+        cleanupTemp(cloneRoot)
+        return { success: false, installed, errors: [{ skill: '*', agent: '*', error: `Invalid source path: ${parsed.path}` }] }
+      }
+      skillsDir = candidate
+    }
   }
 
   // 3. Discover skills
   const discovered = discoverSkills(skillsDir, { recursive: true })
   if (discovered.length === 0) {
-    if (shouldCleanup)
-      cleanupTemp(skillsDir)
+    if (cloneRoot)
+      cleanupTemp(cloneRoot)
     return { success: false, installed, errors: [{ skill: '*', agent: '*', error: 'No skills found in source' }] }
   }
 
@@ -86,15 +112,15 @@ export async function installSkill(options: InstallSkillOptions): Promise<Instal
   // 5. Resolve target agents
   const targetAgents = resolveTargetAgents(agentIds)
   if (targetAgents.length === 0) {
-    if (shouldCleanup)
-      cleanupTemp(skillsDir)
+    if (cloneRoot)
+      cleanupTemp(cloneRoot)
     return { success: false, installed, errors: [{ skill: '*', agent: '*', error: 'No agents found or specified' }] }
   }
 
   // 6. Install each skill to each agent
   for (const skill of targetSkills) {
     for (const agent of targetAgents) {
-      const result = installSkillToAgent(skill, agent, { source: parsed.raw, isGlobal, cwd, mode })
+      const result = installSkillToAgent(skill, agent, { source: parsed.raw, mode })
       if (result.success) {
         installed.push({ skill: skill.name, agent: agent.id, path: result.path! })
       }
@@ -105,15 +131,15 @@ export async function installSkill(options: InstallSkillOptions): Promise<Instal
   }
 
   // 7. Cleanup temp dir if cloned
-  if (shouldCleanup)
-    cleanupTemp(skillsDir)
+  if (cloneRoot)
+    cleanupTemp(cloneRoot)
 
   return { success: errors.length === 0, installed, errors }
 }
 
 interface InstallToAgentResult { success: boolean, path?: string, error?: string }
 
-function installSkillToAgent(skill: DiscoveredSkill, agent: ResolvedAgent, ctx: { source: string, isGlobal: boolean, cwd: string, mode: 'symlink' | 'copy' }): InstallToAgentResult {
+function installSkillToAgent(skill: DiscoveredSkill, agent: ResolvedAgent, ctx: { source: string, mode: 'symlink' | 'copy' }): InstallToAgentResult {
   const skillsDir = getAgentSkillsDir(agent.config)
   if (!skillsDir) {
     return { success: false, error: `Agent ${agent.id} does not support skills` }

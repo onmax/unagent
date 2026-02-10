@@ -20,12 +20,21 @@ export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/q
 export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
 
 export function detectQueue(): QueueDetectionResult {
-  if (process.env.CLOUDFLARE_WORKER)
+  if (isWorkerd || envProvider === 'cloudflare_workers')
     return { type: 'cloudflare', details: { runtime: 'workers' } }
-  if (process.env.CF_PAGES)
+  if (envProvider === 'cloudflare_pages')
     return { type: 'cloudflare', details: { runtime: 'pages' } }
-  if (process.env.VERCEL || process.env.VERCEL_ENV)
-    return { type: 'vercel', details: { env: process.env.VERCEL_ENV } }
+  if (envProvider === 'vercel')
+    return { type: 'vercel', details: { env: (typeof process !== 'undefined' ? process.env.VERCEL_ENV : undefined) } }
+
+  const env = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>
+
+  if (env.CLOUDFLARE_WORKER)
+    return { type: 'cloudflare', details: { runtime: 'workers' } }
+  if (env.CF_PAGES)
+    return { type: 'cloudflare', details: { runtime: 'pages' } }
+  if (env.VERCEL || env.VERCEL_ENV)
+    return { type: 'vercel', details: { env: env.VERCEL_ENV } }
   return { type: 'none' }
 }
 
@@ -33,12 +42,21 @@ function canResolve(moduleName: string): boolean {
   try {
     const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
     if (!resolver)
-      return false
+      throw new Error('no-require-resolve')
     resolver(moduleName)
     return true
   }
   catch {
-    return false
+    try {
+      const resolver = (import.meta as { resolve?: (id: string) => string }).resolve
+      if (typeof resolver !== 'function')
+        return false
+      resolver(moduleName)
+      return true
+    }
+    catch {
+      return false
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import type { ParsedSkill } from './parse'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { basename, join } from 'pathe'
 import { parseSkillMd } from './parse'
 
@@ -15,17 +16,28 @@ export interface DiscoverOptions {
 
 const SKILL_FILE = 'SKILL.md'
 
+function expandTilde(path: string): string {
+  if (path === '~')
+    return homedir()
+  if (path.startsWith('~/') || path.startsWith('~\\'))
+    return join(homedir(), path.slice(2))
+  // Do not expand "~user" forms
+  return path
+}
+
 export function discoverSkills(dir: string, options: DiscoverOptions = {}): DiscoveredSkill[] {
   const { recursive = false } = options
 
-  if (!existsSync(dir))
+  const baseDir = expandTilde(dir)
+
+  if (!existsSync(baseDir))
     return []
 
   const skills: DiscoveredSkill[] = []
-  const entries = readdirSync(dir)
+  const entries = readdirSync(baseDir)
 
   for (const entry of entries) {
-    const fullPath = join(dir, entry)
+    const fullPath = join(baseDir, entry)
     const stat = statSync(fullPath)
 
     if (!stat.isDirectory())
