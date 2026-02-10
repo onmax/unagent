@@ -1,4 +1,5 @@
-import { runner } from '~/_shared/task'
+import { createError, defineEventHandler, readBody } from 'h3'
+import { runner } from '~/server/_shared/task'
 
 export default defineEventHandler(async (event) => {
   const { name, payload } = await readBody<{ name: string, payload?: Record<string, unknown> }>(event)
