@@ -30,10 +30,29 @@ export interface TaskRunnerOptions {
 export interface RunTaskOptions {
   payload?: Record<string, unknown>
   context?: Record<string, unknown>
+  /**
+   * Concurrent deduplication (same task + dedupe key returns the same promise).
+   * Defaults to true.
+   */
+  dedupe?: boolean
+  /**
+   * Override the computed dedupe key.
+   */
+  dedupeKey?: string
+  /**
+   * Include context in computed dedupe key.
+   * Defaults to false.
+   */
+  dedupeContext?: boolean
 }
 
 export interface RunCronTasksOptions {
   context?: Record<string, unknown>
+  /**
+   * What to do when no tasks are scheduled for the given cron.
+   * Defaults to 'throw' (backwards compatible).
+   */
+  onMissing?: 'throw' | 'noop'
 }
 
 export interface TaskRunner {
