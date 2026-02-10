@@ -1,5 +1,5 @@
-import type { FileEntry, ListFilesOptions, ProcessOptions, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
-import type { ChildProcess, DenoNamespace, DenoSandboxInstance, SandboxDeno, SandboxEnv, SandboxFs, SpawnOptions, VsCode, VsCodeOptions } from '../types/deno'
+import type { SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxFileEntry, SandboxListFilesOptions, SandboxProcess, SandboxProcessOptions, SandboxWaitForPortOptions } from '../types/common'
+import type { DenoSandboxChildProcess, DenoSandboxInstance, DenoSandboxNamespace, DenoSandboxSpawnOptions, DenoSandboxVsCode, DenoSandboxVsCodeOptions, SandboxDeno, SandboxEnv, SandboxFs } from '../types/deno'
 import { NotSupportedError, SandboxError } from '../errors'
 import { BaseSandboxAdapter } from './base'
 
@@ -25,7 +25,7 @@ async function readStream(stream: ReadableStream<Uint8Array>, onChunk?: (chunk: 
 class DenoProcessHandle implements SandboxProcess {
   readonly id: string
   readonly command: string
-  private process: ChildProcess
+  private process: DenoSandboxChildProcess
   private sandbox: DenoSandboxInstance
   private stdout = ''
   private stderr = ''
@@ -34,7 +34,7 @@ class DenoProcessHandle implements SandboxProcess {
   private logsPumpError?: unknown
   private logEventWaiters: Array<() => void> = []
 
-  constructor(id: string, command: string, process: ChildProcess, sandbox: DenoSandboxInstance) {
+  constructor(id: string, command: string, process: DenoSandboxChildProcess, sandbox: DenoSandboxInstance) {
     this.id = id
     this.command = command
     this.process = process
@@ -177,7 +177,7 @@ class DenoProcessHandle implements SandboxProcess {
     throw new SandboxError(`Timeout waiting for log pattern: ${pattern}`, 'TIMEOUT')
   }
 
-  async waitForPort(port: number, opts?: WaitForPortOptions): Promise<void> {
+  async waitForPort(port: number, opts?: SandboxWaitForPortOptions): Promise<void> {
     const timeout = opts?.timeout ?? 30_000
     const hostname = opts?.hostname ?? 'localhost'
     const startTime = Date.now()
@@ -200,7 +200,7 @@ class DenoProcessHandle implements SandboxProcess {
   }
 }
 
-class DenoNamespaceImpl implements DenoNamespace {
+class DenoNamespaceImpl implements DenoSandboxNamespace {
   readonly native: DenoSandboxInstance
   private sandbox: DenoSandboxInstance
 
@@ -237,7 +237,7 @@ class DenoNamespaceImpl implements DenoNamespace {
     return this.sandbox.exposeSsh()
   }
 
-  async exposeVscode(path?: string, options?: VsCodeOptions): Promise<VsCode> {
+  async exposeVscode(path?: string, options?: DenoSandboxVsCodeOptions): Promise<DenoSandboxVsCode> {
     return this.sandbox.exposeVscode(path, options)
   }
 
@@ -257,7 +257,7 @@ class DenoNamespaceImpl implements DenoNamespace {
     await this.sandbox.kill()
   }
 
-  async spawn(command: string | URL, options?: SpawnOptions): Promise<ChildProcess> {
+  async spawn(command: string | URL, options?: DenoSandboxSpawnOptions): Promise<DenoSandboxChildProcess> {
     return this.sandbox.spawn(command, options)
   }
 }
@@ -278,7 +278,7 @@ export class DenoSandboxAdapter extends BaseSandboxAdapter<'deno'> {
   }
 
   private sandbox: DenoSandboxInstance
-  private _deno?: DenoNamespace
+  private _deno?: DenoSandboxNamespace
 
   constructor(sandbox: DenoSandboxInstance) {
     super()
@@ -286,7 +286,7 @@ export class DenoSandboxAdapter extends BaseSandboxAdapter<'deno'> {
     this.id = sandbox.id
   }
 
-  override get deno(): DenoNamespace {
+  override get deno(): DenoSandboxNamespace {
     if (!this._deno) {
       this._deno = new DenoNamespaceImpl(this.sandbox)
     }
@@ -297,7 +297,7 @@ export class DenoSandboxAdapter extends BaseSandboxAdapter<'deno'> {
     if (opts?.sudo)
       throw new NotSupportedError('sudo', 'deno')
 
-    const spawnOpts: SpawnOptions = {
+    const spawnOpts: DenoSandboxSpawnOptions = {
       args,
       cwd: opts?.cwd,
       env: opts?.env,
@@ -390,8 +390,8 @@ export class DenoSandboxAdapter extends BaseSandboxAdapter<'deno'> {
     })
   }
 
-  async startProcess(cmd: string, args: string[] = [], opts?: ProcessOptions): Promise<SandboxProcess> {
-    const spawnOpts: SpawnOptions = {
+  async startProcess(cmd: string, args: string[] = [], opts?: SandboxProcessOptions): Promise<SandboxProcess> {
+    const spawnOpts: DenoSandboxSpawnOptions = {
       args,
       cwd: opts?.cwd,
       env: opts?.env,
@@ -404,8 +404,8 @@ export class DenoSandboxAdapter extends BaseSandboxAdapter<'deno'> {
     return new DenoProcessHandle(processId, `${cmd} ${args.join(' ')}`, process, this.sandbox)
   }
 
-  override async listFiles(path: string, opts?: ListFilesOptions): Promise<FileEntry[]> {
-    const results: FileEntry[] = []
+  override async listFiles(path: string, opts?: SandboxListFilesOptions): Promise<SandboxFileEntry[]> {
+    const results: SandboxFileEntry[] = []
     const base = path.replace(/\/$/, '')
 
     const walk = async (dir: string): Promise<void> => {

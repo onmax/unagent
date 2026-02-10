@@ -10,6 +10,7 @@ export default antfu({
     'playground/.vercel/**',
     'playground/.wrangler/**',
     'playground/server/plugins/**',
+    'playground/public/assets/**',
   ],
   rules: {
     'node/prefer-global/process': 'off',

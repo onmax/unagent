@@ -31,6 +31,9 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },
     { id: 'openworkflow', label: 'OpenWorkflow', envRequired: ['DATABASE_URL'] },
   ],
+  task: [
+    { id: 'node', label: 'Node' },
+  ],
   vector: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare' },
     { id: 'upstash', label: 'Upstash', envRequired: ['UPSTASH_VECTOR_URL', 'UPSTASH_VECTOR_TOKEN'] },

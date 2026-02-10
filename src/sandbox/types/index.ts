@@ -1,7 +1,7 @@
-import type { CloudflareNamespace } from './cloudflare'
-import type { FileEntry, ListFilesOptions, ProcessOptions, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxProcess, SandboxProvider } from './common'
-import type { DenoNamespace } from './deno'
-import type { VercelNamespace } from './vercel'
+import type { CloudflareSandboxNamespace } from './cloudflare'
+import type { SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxFileEntry, SandboxListFilesOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider } from './common'
+import type { DenoSandboxNamespace } from './deno'
+import type { VercelSandboxNamespace } from './vercel'
 
 export type * from './cloudflare'
 export type * from './common'
@@ -9,7 +9,7 @@ export type * from './deno'
 export type * from './vercel'
 
 // === Unified Sandbox Interface ===
-export interface Sandbox<P extends SandboxProvider = SandboxProvider> {
+export interface SandboxClient<P extends SandboxProvider = SandboxProvider> {
   readonly id: string
   readonly provider: P
   readonly supports: SandboxCapabilities
@@ -23,21 +23,21 @@ export interface Sandbox<P extends SandboxProvider = SandboxProvider> {
   // === New unified (both platforms) ===
   mkdir: (path: string, opts?: { recursive?: boolean }) => Promise<void>
   readFileStream: (path: string) => Promise<ReadableStream<Uint8Array>>
-  startProcess: (cmd: string, args?: string[], opts?: ProcessOptions) => Promise<SandboxProcess>
+  startProcess: (cmd: string, args?: string[], opts?: SandboxProcessOptions) => Promise<SandboxProcess>
 
   // === Unified (CF full support, Vercel throws NotSupportedError) ===
-  listFiles: (path: string, opts?: ListFilesOptions) => Promise<FileEntry[]>
+  listFiles: (path: string, opts?: SandboxListFilesOptions) => Promise<SandboxFileEntry[]>
   exists: (path: string) => Promise<boolean>
   deleteFile: (path: string) => Promise<void>
   moveFile: (src: string, dst: string) => Promise<void>
 
   // === Platform namespaces ===
-  readonly vercel: P extends 'vercel' ? VercelNamespace : never
-  readonly cloudflare: P extends 'cloudflare' ? CloudflareNamespace : never
-  readonly deno: P extends 'deno' ? DenoNamespace : never
+  readonly vercel: P extends 'vercel' ? VercelSandboxNamespace : never
+  readonly cloudflare: P extends 'cloudflare' ? CloudflareSandboxNamespace : never
+  readonly deno: P extends 'deno' ? DenoSandboxNamespace : never
 }
 
 // === Typed sandbox aliases ===
-export type VercelSandbox = Sandbox<'vercel'>
-export type CloudflareSandbox = Sandbox<'cloudflare'>
-export type DenoSandbox = Sandbox<'deno'>
+export type VercelSandboxClient = SandboxClient<'vercel'>
+export type CloudflareSandboxClient = SandboxClient<'cloudflare'>
+export type DenoSandboxClient = SandboxClient<'deno'>

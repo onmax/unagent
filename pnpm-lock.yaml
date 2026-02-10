@@ -85,6 +85,9 @@ catalogs:
       specifier: ^2.13.1
       version: 2.13.1
   prod:
+    croner:
+      specifier: ^9.0.0
+      version: 9.1.0
     hookable:
       specifier: ^6.0.1
       version: 6.0.1
@@ -182,6 +185,9 @@ importers:
       ai:
         specifier: '>=3.0.0'
         version: 6.0.69(zod@4.1.11)
+      croner:
+        specifier: catalog:prod
+        version: 9.1.0
       hookable:
         specifier: catalog:prod
         version: 6.0.1

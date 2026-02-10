@@ -1,5 +1,11 @@
 export type SandboxProvider = 'vercel' | 'cloudflare' | 'deno'
 
+// === Detection ===
+export interface SandboxDetectionResult {
+  type: 'cloudflare' | 'vercel' | 'deno' | 'docker' | 'none'
+  details?: Record<string, unknown>
+}
+
 // === Exec Options ===
 export interface SandboxExecOptions {
   cwd?: string
@@ -30,7 +36,7 @@ export interface SandboxCapabilities {
 }
 
 // === File Operations ===
-export interface FileEntry {
+export interface SandboxFileEntry {
   name: string
   path: string
   type: 'file' | 'directory'
@@ -38,17 +44,17 @@ export interface FileEntry {
   mtime?: string
 }
 
-export interface ListFilesOptions {
+export interface SandboxListFilesOptions {
   recursive?: boolean
 }
 
 // === Process ===
-export interface ProcessOptions {
+export interface SandboxProcessOptions {
   cwd?: string
   env?: Record<string, string>
 }
 
-export interface WaitForPortOptions {
+export interface SandboxWaitForPortOptions {
   timeout?: number
   hostname?: string
 }
@@ -60,7 +66,7 @@ export interface SandboxProcess {
   logs: () => Promise<{ stdout: string, stderr: string }>
   wait: (timeout?: number) => Promise<{ exitCode: number }>
   waitForLog: (pattern: string | RegExp, timeout?: number) => Promise<{ line: string }>
-  waitForPort: (port: number, opts?: WaitForPortOptions) => Promise<void>
+  waitForPort: (port: number, opts?: SandboxWaitForPortOptions) => Promise<void>
 }
 
 // === Provider Options ===
@@ -81,7 +87,7 @@ export interface VercelSandboxCredentials {
   projectId: string
 }
 
-export interface VercelProviderOptions {
+export interface VercelSandboxProviderOptions {
   name: 'vercel'
   runtime?: string
   timeout?: number
@@ -90,7 +96,7 @@ export interface VercelProviderOptions {
   credentials?: VercelSandboxCredentials
 }
 
-export interface CloudflareProviderOptions {
+export interface CloudflareSandboxProviderOptions {
   name: 'cloudflare'
   namespace: DurableObjectNamespaceLike
   sandboxId?: string
@@ -98,7 +104,7 @@ export interface CloudflareProviderOptions {
   getSandbox?: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T
 }
 
-export interface DenoProviderOptions {
+export interface DenoSandboxProviderOptions {
   name: 'deno'
   allowNet?: string[]
   debug?: boolean
@@ -115,14 +121,14 @@ export interface DenoProviderOptions {
   volumes?: Record<string, string>
 }
 
-export type SandboxProviderOptions = VercelProviderOptions | CloudflareProviderOptions | DenoProviderOptions
+export type SandboxProviderOptions = VercelSandboxProviderOptions | CloudflareSandboxProviderOptions | DenoSandboxProviderOptions
 
 export interface SandboxOptions {
   provider?: SandboxProviderOptions
 }
 
 // === Cloudflare Stub Types ===
-export interface CloudflareExecResult {
+export interface CloudflareSandboxExecResult {
   success: boolean
   exitCode: number
   stdout: string
@@ -133,14 +139,14 @@ export interface CloudflareExecResult {
   sessionId?: string
 }
 
-export interface CloudflareWriteFileResult {
+export interface CloudflareSandboxWriteFileResult {
   success: boolean
   path: string
   timestamp: string
   exitCode?: number
 }
 
-export interface CloudflareReadFileResult {
+export interface CloudflareSandboxReadFileResult {
   success: boolean
   path: string
   content: string
@@ -153,20 +159,20 @@ export interface CloudflareReadFileResult {
 }
 
 export interface CloudflareSandboxStub {
-  exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string | undefined>, cwd?: string, stream?: boolean, onOutput?: (data: string, stream: 'stdout' | 'stderr') => void }) => Promise<CloudflareExecResult>
-  writeFile: (path: string, content: string, opts?: { encoding?: string }) => Promise<CloudflareWriteFileResult>
-  readFile: (path: string, opts?: { encoding?: string }) => Promise<CloudflareReadFileResult>
+  exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string | undefined>, cwd?: string, stream?: boolean, onOutput?: (data: string, stream: 'stdout' | 'stderr') => void }) => Promise<CloudflareSandboxExecResult>
+  writeFile: (path: string, content: string, opts?: { encoding?: string }) => Promise<CloudflareSandboxWriteFileResult>
+  readFile: (path: string, opts?: { encoding?: string }) => Promise<CloudflareSandboxReadFileResult>
   readFileStream?: (path: string) => Promise<ReadableStream<Uint8Array>>
   mkdir?: (path: string, opts?: { recursive?: boolean }) => Promise<{ success: boolean }>
   listFiles?: (path: string, opts?: { recursive?: boolean }) => Promise<{ files: Array<{ name: string, path: string, type: 'file' | 'directory', size?: number, mtime?: string }> }>
   exists?: (path: string) => Promise<{ exists: boolean }>
   deleteFile?: (path: string) => Promise<{ success: boolean }>
   moveFile?: (src: string, dst: string) => Promise<{ success: boolean }>
-  startProcess?: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareProcessInfo>
+  startProcess?: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareSandboxProcessInfo>
   destroy: () => Promise<void>
 }
 
-export interface CloudflareProcessInfo {
+export interface CloudflareSandboxProcessInfo {
   id: string
   command: string
   kill: (signal?: string) => Promise<void>

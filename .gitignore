@@ -4,3 +4,4 @@ dist
 .DS_Store
 .vercel
 .env*.local
+playground/public/assets

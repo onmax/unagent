@@ -1,5 +1,5 @@
-import type { ProcessOptions, SandboxExecOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
-import type { NetworkPolicy, VercelCommandResult, VercelNamespace, VercelSandboxInstance, VercelSandboxMetadata, VercelSnapshot } from '../types/vercel'
+import type { SandboxExecOptions, SandboxExecResult, SandboxProcess, SandboxProcessOptions, SandboxWaitForPortOptions } from '../types/common'
+import type { SandboxNetworkPolicy, VercelSandboxCommandResult, VercelSandboxInstance, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxSnapshot } from '../types/vercel'
 import { Buffer } from 'node:buffer'
 import { Readable, Writable } from 'node:stream'
 import { NotSupportedError, SandboxError } from '../errors'
@@ -8,7 +8,7 @@ import { BaseSandboxAdapter } from './base'
 class VercelProcessHandle implements SandboxProcess {
   readonly id: string
   readonly command: string
-  private cmdResult: VercelCommandResult
+  private cmdResult: VercelSandboxCommandResult
   private collectedStdout = ''
   private collectedStderr = ''
   private logsGenerator?: AsyncGenerator<{ stream: 'stdout' | 'stderr', data: string }>
@@ -18,7 +18,7 @@ class VercelProcessHandle implements SandboxProcess {
   private logEventWaiters: Array<() => void> = []
   private resolvePortUrl?: (port: number) => string
 
-  constructor(id: string, command: string, cmdResult: VercelCommandResult, resolvePortUrl?: (port: number) => string) {
+  constructor(id: string, command: string, cmdResult: VercelSandboxCommandResult, resolvePortUrl?: (port: number) => string) {
     this.id = id
     this.command = command
     this.cmdResult = cmdResult
@@ -155,7 +155,7 @@ class VercelProcessHandle implements SandboxProcess {
     throw new SandboxError(`Timeout waiting for log pattern: ${pattern}`, 'TIMEOUT')
   }
 
-  async waitForPort(port: number, opts?: WaitForPortOptions): Promise<void> {
+  async waitForPort(port: number, opts?: SandboxWaitForPortOptions): Promise<void> {
     const timeout = opts?.timeout ?? 30_000
     const hostname = opts?.hostname ?? 'localhost'
     const startTime = Date.now()
@@ -192,7 +192,7 @@ class VercelProcessHandle implements SandboxProcess {
   }
 }
 
-class VercelNamespaceImpl implements VercelNamespace {
+class VercelNamespaceImpl implements VercelSandboxNamespace {
   readonly native: VercelSandboxInstance
   private instance: VercelSandboxInstance
   private sandboxId: string
@@ -205,26 +205,26 @@ class VercelNamespaceImpl implements VercelNamespace {
     this._metadata = metadata
   }
 
-  async snapshot(): Promise<VercelSnapshot> {
+  async snapshot(): Promise<VercelSandboxSnapshot> {
     const instanceAny = this.instance as unknown as Record<string, unknown>
     if (typeof instanceAny.snapshot === 'function') {
-      return instanceAny.snapshot() as Promise<VercelSnapshot>
+      return instanceAny.snapshot() as Promise<VercelSandboxSnapshot>
     }
     throw new NotSupportedError('snapshot', 'vercel')
   }
 
-  async getSnapshot(id: string): Promise<VercelSnapshot> {
+  async getSnapshot(id: string): Promise<VercelSandboxSnapshot> {
     const instanceAny = this.instance as unknown as Record<string, unknown>
     if (typeof instanceAny.getSnapshot === 'function') {
-      return instanceAny.getSnapshot(id) as Promise<VercelSnapshot>
+      return instanceAny.getSnapshot(id) as Promise<VercelSandboxSnapshot>
     }
     throw new NotSupportedError('getSnapshot', 'vercel')
   }
 
-  async listSnapshots(): Promise<{ snapshots: VercelSnapshot[] }> {
+  async listSnapshots(): Promise<{ snapshots: VercelSandboxSnapshot[] }> {
     const instanceAny = this.instance as unknown as Record<string, unknown>
     if (typeof instanceAny.listSnapshots === 'function') {
-      return instanceAny.listSnapshots() as Promise<{ snapshots: VercelSnapshot[] }>
+      return instanceAny.listSnapshots() as Promise<{ snapshots: VercelSandboxSnapshot[] }>
     }
     throw new NotSupportedError('listSnapshots', 'vercel')
   }
@@ -256,10 +256,10 @@ class VercelNamespaceImpl implements VercelNamespace {
     throw new NotSupportedError('extendTimeout', 'vercel')
   }
 
-  async updateNetworkPolicy(policy: NetworkPolicy): Promise<void> {
+  async updateNetworkPolicy(policy: SandboxNetworkPolicy): Promise<void> {
     const instanceAny = this.instance as unknown as Record<string, unknown>
     if (typeof instanceAny.updateNetworkPolicy === 'function') {
-      await (instanceAny.updateNetworkPolicy as (policy: NetworkPolicy) => Promise<void>)(policy)
+      await (instanceAny.updateNetworkPolicy as (policy: SandboxNetworkPolicy) => Promise<void>)(policy)
       return
     }
     throw new NotSupportedError('updateNetworkPolicy', 'vercel')
@@ -291,7 +291,7 @@ export class VercelSandboxAdapter extends BaseSandboxAdapter<'vercel'> {
   }
 
   private instance: VercelSandboxInstance
-  private _vercel?: VercelNamespace
+  private _vercel?: VercelSandboxNamespace
   private metadata: { runtime: string, createdAt: string }
 
   constructor(id: string, instance: VercelSandboxInstance, metadata: { runtime: string, createdAt: string }) {
@@ -301,7 +301,7 @@ export class VercelSandboxAdapter extends BaseSandboxAdapter<'vercel'> {
     this.metadata = metadata
   }
 
-  override get vercel(): VercelNamespace {
+  override get vercel(): VercelSandboxNamespace {
     if (!this._vercel) {
       this._vercel = new VercelNamespaceImpl(this.instance, this.id, this.metadata)
     }
@@ -380,7 +380,7 @@ export class VercelSandboxAdapter extends BaseSandboxAdapter<'vercel'> {
     return Readable.toWeb(stream) as ReadableStream<Uint8Array>
   }
 
-  async startProcess(cmd: string, args: string[] = [], opts?: ProcessOptions): Promise<SandboxProcess> {
+  async startProcess(cmd: string, args: string[] = [], opts?: SandboxProcessOptions): Promise<SandboxProcess> {
     const processId = `vercel-proc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const cmdResult = await this.instance.runCommand({
       cmd,

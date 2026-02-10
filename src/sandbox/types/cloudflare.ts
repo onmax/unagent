@@ -1,13 +1,13 @@
 import type { CloudflareSandboxStub } from './common'
 
 // === Git ===
-export interface GitCheckoutOptions {
+export interface SandboxGitCheckoutOptions {
   branch?: string
   depth?: number
   sparse?: string[]
 }
 
-export interface GitCheckoutResult {
+export interface SandboxGitCheckoutResult {
   success: boolean
   path: string
   branch: string
@@ -15,20 +15,20 @@ export interface GitCheckoutResult {
 }
 
 // === Sessions ===
-export interface SessionOptions {
+export interface CloudflareSandboxSessionOptions {
   cwd?: string
   env?: Record<string, string>
   timeout?: number
 }
 
-export interface CloudflareSession {
+export interface CloudflareSandboxSession {
   id: string
   exec: (cmd: string, opts?: { timeout?: number, env?: Record<string, string>, cwd?: string }) => Promise<{ stdout: string, stderr: string, exitCode: number }>
-  startProcess: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareSessionProcess>
+  startProcess: (cmd: string, args?: string[], opts?: { cwd?: string, env?: Record<string, string> }) => Promise<CloudflareSandboxSessionProcess>
   destroy: () => Promise<void>
 }
 
-export interface CloudflareSessionProcess {
+export interface CloudflareSandboxSessionProcess {
   id: string
   kill: (signal?: string) => Promise<void>
   logs: () => Promise<{ stdout: string, stderr: string }>
@@ -36,72 +36,72 @@ export interface CloudflareSessionProcess {
 }
 
 // === Code Interpreter ===
-export interface CodeContextOptions {
+export interface SandboxCodeContextOptions {
   language?: 'python' | 'javascript' | 'typescript'
   timeout?: number
 }
 
-export interface RunCodeOptions {
-  context?: CodeContext
+export interface SandboxRunCodeOptions {
+  context?: SandboxCodeContext
   timeout?: number
   language?: 'python' | 'javascript' | 'typescript'
 }
 
-export interface CodeExecutionResult {
+export interface SandboxCodeExecutionResult {
   success: boolean
   output: string
   error?: string
   executionTime: number
 }
 
-export interface CodeContext {
+export interface SandboxCodeContext {
   id: string
   language: 'python' | 'javascript' | 'typescript'
   createdAt: string
 }
 
 // === Ports ===
-export interface ExposePortOptions {
+export interface SandboxExposePortOptions {
   hostname?: string
   protocol?: 'http' | 'https'
 }
 
-export interface ExposedPort {
+export interface SandboxExposedPort {
   port: number
   url: string
   hostname: string
 }
 
 // === Buckets ===
-export interface MountBucketOptions {
+export interface SandboxMountBucketOptions {
   readonly?: boolean
 }
 
 // === Cloudflare Namespace ===
-export interface CloudflareNamespace {
+export interface CloudflareSandboxNamespace {
   readonly native: CloudflareSandboxStub
 
   // Git
-  gitCheckout: (url: string, opts?: GitCheckoutOptions) => Promise<GitCheckoutResult>
+  gitCheckout: (url: string, opts?: SandboxGitCheckoutOptions) => Promise<SandboxGitCheckoutResult>
 
   // Sessions
-  createSession: (opts?: SessionOptions) => Promise<CloudflareSession>
-  getSession: (id: string) => Promise<CloudflareSession>
+  createSession: (opts?: CloudflareSandboxSessionOptions) => Promise<CloudflareSandboxSession>
+  getSession: (id: string) => Promise<CloudflareSandboxSession>
   deleteSession: (id: string) => Promise<void>
 
   // Code interpreter
-  createCodeContext: (opts?: CodeContextOptions) => Promise<CodeContext>
-  runCode: (code: string, opts?: RunCodeOptions) => Promise<CodeExecutionResult>
-  listCodeContexts: () => Promise<CodeContext[]>
+  createCodeContext: (opts?: SandboxCodeContextOptions) => Promise<SandboxCodeContext>
+  runCode: (code: string, opts?: SandboxRunCodeOptions) => Promise<SandboxCodeExecutionResult>
+  listCodeContexts: () => Promise<SandboxCodeContext[]>
   deleteCodeContext: (id: string) => Promise<void>
 
   // Ports
-  exposePort: (port: number, opts?: ExposePortOptions) => Promise<{ url: string }>
+  exposePort: (port: number, opts?: SandboxExposePortOptions) => Promise<{ url: string }>
   unexposePort: (port: number) => Promise<void>
-  getExposedPorts: (hostname?: string) => Promise<ExposedPort[]>
+  getExposedPorts: (hostname?: string) => Promise<SandboxExposedPort[]>
 
   // Buckets
-  mountBucket: (bucket: string, path: string, opts?: MountBucketOptions) => Promise<void>
+  mountBucket: (bucket: string, path: string, opts?: SandboxMountBucketOptions) => Promise<void>
   unmountBucket: (path: string) => Promise<void>
 
   // Env

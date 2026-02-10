@@ -35,6 +35,10 @@
       "types": "./dist/fs/index.d.ts",
       "default": "./dist/fs/index.js"
     },
+    "./task": {
+      "types": "./dist/task/index.d.ts",
+      "default": "./dist/task/index.js"
+    },
     "./queue": {
       "types": "./dist/queue/index.d.ts",
       "default": "./dist/queue/index.js"
@@ -185,6 +189,7 @@
     }
   },
   "dependencies": {
+    "croner": "catalog:prod",
     "hookable": "catalog:prod",
     "pathe": "catalog:prod",
     "std-env": "catalog:prod",

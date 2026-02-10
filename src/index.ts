@@ -42,8 +42,10 @@ export type {
   VercelQueueSendOptions,
 } from './queue'
 export { createSandbox, detectSandbox, isSandboxAvailable, SandboxError, NotSupportedError as SandboxNotSupportedError } from './sandbox'
-export type { CloudflareNamespace, CloudflareProviderOptions, CloudflareSandbox, CloudflareSandboxOptions, CloudflareSession, CodeContext, CodeExecutionResult, DenoNamespace, DenoProviderOptions, DenoSandbox, DenoSandboxOptions, DurableObjectNamespaceLike, ExposedPort, FileEntry, GitCheckoutResult, ListFilesOptions, NetworkPolicy, ProcessOptions, Sandbox, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxOptions, SandboxProcess, SandboxProvider, VercelNamespace, VercelProviderOptions, VercelSandbox, VercelSandboxMetadata, VercelSnapshot, WaitForPortOptions } from './sandbox'
+export type { CloudflareSandboxClient, CloudflareSandboxNamespace, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxSession, DenoSandboxClient, DenoSandboxNamespace, DenoSandboxOptions, DenoSandboxProviderOptions, DurableObjectNamespaceLike, SandboxCapabilities, SandboxClient, SandboxCodeContext, SandboxCodeExecutionResult, SandboxExecOptions, SandboxExecResult, SandboxExposedPort, SandboxFileEntry, SandboxGitCheckoutResult, SandboxListFilesOptions, SandboxNetworkPolicy, SandboxOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider, SandboxWaitForPortOptions, VercelSandboxClient, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxProviderOptions, VercelSandboxSnapshot } from './sandbox'
 export * from './skill'
+export { createTaskRunner, TaskError, toCloudflareCrons, toVercelCrons } from './task'
+export type { MaybePromise, RunCronTasksOptions, RunTaskOptions, Task, TaskEntry, TaskEvent, TaskMeta, TaskResult, TaskRunner, TaskRunnerOptions } from './task'
 export * from './usage'
 export * from './vector'
 export * from './vercel'
