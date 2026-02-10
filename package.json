@@ -93,6 +93,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "pricing:sync": "node scripts/sync-ai-gateway-pricing.mjs",
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",

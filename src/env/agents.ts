@@ -15,7 +15,7 @@ export const agents: Record<string, AgentConfig> = {
     rulesFile: 'CLAUDE.md',
     skillsDir: 'skills',
     legacySkillsDirs: ['.agents/skills'],
-    envDetect: ['CLAUDE_CODE', 'CLAUDE_CODE_ENTRY'],
+    envDetect: ['CLAUDECODE', 'CLAUDE_CODE', 'CLAUDE_CODE_ENTRY'],
     description: 'Anthropic\'s official CLI for Claude',
   },
   'cursor': {
@@ -23,8 +23,16 @@ export const agents: Record<string, AgentConfig> = {
     configDir: '~/.cursor',
     rulesFile: '.cursorrules',
     skillsDir: 'rules',
-    envDetect: ['CURSOR_SESSION_ID'],
+    envDetect: ['CURSOR_SESSION_ID', 'CURSOR_TRACE_ID'],
     description: 'AI-powered code editor',
+  },
+  'cursor-cli': {
+    name: 'Cursor CLI',
+    configDir: '~/.cursor',
+    rulesFile: '.cursorrules',
+    skillsDir: 'rules',
+    envDetect: ['CURSOR_AGENT'],
+    description: 'Cursor agent CLI',
   },
   'windsurf': {
     name: 'Windsurf',
@@ -67,8 +75,14 @@ export const agents: Record<string, AgentConfig> = {
     name: 'OpenAI Codex CLI',
     configDir: '~/.codex',
     rulesFile: 'instructions.md',
-    envDetect: ['CODEX_HOME'],
+    envDetect: ['CODEX_HOME', 'CODEX_SANDBOX'],
     description: 'OpenAI\'s Codex CLI',
+  },
+  'gemini-cli': {
+    name: 'Gemini CLI',
+    configDir: '~/.config/gemini',
+    envDetect: ['GEMINI_CLI'],
+    description: 'Google\'s Gemini CLI',
   },
   'zed': {
     name: 'Zed',
@@ -192,6 +206,18 @@ export const agents: Record<string, AgentConfig> = {
     configDir: '~/.devin',
     envDetect: ['DEVIN_API_KEY'],
     description: 'Cognition\'s AI software engineer',
+  },
+  'augment-cli': {
+    name: 'Augment CLI',
+    configDir: '~/.config/augment',
+    envDetect: ['AUGMENT_AGENT'],
+    description: 'Augment agent CLI',
+  },
+  'opencode': {
+    name: 'OpenCode',
+    configDir: '~/.config/opencode',
+    envDetect: ['OPENCODE_CLIENT'],
+    description: 'OpenCode client',
   },
   'bolt': {
     name: 'Bolt',
@@ -324,8 +350,9 @@ export const agents: Record<string, AgentConfig> = {
   },
   'trae': {
     name: 'Trae AI',
-    configDir: '~/.trae',
-    rulesFile: 'rules/project_rules.md',
+    configDir: '.trae',
+    rulesFile: 'project_rules.md',
+    envDetect: ['TERM_PROGRAM=Trae', 'TERM_PROGRAM=trae', 'TRAE'],
     description: 'AI-powered code editor',
   },
 }
