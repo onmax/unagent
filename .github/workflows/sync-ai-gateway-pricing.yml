@@ -1,0 +1,56 @@
+name: Sync AI Gateway Pricing
+
+on:
+  schedule:
+    - cron: '0 9 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - run: pnpm install
+      - run: pnpm pricing:sync
+
+      - name: Create PR (if changed)
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="chore/ai-gateway-pricing-sync"
+          git checkout -B "$BRANCH"
+          git add -A
+          git commit -m "chore: sync ai gateway pricing"
+          git push --force-with-lease origin "$BRANCH"
+
+          PR_NUMBER="$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' || true)"
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            echo "PR already exists."
+            exit 0
+          fi
+
+          gh pr create \
+            --head "$BRANCH" \
+            --title "chore: sync ai gateway pricing" \
+            --body "Sync generated pricing table from [vercel.com/ai-gateway/models](https://vercel.com/ai-gateway/models)."
