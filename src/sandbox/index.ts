@@ -9,35 +9,62 @@ export { NotSupportedError, SandboxError } from './errors'
 export type { CloudflareSandboxClient, CloudflareSandboxNamespace, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxSession, DenoSandboxClient, DenoSandboxNamespace, DenoSandboxOptions, DenoSandboxProviderOptions, DurableObjectNamespaceLike, SandboxCapabilities, SandboxClient, SandboxCodeContext, SandboxCodeExecutionResult, SandboxExecOptions, SandboxExecResult, SandboxExposedPort, SandboxFileEntry, SandboxGitCheckoutResult, SandboxListFilesOptions, SandboxNetworkPolicy, SandboxOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider, SandboxWaitForPortOptions, VercelSandboxClient, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxProviderOptions, VercelSandboxSnapshot } from './types'
 
 export function detectSandbox(): import('./types/common').SandboxDetectionResult {
-  if (process.env.CLOUDFLARE_WORKER)
+  if (isWorkerd || envProvider === 'cloudflare_workers')
     return { type: 'cloudflare', details: { runtime: 'workers' } }
-  if (process.env.CF_PAGES)
+  if (envProvider === 'cloudflare_pages')
     return { type: 'cloudflare', details: { runtime: 'pages' } }
-  if (process.env.VERCEL || process.env.VERCEL_ENV)
-    return { type: 'vercel', details: { env: process.env.VERCEL_ENV } }
-  if (process.env.DENO_DEPLOYMENT_ID)
-    return { type: 'deno', details: { deploymentId: process.env.DENO_DEPLOYMENT_ID } }
-  if (process.env.DOCKER_CONTAINER)
+  if (envProvider === 'vercel')
+    return { type: 'vercel', details: { env: (typeof process !== 'undefined' ? process.env.VERCEL_ENV : undefined) } }
+  if (envProvider === 'deno-deploy')
+    return { type: 'deno', details: { deploymentId: (typeof process !== 'undefined' ? process.env.DENO_DEPLOYMENT_ID : undefined) } }
+
+  const env = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>
+
+  if (env.CLOUDFLARE_WORKER)
+    return { type: 'cloudflare', details: { runtime: 'workers' } }
+  if (env.CF_PAGES)
+    return { type: 'cloudflare', details: { runtime: 'pages' } }
+  if (env.VERCEL || env.VERCEL_ENV)
+    return { type: 'vercel', details: { env: env.VERCEL_ENV } }
+  if (env.DENO_DEPLOYMENT_ID)
+    return { type: 'deno', details: { deploymentId: env.DENO_DEPLOYMENT_ID } }
+  if (env.DOCKER_CONTAINER)
     return { type: 'docker' }
   return { type: 'none' }
 }
 
-export function isSandboxAvailable(provider: SandboxProvider): boolean {
+function canResolve(moduleName: string): boolean {
   try {
     const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
     if (!resolver)
-      return false
-    if (provider === 'vercel') {
-      resolver('@vercel/sandbox')
+      throw new Error('no-require-resolve')
+    resolver(moduleName)
+    return true
+  }
+  catch {
+    try {
+      const resolver = (import.meta as { resolve?: (id: string) => string }).resolve
+      if (typeof resolver !== 'function')
+        return false
+      resolver(moduleName)
       return true
+    }
+    catch {
+      return false
+    }
+  }
+}
+
+export function isSandboxAvailable(provider: SandboxProvider): boolean {
+  try {
+    if (provider === 'vercel') {
+      return canResolve('@vercel/sandbox')
     }
     if (provider === 'cloudflare') {
-      resolver('@cloudflare/sandbox')
-      return true
+      return canResolve('@cloudflare/sandbox')
     }
     if (provider === 'deno') {
-      resolver('@deno/sandbox')
-      return true
+      return canResolve('@deno/sandbox')
     }
   }
   catch {

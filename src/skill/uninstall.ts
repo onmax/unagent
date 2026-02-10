@@ -11,7 +11,9 @@ const SKILL_NAME_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
 export interface UninstallSkillOptions {
   skill: string
   agents?: string[]
+  /** Reserved for future local/project uninstalls (currently ignored). */
   global?: boolean
+  /** Reserved for future local/project uninstalls (currently ignored). */
   cwd?: string
 }
 

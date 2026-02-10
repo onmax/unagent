@@ -253,13 +253,15 @@ export class RealFS implements VirtualFS {
   private normalizedBase: string
 
   constructor(private basePath: string = '/') {
-    this.normalizedBase = normalize(basePath)
+    // Normalize once; treat '/' as a special case.
+    const n = normalize(basePath)
+    this.normalizedBase = n === '/' ? '/' : n.replace(/\/+$/, '')
   }
 
   private resolve(path: string): string {
     const resolved = normalize(join(this.basePath, path))
     // Prevent path traversal attacks
-    if (!resolved.startsWith(this.normalizedBase) && resolved !== this.normalizedBase)
+    if (this.normalizedBase !== '/' && resolved !== this.normalizedBase && !resolved.startsWith(`${this.normalizedBase}/`))
       throw new Error(`EACCES: path traversal not allowed: ${path}`)
     return resolved
   }

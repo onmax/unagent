@@ -1,5 +1,8 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { createFSFromStorage, InMemoryFS, OverlayFS } from '../src/fs'
+import { createFSFromStorage, InMemoryFS, OverlayFS, RealFS } from '../src/fs'
 
 describe('fs', () => {
   describe('inMemoryFS', () => {
@@ -143,6 +146,25 @@ describe('fs', () => {
       })
 
       await expect(fs.readFile('/missing.txt')).rejects.toThrow('ENOENT')
+    })
+  })
+
+  describe('realFS', () => {
+    it('blocks prefix-based traversal (base is a prefix of sibling dir)', async () => {
+      const root = mkdtempSync(join(tmpdir(), 'unagent-realfs-'))
+      const baseDir = join(root, 'bar')
+      const sibling = join(root, 'barbaz')
+      mkdirSync(baseDir, { recursive: true })
+      mkdirSync(sibling, { recursive: true })
+      writeFileSync(join(sibling, 'secret.txt'), 'nope')
+
+      try {
+        const fs = new RealFS(baseDir)
+        await expect(fs.readFile('../barbaz/secret.txt')).rejects.toThrow('EACCES')
+      }
+      finally {
+        rmSync(root, { recursive: true, force: true })
+      }
     })
   })
 })

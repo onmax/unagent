@@ -75,11 +75,18 @@ export type { UpstashVectorNamespace, UpstashVectorProviderOptions } from './typ
 export type { WeaviateNamespace, WeaviateProviderOptions } from './types/weaviate'
 
 export function detectVector(): VectorDetectionResult {
-  if (process.env.CLOUDFLARE_WORKER)
+  if (isWorkerd || envProvider === 'cloudflare_workers')
     return { type: 'cloudflare', details: { runtime: 'workers' } }
-  if (process.env.CF_PAGES)
+  if (envProvider === 'cloudflare_pages')
     return { type: 'cloudflare', details: { runtime: 'pages' } }
-  if (process.env.UPSTASH_VECTOR_URL && process.env.UPSTASH_VECTOR_TOKEN)
+
+  const env = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>
+
+  if (env.CLOUDFLARE_WORKER)
+    return { type: 'cloudflare', details: { runtime: 'workers' } }
+  if (env.CF_PAGES)
+    return { type: 'cloudflare', details: { runtime: 'pages' } }
+  if (env.UPSTASH_VECTOR_URL && env.UPSTASH_VECTOR_TOKEN)
     return { type: 'upstash', details: { env: 'upstash' } }
   return { type: 'none' }
 }
@@ -88,12 +95,21 @@ function canResolve(moduleName: string): boolean {
   try {
     const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
     if (!resolver)
-      return false
+      throw new Error('no-require-resolve')
     resolver(moduleName)
     return true
   }
   catch {
-    return false
+    try {
+      const resolver = (import.meta as { resolve?: (id: string) => string }).resolve
+      if (typeof resolver !== 'function')
+        return false
+      resolver(moduleName)
+      return true
+    }
+    catch {
+      return false
+    }
   }
 }
 

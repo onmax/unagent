@@ -13,27 +13,49 @@ export type { OpenWorkflowNamespace, OpenWorkflowProviderOptions, OpenWorkflowRu
 export type { VercelWorkflowAPI, VercelWorkflowNamespace, VercelWorkflowProviderOptions, VercelWorkflowRunLike, VercelWorkflowStartOptions } from './types/vercel'
 
 export function detectWorkflow(): WorkflowDetectionResult {
-  if (process.env.CLOUDFLARE_WORKER)
+  if (isWorkerd || envProvider === 'cloudflare_workers')
     return { type: 'cloudflare', details: { runtime: 'workers' } }
-  if (process.env.CF_PAGES)
+  if (envProvider === 'cloudflare_pages')
     return { type: 'cloudflare', details: { runtime: 'pages' } }
-  if (process.env.VERCEL || process.env.VERCEL_ENV)
-    return { type: 'vercel', details: { env: process.env.VERCEL_ENV } }
+  if (envProvider === 'vercel')
+    return { type: 'vercel', details: { env: (typeof process !== 'undefined' ? process.env.VERCEL_ENV : undefined) } }
+
+  const env = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>
+
+  if (env.CLOUDFLARE_WORKER)
+    return { type: 'cloudflare', details: { runtime: 'workers' } }
+  if (env.CF_PAGES)
+    return { type: 'cloudflare', details: { runtime: 'pages' } }
+  if (env.VERCEL || env.VERCEL_ENV)
+    return { type: 'vercel', details: { env: env.VERCEL_ENV } }
   return { type: 'none' }
 }
 
-export function isWorkflowAvailable(provider: WorkflowProvider): boolean {
-  if (provider === 'vercel') {
+function canResolve(moduleName: string): boolean {
+  try {
+    const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
+    if (!resolver)
+      throw new Error('no-require-resolve')
+    resolver(moduleName)
+    return true
+  }
+  catch {
     try {
-      const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
-      if (!resolver)
+      const resolver = (import.meta as { resolve?: (id: string) => string }).resolve
+      if (typeof resolver !== 'function')
         return false
-      resolver('workflow/api')
+      resolver(moduleName)
       return true
     }
     catch {
       return false
     }
+  }
+}
+
+export function isWorkflowAvailable(provider: WorkflowProvider): boolean {
+  if (provider === 'vercel') {
+    return canResolve('workflow/api')
   }
 
   if (provider === 'cloudflare') {
@@ -47,16 +69,7 @@ export function isWorkflowAvailable(provider: WorkflowProvider): boolean {
   }
 
   if (provider === 'openworkflow') {
-    try {
-      const resolver = (globalThis as { require?: { resolve?: (id: string) => string } }).require?.resolve
-      if (!resolver)
-        return false
-      resolver('openworkflow')
-      return true
-    }
-    catch {
-      return false
-    }
+    return canResolve('openworkflow')
   }
 
   return false
