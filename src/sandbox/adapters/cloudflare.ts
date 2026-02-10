@@ -1,5 +1,5 @@
-import type { CloudflareNamespace, CloudflareSession, CodeContext, CodeContextOptions, CodeExecutionResult, ExposedPort, ExposePortOptions, GitCheckoutOptions, GitCheckoutResult, MountBucketOptions, RunCodeOptions, SessionOptions } from '../types/cloudflare'
-import type { CloudflareSandboxStub, FileEntry, ListFilesOptions, ProcessOptions, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxProcess, WaitForPortOptions } from '../types/common'
+import type { CloudflareSandboxNamespace, CloudflareSandboxSession, CloudflareSandboxSessionOptions, SandboxCodeContext, SandboxCodeContextOptions, SandboxCodeExecutionResult, SandboxExposedPort, SandboxExposePortOptions, SandboxGitCheckoutOptions, SandboxGitCheckoutResult, SandboxMountBucketOptions, SandboxRunCodeOptions } from '../types/cloudflare'
+import type { CloudflareSandboxStub, SandboxCapabilities, SandboxExecOptions, SandboxExecResult, SandboxFileEntry, SandboxListFilesOptions, SandboxProcess, SandboxProcessOptions, SandboxWaitForPortOptions } from '../types/common'
 import { NotSupportedError, SandboxError } from '../errors'
 import { shellQuote } from '../utils'
 import { BaseSandboxAdapter } from './base'
@@ -64,7 +64,7 @@ class CloudflareProcessHandle implements SandboxProcess {
     throw new SandboxError(`Timeout waiting for log pattern: ${pattern}`, 'TIMEOUT')
   }
 
-  async waitForPort(port: number, opts?: WaitForPortOptions): Promise<void> {
+  async waitForPort(port: number, opts?: SandboxWaitForPortOptions): Promise<void> {
     if (this.processInfo.waitForPort) {
       await this.processInfo.waitForPort(port, opts)
       return
@@ -89,7 +89,7 @@ class CloudflareProcessHandle implements SandboxProcess {
   }
 }
 
-class CloudflareNamespaceImpl implements CloudflareNamespace {
+class CloudflareNamespaceImpl implements CloudflareSandboxNamespace {
   readonly native: CloudflareSandboxStub
   private stub: CloudflareSandboxStub
 
@@ -98,27 +98,27 @@ class CloudflareNamespaceImpl implements CloudflareNamespace {
     this.stub = stub
   }
 
-  async gitCheckout(_url: string, _opts?: GitCheckoutOptions): Promise<GitCheckoutResult> {
+  async gitCheckout(_url: string, _opts?: SandboxGitCheckoutOptions): Promise<SandboxGitCheckoutResult> {
     // The CF sandbox SDK should expose this - for now delegate to stub if available
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.gitCheckout === 'function') {
-      return stubAny.gitCheckout(_url, _opts) as Promise<GitCheckoutResult>
+      return stubAny.gitCheckout(_url, _opts) as Promise<SandboxGitCheckoutResult>
     }
     throw new NotSupportedError('gitCheckout', 'cloudflare')
   }
 
-  async createSession(_opts?: SessionOptions): Promise<CloudflareSession> {
+  async createSession(_opts?: CloudflareSandboxSessionOptions): Promise<CloudflareSandboxSession> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.createSession === 'function') {
-      return stubAny.createSession(_opts) as Promise<CloudflareSession>
+      return stubAny.createSession(_opts) as Promise<CloudflareSandboxSession>
     }
     throw new NotSupportedError('createSession', 'cloudflare')
   }
 
-  async getSession(_id: string): Promise<CloudflareSession> {
+  async getSession(_id: string): Promise<CloudflareSandboxSession> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.getSession === 'function') {
-      return stubAny.getSession(_id) as Promise<CloudflareSession>
+      return stubAny.getSession(_id) as Promise<CloudflareSandboxSession>
     }
     throw new NotSupportedError('getSession', 'cloudflare')
   }
@@ -132,26 +132,26 @@ class CloudflareNamespaceImpl implements CloudflareNamespace {
     throw new NotSupportedError('deleteSession', 'cloudflare')
   }
 
-  async createCodeContext(_opts?: CodeContextOptions): Promise<CodeContext> {
+  async createCodeContext(_opts?: SandboxCodeContextOptions): Promise<SandboxCodeContext> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.createCodeContext === 'function') {
-      return stubAny.createCodeContext(_opts) as Promise<CodeContext>
+      return stubAny.createCodeContext(_opts) as Promise<SandboxCodeContext>
     }
     throw new NotSupportedError('createCodeContext', 'cloudflare')
   }
 
-  async runCode(_code: string, _opts?: RunCodeOptions): Promise<CodeExecutionResult> {
+  async runCode(_code: string, _opts?: SandboxRunCodeOptions): Promise<SandboxCodeExecutionResult> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.runCode === 'function') {
-      return stubAny.runCode(_code, _opts) as Promise<CodeExecutionResult>
+      return stubAny.runCode(_code, _opts) as Promise<SandboxCodeExecutionResult>
     }
     throw new NotSupportedError('runCode', 'cloudflare')
   }
 
-  async listCodeContexts(): Promise<CodeContext[]> {
+  async listCodeContexts(): Promise<SandboxCodeContext[]> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.listCodeContexts === 'function') {
-      return stubAny.listCodeContexts() as Promise<CodeContext[]>
+      return stubAny.listCodeContexts() as Promise<SandboxCodeContext[]>
     }
     throw new NotSupportedError('listCodeContexts', 'cloudflare')
   }
@@ -165,7 +165,7 @@ class CloudflareNamespaceImpl implements CloudflareNamespace {
     throw new NotSupportedError('deleteCodeContext', 'cloudflare')
   }
 
-  async exposePort(_port: number, _opts?: ExposePortOptions): Promise<{ url: string }> {
+  async exposePort(_port: number, _opts?: SandboxExposePortOptions): Promise<{ url: string }> {
     if (!_opts?.hostname) {
       throw new SandboxError('Cloudflare exposePort() requires opts.hostname. Use a custom domain (not *.workers.dev).', 'INVALID_ARGUMENT')
     }
@@ -185,21 +185,21 @@ class CloudflareNamespaceImpl implements CloudflareNamespace {
     throw new NotSupportedError('unexposePort', 'cloudflare')
   }
 
-  async getExposedPorts(_hostname?: string): Promise<ExposedPort[]> {
+  async getExposedPorts(_hostname?: string): Promise<SandboxExposedPort[]> {
     if (!_hostname) {
       throw new SandboxError('Cloudflare getExposedPorts() requires a hostname argument. Use your custom domain hostname.', 'INVALID_ARGUMENT')
     }
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.getExposedPorts === 'function') {
-      return stubAny.getExposedPorts(_hostname) as Promise<ExposedPort[]>
+      return stubAny.getExposedPorts(_hostname) as Promise<SandboxExposedPort[]>
     }
     throw new NotSupportedError('getExposedPorts', 'cloudflare')
   }
 
-  async mountBucket(_bucket: string, _path: string, _opts?: MountBucketOptions): Promise<void> {
+  async mountBucket(_bucket: string, _path: string, _opts?: SandboxMountBucketOptions): Promise<void> {
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.mountBucket === 'function') {
-      await (stubAny.mountBucket as (bucket: string, path: string, opts?: MountBucketOptions) => Promise<void>)(_bucket, _path, _opts)
+      await (stubAny.mountBucket as (bucket: string, path: string, opts?: SandboxMountBucketOptions) => Promise<void>)(_bucket, _path, _opts)
       return
     }
     throw new NotSupportedError('mountBucket', 'cloudflare')
@@ -250,7 +250,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
   }
 
   private stub: CloudflareSandboxStub
-  private _cloudflare?: CloudflareNamespace
+  private _cloudflare?: CloudflareSandboxNamespace
 
   constructor(id: string, stub: CloudflareSandboxStub) {
     super()
@@ -258,7 +258,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
     this.stub = stub
   }
 
-  override get cloudflare(): CloudflareNamespace {
+  override get cloudflare(): CloudflareSandboxNamespace {
     if (!this._cloudflare) {
       this._cloudflare = new CloudflareNamespaceImpl(this.stub)
     }
@@ -330,7 +330,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
     })
   }
 
-  async startProcess(cmd: string, args: string[] = [], opts?: ProcessOptions): Promise<SandboxProcess> {
+  async startProcess(cmd: string, args: string[] = [], opts?: SandboxProcessOptions): Promise<SandboxProcess> {
     if (!this.stub.startProcess)
       throw new NotSupportedError('startProcess', 'cloudflare')
 
@@ -360,7 +360,7 @@ export class CloudflareSandboxAdapter extends BaseSandboxAdapter<'cloudflare'> {
     })
   }
 
-  override async listFiles(path: string, opts?: ListFilesOptions): Promise<FileEntry[]> {
+  override async listFiles(path: string, opts?: SandboxListFilesOptions): Promise<SandboxFileEntry[]> {
     if (this.stub.listFiles) {
       const result = await this.stub.listFiles(path, opts)
       return result.files.map(f => ({ name: f.name, path: f.path, type: f.type, size: f.size, mtime: f.mtime }))

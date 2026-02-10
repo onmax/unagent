@@ -20,8 +20,10 @@ export interface Task<T = unknown> {
   run: (event: TaskEvent) => MaybePromise<TaskResult<T>>
 }
 
+export type TaskEntry<T = unknown> = Task<T> | { resolve: () => Promise<Task<T>>, meta?: TaskMeta }
+
 export interface TaskRunnerOptions {
-  tasks: Record<string, Task>
+  tasks: Record<string, TaskEntry>
   scheduledTasks?: Record<string, string | string[]>
 }
 

@@ -1,5 +1,5 @@
 // === Vercel SDK Types ===
-export interface VercelRunCommandParams {
+export interface VercelSandboxRunCommandParams {
   cmd: string
   args?: string[]
   cwd?: string
@@ -13,9 +13,9 @@ export interface VercelRunCommandParams {
 
 export interface VercelSandboxInstance {
   runCommand: {
-    (cmd: string, args?: string[], opts?: { signal?: AbortSignal }): Promise<VercelCommandResult>
-    (params: VercelRunCommandParams & { detached: true }): Promise<VercelCommandResult>
-    (params: VercelRunCommandParams): Promise<VercelCommandResult>
+    (cmd: string, args?: string[], opts?: { signal?: AbortSignal }): Promise<VercelSandboxCommandResult>
+    (params: VercelSandboxRunCommandParams & { detached: true }): Promise<VercelSandboxCommandResult>
+    (params: VercelSandboxRunCommandParams): Promise<VercelSandboxCommandResult>
   }
   writeFiles: (files: Array<{ path: string, content: Uint8Array }>, opts?: { signal?: AbortSignal }) => Promise<void>
   readFileToBuffer: (opts: { path: string, cwd?: string }, opts2?: { signal?: AbortSignal }) => Promise<Uint8Array | null>
@@ -25,7 +25,7 @@ export interface VercelSandboxInstance {
   [Symbol.asyncDispose]: () => Promise<void>
 }
 
-export interface VercelCommandResult {
+export interface VercelSandboxCommandResult {
   exitCode: number
   stdout: () => Promise<string>
   stderr: () => Promise<string>
@@ -36,13 +36,13 @@ export interface VercelCommandResult {
 
 export interface VercelSandboxSDK {
   Sandbox: {
-    create: (options: VercelCreateOptions) => Promise<VercelSandboxInstance>
+    create: (options: VercelSandboxCreateOptions) => Promise<VercelSandboxInstance>
     list: () => Promise<{ sandboxes: VercelSandboxListItem[] }>
     get: (id: string) => Promise<VercelSandboxInstance | null>
   }
 }
 
-export interface VercelCreateOptions {
+export interface VercelSandboxCreateOptions {
   runtime: string
   timeout?: number
   resources?: { vcpus?: number }
@@ -59,13 +59,13 @@ export interface VercelSandboxListItem {
 }
 
 // === Vercel Namespace ===
-export interface VercelSnapshot {
+export interface VercelSandboxSnapshot {
   id: string
   sandboxId: string
   createdAt: string
 }
 
-export interface NetworkPolicy {
+export interface SandboxNetworkPolicy {
   allowInternet?: boolean
   allowedHosts?: string[]
   blockedHosts?: string[]
@@ -78,14 +78,14 @@ export interface VercelSandboxMetadata {
   createdAt: string
 }
 
-export interface VercelNamespace {
+export interface VercelSandboxNamespace {
   readonly native: VercelSandboxInstance
-  snapshot: () => Promise<VercelSnapshot>
-  getSnapshot: (id: string) => Promise<VercelSnapshot>
-  listSnapshots: () => Promise<{ snapshots: VercelSnapshot[] }>
+  snapshot: () => Promise<VercelSandboxSnapshot>
+  getSnapshot: (id: string) => Promise<VercelSandboxSnapshot>
+  listSnapshots: () => Promise<{ snapshots: VercelSandboxSnapshot[] }>
   deleteSnapshot: (id: string) => Promise<void>
   domain: (port: number) => string
   extendTimeout: (durationMs: number) => Promise<void>
-  updateNetworkPolicy: (policy: NetworkPolicy) => Promise<void>
+  updateNetworkPolicy: (policy: SandboxNetworkPolicy) => Promise<void>
   getMetadata: () => VercelSandboxMetadata
 }

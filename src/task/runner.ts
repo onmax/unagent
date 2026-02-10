@@ -1,6 +1,10 @@
-import type { RunCronTasksOptions, RunTaskOptions, TaskMeta, TaskResult, TaskRunner, TaskRunnerOptions } from './types'
+import type { RunCronTasksOptions, RunTaskOptions, Task, TaskMeta, TaskResult, TaskRunner, TaskRunnerOptions } from './types'
 import { Cron } from 'croner'
 import { TaskError } from './errors'
+
+function isLazy(entry: unknown): entry is { resolve: () => Promise<Task>, meta?: TaskMeta } {
+  return typeof (entry as any).resolve === 'function'
+}
 
 export function createTaskRunner(options: TaskRunnerOptions): TaskRunner {
   const { tasks } = options
@@ -12,12 +16,28 @@ export function createTaskRunner(options: TaskRunnerOptions): TaskRunner {
       scheduledTasks[cron] = Array.isArray(names) ? names : [names]
   }
 
+  // Cache for resolved lazy tasks
+  const resolved = new Map<string, Task>()
+
   // Concurrent dedup: same task+payload returns same promise
   const running = new Map<string, Promise<TaskResult>>()
 
+  async function resolveTask(name: string): Promise<Task> {
+    const entry = tasks[name]
+    if (!entry)
+      throw new TaskError(`Task "${name}" is not registered`)
+    if (!isLazy(entry))
+      return entry
+    const cached = resolved.get(name)
+    if (cached)
+      return cached
+    const task = await entry.resolve()
+    resolved.set(name, task)
+    return task
+  }
+
   function runTask(name: string, options: RunTaskOptions = {}): Promise<TaskResult> {
-    const task = tasks[name]
-    if (!task)
+    if (!tasks[name])
       throw new TaskError(`Task "${name}" is not registered`)
 
     const key = `${name}:${JSON.stringify(options.payload || {})}`
@@ -25,7 +45,7 @@ export function createTaskRunner(options: TaskRunnerOptions): TaskRunner {
     if (existing)
       return existing
 
-    const promise = Promise.resolve(task.run({
+    const promise = resolveTask(name).then(task => task.run({
       name,
       payload: options.payload || {},
       context: options.context || {},
@@ -36,7 +56,7 @@ export function createTaskRunner(options: TaskRunnerOptions): TaskRunner {
   }
 
   function listTasks(): { name: string, meta?: TaskMeta }[] {
-    return Object.entries(tasks).map(([name, task]) => ({ name, meta: task.meta }))
+    return Object.entries(tasks).map(([name, entry]) => ({ name, meta: entry.meta }))
   }
 
   function getCronTasks(cron: string): string[] {
