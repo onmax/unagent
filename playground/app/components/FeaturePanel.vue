@@ -6,7 +6,7 @@ import SandboxPanel from './SandboxPanel.vue'
 import WorkflowPanel from './WorkflowPanel.vue'
 import QueuePanel from './QueuePanel.vue'
 import VectorPanel from './VectorPanel.vue'
-import CronPanel from './CronPanel.vue'
+import TaskPanel from './TaskPanel.vue'
 
 const route = useRoute()
 const { isAvailable, providersData } = useProviders()
@@ -34,6 +34,6 @@ watch([feature, provider], ([f, p]) => {
     <WorkflowPanel v-else-if="feature === 'workflow'" :provider="provider" />
     <QueuePanel v-else-if="feature === 'queue'" :provider="provider" />
     <VectorPanel v-else-if="feature === 'vector'" :provider="provider" />
-    <CronPanel v-else-if="feature === 'cron'" :provider="provider" />
+    <TaskPanel v-else-if="feature === 'task'" />
   </div>
 </template>

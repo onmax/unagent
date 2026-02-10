@@ -31,10 +31,8 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },
     { id: 'openworkflow', label: 'OpenWorkflow', envRequired: ['DATABASE_URL'] },
   ],
-  cron: [
-    { id: 'qstash', label: 'QStash', envRequired: ['QSTASH_TOKEN'] },
-    { id: 'cloudflare', label: 'Cloudflare', envRequired: ['CF_ACCOUNT_ID', 'CF_API_TOKEN', 'CF_SCRIPT_NAME'] },
-    { id: 'vercel', label: 'Vercel', envRequired: ['VERCEL_TOKEN', 'VERCEL_PROJECT_ID'] },
+  task: [
+    { id: 'node', label: 'Node' },
   ],
   vector: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare' },

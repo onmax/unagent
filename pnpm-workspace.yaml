@@ -32,6 +32,7 @@ catalogs:
     lint-staged: ^16.2.7
     simple-git-hooks: ^2.13.1
   prod:
+    croner: ^9.0.0
     hookable: ^6.0.1
     pathe: ^2.0.3
     std-env: ^3.10.0

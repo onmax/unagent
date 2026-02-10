@@ -14,7 +14,7 @@ export const FEATURES: Record<string, { title: string, subtitle: string }> = {
   workflow: { title: 'Workflow', subtitle: 'Start a workflow, check status, stop it.' },
   queue: { title: 'Queue', subtitle: 'Send and batch messages.' },
   vector: { title: 'Vector', subtitle: 'Index/search/remove/clear documents.' },
-  cron: { title: 'Cron', subtitle: 'Create, list, pause, resume schedules.' },
+  task: { title: 'Task', subtitle: 'Define, run, and schedule tasks.' },
 }
 
 export const useProviders = createSharedComposable(() => {

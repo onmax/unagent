@@ -5,7 +5,7 @@ export default defineConfig({
     'src/index.ts',
     'src/env/index.ts',
     'src/fs/index.ts',
-    'src/cron/index.ts',
+    'src/task/index.ts',
     'src/queue/index.ts',
     'src/sandbox/index.ts',
     'src/workflow/index.ts',
