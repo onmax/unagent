@@ -3,11 +3,11 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 describe('pricing sync', () => {
-  it('parses models from HTML and builds pricing', async () => {
-    const html = readFileSync(resolve(process.cwd(), 'test/fixtures/vercel-ai-gateway-models-snippet.html'), 'utf8')
+  it('parses models from JSON and builds pricing', async () => {
+    const json = JSON.parse(readFileSync(resolve(process.cwd(), 'test/fixtures/vercel-ai-gateway-models.json'), 'utf8'))
     const mod = await import('../scripts/sync-ai-gateway-pricing.mjs')
 
-    const models = mod.parseModelsFromHtml(html)
+    const models = mod.parseModelsFromJson(json)
     const pricing = mod.buildPricing(models)
 
     expect(pricing.get('gpt-4o')).toEqual({
@@ -21,6 +21,13 @@ describe('pricing sync', () => {
       inputCostPerMillionTokens: 0.15,
       outputCostPerMillionTokens: 0.6,
       cacheReadCostPerMillionTokens: 0.075,
+      cacheWriteCostPerMillionTokens: undefined,
+    })
+
+    expect(pricing.get('amazon/titan-embed-text-v2')).toEqual({
+      inputCostPerMillionTokens: 0.02,
+      outputCostPerMillionTokens: 0,
+      cacheReadCostPerMillionTokens: undefined,
       cacheWriteCostPerMillionTokens: undefined,
     })
   })

@@ -2,70 +2,8 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const DEFAULT_URL = 'https://vercel.com/ai-gateway/models'
+const DEFAULT_URL = 'https://ai-gateway.vercel.sh/v1/models'
 const DEFAULT_OUT = resolve(process.cwd(), 'src/usage/model-pricing.generated.ts')
-
-function countBackslashesBefore(s, i) {
-  let n = 0
-  for (let j = i - 1; j >= 0 && s[j] === '\\\\'; j--)
-    n++
-  return n
-}
-
-export function extractEscapedModelsArray(html) {
-  const startToken = '[{\\\"slug\\\":\\\"'
-  const start = html.indexOf(startToken)
-  if (start === -1)
-    throw new Error('Could not find escaped models array start token')
-
-  let depth = 0
-  let inString = false
-
-  for (let i = start; i < html.length; i++) {
-    const ch = html[i]
-
-    if (ch === '\"') {
-      const bs = countBackslashesBefore(html, i)
-      if (bs > 0) {
-        // One backslash is for the outer string escaping this quote. The rest
-        // determines whether the quote is escaped at the inner JSON level.
-        const innerBackslashes = bs - 1
-        if (innerBackslashes % 2 === 0)
-          inString = !inString
-      }
-      continue
-    }
-
-    if (inString)
-      continue
-
-    if (ch === '[') {
-      depth++
-    }
-    else if (ch === ']') {
-      depth--
-      if (depth === 0)
-        return html.slice(start, i + 1)
-      if (depth < 0)
-        break
-    }
-  }
-
-  throw new Error('Could not extract escaped models array (unbalanced brackets)')
-}
-
-export function parseModelsFromHtml(html) {
-  const escaped = extractEscapedModelsArray(html)
-
-  // Decode one layer of escaping (this array is embedded as a JSON string).
-  const decodedJson = JSON.parse(`"${escaped}"`)
-  const models = JSON.parse(decodedJson)
-
-  if (!Array.isArray(models))
-    throw new Error('Parsed models payload is not an array')
-
-  return models
-}
 
 function toNumber(v) {
   if (v == null)
@@ -90,37 +28,44 @@ function toNumber(v) {
   return n
 }
 
+export function parseModelsFromJson(json) {
+  if (json == null || typeof json !== 'object')
+    throw new Error('Invalid JSON payload')
+
+  const data = json.data
+  if (!Array.isArray(data))
+    throw new Error('JSON payload missing `data` array')
+
+  return data
+}
+
 export function buildPricing(models) {
   // Stable ordering so slug collisions resolve deterministically.
-  const sorted = [...models].sort((a, b) => {
-    const ak = String(a?.copyString ?? a?.slug ?? '')
-    const bk = String(b?.copyString ?? b?.slug ?? '')
-    return ak.localeCompare(bk)
-  })
+  const sorted = [...models].sort((a, b) => String(a?.id ?? '').localeCompare(String(b?.id ?? '')))
 
   const out = new Map()
 
   for (const model of sorted) {
-    const slug = model?.slug
-    const copyString = model?.copyString
+    const id = model?.id
+    const pricing = model?.pricing
 
-    const input = toNumber(model?.inputCost)
-    const output = toNumber(model?.outputCost)
+    const input = toNumber(pricing?.input)
+    const output = toNumber(pricing?.output) ?? 0
 
-    if (!slug || input == null || output == null)
+    if (!id || input == null)
       continue
 
     const rates = {
-      inputCostPerMillionTokens: input,
-      outputCostPerMillionTokens: output,
-      cacheReadCostPerMillionTokens: toNumber(model?.cachedInputCost),
-      cacheWriteCostPerMillionTokens: toNumber(model?.cacheCreationInputCost),
+      inputCostPerMillionTokens: input * 1_000_000,
+      outputCostPerMillionTokens: output * 1_000_000,
+      cacheReadCostPerMillionTokens: toNumber(pricing?.input_cache_read) != null ? toNumber(pricing?.input_cache_read) * 1_000_000 : undefined,
+      cacheWriteCostPerMillionTokens: toNumber(pricing?.input_cache_write) != null ? toNumber(pricing?.input_cache_write) * 1_000_000 : undefined,
     }
 
-    if (copyString)
-      out.set(copyString, rates)
+    const slug = String(id).includes('/') ? String(id).split('/').pop() : String(id)
 
-    if (!out.has(slug))
+    out.set(id, rates)
+    if (slug && !out.has(slug))
       out.set(slug, rates)
   }
 
@@ -135,7 +80,8 @@ export function generateTs(pricingMap) {
   const lines = []
   lines.push('import type { CostRates } from \'./types\'')
   lines.push('')
-  lines.push('// Generated from https://vercel.com/ai-gateway/models')
+  lines.push('// Generated from https://ai-gateway.vercel.sh/v1/models')
+  lines.push('// Source page: https://vercel.com/ai-gateway/models')
   lines.push('// Run: pnpm pricing:sync')
   lines.push('export const MODEL_PRICING_GENERATED: Record<string, CostRates> = {')
 
@@ -165,29 +111,29 @@ export function generateTs(pricingMap) {
 async function main() {
   const args = process.argv.slice(2)
   const outIdx = args.indexOf('--out')
-  const htmlIdx = args.indexOf('--html')
+  const jsonIdx = args.indexOf('--json')
 
   const outFile = outIdx !== -1 ? resolve(process.cwd(), args[outIdx + 1]) : DEFAULT_OUT
   const url = process.env.AI_GATEWAY_MODELS_URL || DEFAULT_URL
 
-  let html
-  if (htmlIdx !== -1) {
-    const p = resolve(process.cwd(), args[htmlIdx + 1])
-    html = await readFile(p, 'utf8')
+  let json
+  if (jsonIdx !== -1) {
+    const p = resolve(process.cwd(), args[jsonIdx + 1])
+    json = JSON.parse(await readFile(p, 'utf8'))
   }
   else {
     const res = await fetch(url, {
       headers: {
         'user-agent': 'unagent-pricing-sync',
-        'accept': 'text/html',
+        'accept': 'application/json',
       },
     })
     if (!res.ok)
       throw new Error(`Fetch failed: ${res.status} ${res.statusText}`)
-    html = await res.text()
+    json = await res.json()
   }
 
-  const models = parseModelsFromHtml(html)
+  const models = parseModelsFromJson(json)
   const pricing = buildPricing(models)
   const ts = generateTs(pricing)
 

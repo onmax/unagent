@@ -1,0 +1,29 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "openai/gpt-4o-mini",
+      "object": "model",
+      "pricing": {
+        "input": "0.00000015",
+        "output": "0.0000006",
+        "input_cache_read": "0.000000075"
+      }
+    },
+    {
+      "id": "openai/gpt-4o",
+      "object": "model",
+      "pricing": {
+        "input": "0.0000025",
+        "output": "0.00001"
+      }
+    },
+    {
+      "id": "amazon/titan-embed-text-v2",
+      "object": "model",
+      "pricing": {
+        "input": "0.00000002"
+      }
+    }
+  ]
+}
