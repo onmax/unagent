@@ -250,7 +250,13 @@ export class PlaywrightBackedSession<P extends BrowserProvider> implements Brows
     try {
       if (this.context?.close)
         await this.context.close()
-      else if (this.browser.close)
+    }
+    catch (error) {
+      firstError ||= error
+    }
+
+    try {
+      if (this.browser.close)
         await this.browser.close()
     }
     catch (error) {

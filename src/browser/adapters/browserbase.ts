@@ -45,41 +45,62 @@ export class BrowserbaseBrowserAdapter extends BaseBrowserAdapter<'browserbase'>
     if (!connectUrl)
       throw new BrowserError('[browserbase] session response is missing connectUrl', 'INVALID_RESPONSE')
 
-    let playwright: any
+    let browser: any
+
     try {
-      playwright = await dynamicImport('playwright')
+      let playwright: any
+      try {
+        playwright = await dynamicImport('playwright')
+      }
+      catch (error) {
+        throw new BrowserError(`playwright load failed. Install it to use the Browserbase provider. Original error: ${error instanceof Error ? error.message : error}`)
+      }
+
+      const chromium = playwright?.chromium
+      if (!chromium?.connectOverCDP)
+        throw new BrowserError('[browserbase] playwright chromium.connectOverCDP is not available', 'INVALID_RESPONSE')
+
+      browser = await chromium.connectOverCDP(connectUrl, this.options.connectOptions || {})
+      const context = browser?.contexts?.()[0] || (typeof browser?.newContext === 'function' ? await browser.newContext(options?.contextOptions || {}) : undefined)
+
+      this.activeIds.add(sessionId)
+
+      const session = this.createPlaywrightSession({
+        id: sessionId,
+        provider: 'browserbase',
+        browser,
+        context,
+        onClose: () => {
+          this.activeIds.delete(sessionId)
+          this.removeSession(session)
+        },
+        onFinalize: async () => {
+          await client.sessions.update(sessionId, {
+            projectId,
+            status: 'REQUEST_RELEASE',
+          })
+        },
+      })
+
+      return this.addSession(session)
     }
     catch (error) {
-      throw new BrowserError(`playwright load failed. Install it to use the Browserbase provider. Original error: ${error instanceof Error ? error.message : error}`)
-    }
+      try {
+        if (browser?.close)
+          await browser.close()
+      }
+      catch {}
 
-    const chromium = playwright?.chromium
-    if (!chromium?.connectOverCDP)
-      throw new BrowserError('[browserbase] playwright chromium.connectOverCDP is not available', 'INVALID_RESPONSE')
-
-    const browser = await chromium.connectOverCDP(connectUrl, this.options.connectOptions || {})
-    const context = browser?.contexts?.()[0] || (typeof browser?.newContext === 'function' ? await browser.newContext(options?.contextOptions || {}) : undefined)
-
-    this.activeIds.add(sessionId)
-
-    const session = this.createPlaywrightSession({
-      id: sessionId,
-      provider: 'browserbase',
-      browser,
-      context,
-      onClose: () => {
-        this.activeIds.delete(sessionId)
-        this.removeSession(session)
-      },
-      onFinalize: async () => {
+      try {
         await client.sessions.update(sessionId, {
           projectId,
           status: 'REQUEST_RELEASE',
         })
-      },
-    })
+      }
+      catch {}
 
-    return this.addSession(session)
+      throw error
+    }
   }
 
   protected override async closeProvider(): Promise<void> {

@@ -104,5 +104,33 @@ describe('browser/adapters', () => {
     await client.close()
 
     expect(context.close).toHaveBeenCalled()
+    expect(browser.close).toHaveBeenCalled()
+  })
+
+  it('still closes browser when context close fails', async () => {
+    const closeError = new Error('context close failed')
+    const context = {
+      newPage: vi.fn(),
+      pages: vi.fn(() => []),
+      close: vi.fn(async () => {
+        throw closeError
+      }),
+    }
+
+    const browser = {
+      newContext: vi.fn(async () => context),
+      close: vi.fn(async () => {}),
+    }
+
+    launch.mockResolvedValue(browser)
+
+    const client = await createBrowser({ provider: { name: 'playwright' } })
+    const session = await client.newSession()
+
+    await expect(session.close()).rejects.toBe(closeError)
+    expect(context.close).toHaveBeenCalled()
+    expect(browser.close).toHaveBeenCalled()
+
+    await client.close()
   })
 })

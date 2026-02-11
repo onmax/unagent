@@ -100,4 +100,41 @@ describe('browser/browserbase provider', () => {
 
     await client.close()
   })
+
+  it('releases browserbase session when setup fails after session creation', async () => {
+    const setupError = new Error('context setup failed')
+    const browser = {
+      contexts: vi.fn(() => []),
+      newContext: vi.fn(async () => {
+        throw setupError
+      }),
+      close: vi.fn(async () => {}),
+    }
+
+    sessionsCreate.mockResolvedValue({
+      id: 'sess-2',
+      connectUrl: 'wss://browserbase.example/ws',
+    })
+    sessionsUpdate.mockResolvedValue({ ok: true })
+    connectOverCDP.mockResolvedValue(browser)
+
+    const client = await createBrowser({
+      provider: {
+        name: 'browserbase',
+        apiKey: 'api-key',
+        projectId: 'project-id',
+      },
+    })
+
+    await expect(client.newSession()).rejects.toBe(setupError)
+
+    expect(browser.close).toHaveBeenCalled()
+    expect(sessionsUpdate).toHaveBeenCalledWith('sess-2', {
+      projectId: 'project-id',
+      status: 'REQUEST_RELEASE',
+    })
+    expect(client.browserbase.activeSessionIds()).not.toContain('sess-2')
+
+    await client.close()
+  })
 })
