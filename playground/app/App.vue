@@ -12,6 +12,7 @@ const route = useRoute()
 
 const featureIcons: Record<string, string> = {
   sandbox: 'i-lucide-box',
+  browser: 'i-lucide-globe',
   workflow: 'i-lucide-git-branch',
   queue: 'i-lucide-mail',
   vector: 'i-lucide-search',

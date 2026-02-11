@@ -35,6 +35,10 @@
       "types": "./dist/fs/index.d.ts",
       "default": "./dist/fs/index.js"
     },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "default": "./dist/browser/index.js"
+    },
     "./task": {
       "types": "./dist/task/index.d.ts",
       "default": "./dist/task/index.js"
@@ -106,6 +110,8 @@
     "@ai-sdk/google": ">=0.0.0",
     "@ai-sdk/mistral": ">=0.0.0",
     "@ai-sdk/openai": ">=0.0.0",
+    "@browserbasehq/sdk": ">=0.0.0",
+    "@cloudflare/playwright": ">=0.0.0",
     "@cloudflare/sandbox": ">=0.1.0",
     "@deno/sandbox": ">=0.1.0",
     "@huggingface/transformers": ">=0.0.0",
@@ -120,6 +126,7 @@
     "ollama-ai-provider-v2": ">=0.0.0",
     "openworkflow": ">=0.0.0",
     "pg": ">=8.0.0",
+    "playwright": ">=0.0.0",
     "sqlite-vec": ">=0.0.0",
     "unstorage": ">=1.10.0",
     "weaviate-client": ">=0.0.0"
@@ -135,6 +142,12 @@
       "optional": true
     },
     "@ai-sdk/openai": {
+      "optional": true
+    },
+    "@browserbasehq/sdk": {
+      "optional": true
+    },
+    "@cloudflare/playwright": {
       "optional": true
     },
     "@cloudflare/sandbox": {
@@ -179,6 +192,9 @@
     "pg": {
       "optional": true
     },
+    "playwright": {
+      "optional": true
+    },
     "sqlite-vec": {
       "optional": true
     },
@@ -190,6 +206,7 @@
     }
   },
   "dependencies": {
+    "ajv": "catalog:prod",
     "croner": "catalog:prod",
     "hookable": "catalog:prod",
     "pathe": "catalog:prod",

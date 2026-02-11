@@ -11,6 +11,7 @@ export interface ProviderEntry {
 
 export const FEATURES: Record<string, { title: string, subtitle: string }> = {
   sandbox: { title: 'Sandbox', subtitle: 'Quick calls for sandbox capabilities and actions.' },
+  browser: { title: 'Browser', subtitle: 'Session-based browser actions, extraction, and screenshots.' },
   workflow: { title: 'Workflow', subtitle: 'Start a workflow, check status, stop it.' },
   queue: { title: 'Queue', subtitle: 'Send and batch messages.' },
   vector: { title: 'Vector', subtitle: 'Index/search/remove/clear documents.' },
