@@ -1,5 +1,6 @@
 import type { BrowserSession, BrowserSessionOptions } from '../types/common'
 import type { PlaywrightBrowserNamespace, PlaywrightBrowserProviderOptions } from '../types/playwright'
+import { dynamicImport } from '../_import'
 import { BrowserError } from '../errors'
 import { BaseBrowserAdapter, createId } from './base'
 
@@ -24,7 +25,7 @@ export class PlaywrightBrowserAdapter extends BaseBrowserAdapter<'playwright'> {
     let mod: any
 
     try {
-      mod = await import('playwright')
+      mod = await dynamicImport('playwright')
     }
     catch (error) {
       throw new BrowserError(`playwright load failed. Install it to use the Playwright provider. Original error: ${error instanceof Error ? error.message : error}`)

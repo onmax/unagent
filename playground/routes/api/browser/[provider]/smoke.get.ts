@@ -23,14 +23,6 @@ export default defineEventHandler(async (event) => {
           const doc = (globalThis as any).document as any
           return { title: String(doc?.title || '') }
         },
-        schema: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-          },
-          required: ['title'],
-          additionalProperties: false,
-        },
       })
       const shot = await page.screenshot({ type: 'png' })
 

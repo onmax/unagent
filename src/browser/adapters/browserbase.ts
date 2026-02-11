@@ -1,5 +1,6 @@
 import type { BrowserbaseBrowserProviderOptions, BrowserbaseNamespace } from '../types/browserbase'
 import type { BrowserSession, BrowserSessionOptions } from '../types/common'
+import { dynamicImport } from '../_import'
 import { BrowserError } from '../errors'
 import { BaseBrowserAdapter } from './base'
 
@@ -46,7 +47,7 @@ export class BrowserbaseBrowserAdapter extends BaseBrowserAdapter<'browserbase'>
 
     let playwright: any
     try {
-      playwright = await import('playwright')
+      playwright = await dynamicImport('playwright')
     }
     catch (error) {
       throw new BrowserError(`playwright load failed. Install it to use the Browserbase provider. Original error: ${error instanceof Error ? error.message : error}`)
@@ -95,7 +96,7 @@ export class BrowserbaseBrowserAdapter extends BaseBrowserAdapter<'browserbase'>
 
     let Browserbase: any
     try {
-      const mod = await import('@browserbasehq/sdk')
+      const mod: any = await dynamicImport('@browserbasehq/sdk')
       Browserbase = mod?.default || mod
     }
     catch (error) {

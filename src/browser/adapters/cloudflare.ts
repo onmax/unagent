@@ -26,10 +26,12 @@ export class CloudflareBrowserAdapter extends BaseBrowserAdapter<'cloudflare'> {
       throw new BrowserError('[cloudflare] binding is required', 'INVALID_OPTIONS')
 
     let launch: ((binding: unknown, opts?: Record<string, unknown>) => Promise<any>) | undefined
+    let endpointURLString: ((binding: unknown, opts?: { sessionId?: string, persistent?: boolean, keepAlive?: number }) => string) | undefined
 
     try {
       const mod: any = await import('@cloudflare/playwright')
       launch = mod?.launch
+      endpointURLString = mod?.endpointURLString
     }
     catch (error) {
       throw new BrowserError(`@cloudflare/playwright load failed. Install it to use the Cloudflare provider. Original error: ${error instanceof Error ? error.message : error}`)
@@ -38,7 +40,11 @@ export class CloudflareBrowserAdapter extends BaseBrowserAdapter<'cloudflare'> {
     if (typeof launch !== 'function')
       throw new BrowserError('@cloudflare/playwright launch() is not available', 'INVALID_RESPONSE')
 
-    const browser = await launch(this.options.binding, this.options.launchOptions || {})
+    let endpoint: unknown = this.options.binding
+    if (typeof endpoint === 'string' && !endpoint.includes('://') && typeof endpointURLString === 'function')
+      endpoint = endpointURLString(endpoint)
+
+    const browser = await launch(endpoint, this.options.launchOptions || {})
     let context: any
     if (typeof browser?.newContext === 'function') {
       context = await browser.newContext(options?.contextOptions || {})

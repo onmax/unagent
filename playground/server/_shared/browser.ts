@@ -14,7 +14,7 @@ export async function createPlaygroundBrowser(event: any, provider: BrowserProvi
       browser: await createBrowser({
         provider: {
           name: 'cloudflare',
-          binding: env.MYBROWSER,
+          binding: 'MYBROWSER',
         },
       }),
     }

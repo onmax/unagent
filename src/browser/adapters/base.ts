@@ -129,33 +129,37 @@ class WrappedPlaywrightPage implements BrowserPage {
 
   async extract(options: BrowserExtractOptions): Promise<unknown> {
     if (options.kind === 'text') {
-      return this.page.evaluate((selector: string, all: boolean, trim: boolean) => {
+      return this.page.evaluate((input: { selector: string, all: boolean, trim: boolean }) => {
         const doc = (globalThis as any).document as any
         if (!doc)
-          return all ? [] : ''
+          return input.all ? [] : ''
 
-        if (all) {
-          return Array.from(doc.querySelectorAll(selector)).map((el: any) => {
+        if (input.all) {
+          return Array.from(doc.querySelectorAll(input.selector)).map((el: any) => {
             const value = String(el?.textContent ?? '')
-            return trim ? value.trim() : value
+            return input.trim ? value.trim() : value
           })
         }
 
-        const el = doc.querySelector(selector)
+        const el = doc.querySelector(input.selector)
         const value = String(el?.textContent ?? '')
-        return trim ? value.trim() : value
-      }, options.selector, !!options.all, options.trim !== false)
+        return input.trim ? value.trim() : value
+      }, {
+        selector: options.selector,
+        all: !!options.all,
+        trim: options.trim !== false,
+      })
     }
 
     if (options.kind === 'html') {
       if (!options.selector)
         return this.content()
 
-      return this.page.evaluate((selector: string) => {
+      return this.page.evaluate((input: { selector: string }) => {
         const doc = (globalThis as any).document as any
-        const el = doc?.querySelector?.(selector)
+        const el = doc?.querySelector?.(input.selector)
         return String(el?.outerHTML ?? '')
-      }, options.selector)
+      }, { selector: options.selector })
     }
 
     const value = await this.evaluate(options.evaluate)

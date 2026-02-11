@@ -43,7 +43,7 @@ describe('browser/adapters', () => {
       url: vi.fn(() => 'https://example.com'),
       content: vi.fn(async () => '<html><body><h1>hello</h1></body></html>'),
       screenshot: vi.fn(async () => new Uint8Array([1, 2, 3])),
-      evaluate: vi.fn(async (fn: () => unknown) => fn()),
+      evaluate: vi.fn(async (fn: (...args: any[]) => unknown, ...args: any[]) => fn(...args)),
       close: vi.fn(async () => {}),
     }
 
