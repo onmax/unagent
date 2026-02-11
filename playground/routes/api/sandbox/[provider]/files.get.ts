@@ -1,6 +1,6 @@
 import type { SandboxProvider } from '../../../../server/_shared/sandbox'
 import { defineEventHandler } from 'h3'
-import { nowIso } from '../../../../server/_shared/http'
+import { jsonError, nowIso } from '../../../../server/_shared/http'
 import { createPlaygroundSandbox } from '../../../../server/_shared/sandbox'
 
 export default defineEventHandler(async (event) => {
@@ -8,6 +8,14 @@ export default defineEventHandler(async (event) => {
   const start = Date.now()
   const { sandbox } = await createPlaygroundSandbox(event, provider)
   try {
+    if (!sandbox.supports?.listFiles || !sandbox.supports?.exists || !sandbox.supports?.moveFile || !sandbox.supports?.deleteFile) {
+      return jsonError(event, 400, 'file operations are not supported for this sandbox provider', {
+        provider,
+        supports: sandbox.supports,
+        elapsed: Date.now() - start,
+      })
+    }
+
     await sandbox.mkdir('/tmp/files-test')
     await sandbox.writeFile('/tmp/files-test/a.txt', 'content a')
     await sandbox.writeFile('/tmp/files-test/b.txt', 'content b')
