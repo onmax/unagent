@@ -99,6 +99,8 @@
     "test": "vitest",
     "pricing:sync": "node scripts/sync-ai-gateway-pricing.mjs",
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
+    "playground:browser:e2e": "pnpm build && node playground/scripts/browser-e2e.mjs",
+    "playground:browser:e2e:docker": "docker compose -f playground/docker-compose.browser.yml run --rm --build playwright-e2e",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",
     "release": "bumpp",
