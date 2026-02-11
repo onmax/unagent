@@ -4,6 +4,7 @@ import type { VectorizeIndexBinding } from 'unagent/vector'
 import type { CloudflareWorkflowBindingLike } from 'unagent/workflow'
 
 export interface CloudflareEnv {
+  MYBROWSER?: unknown
   SANDBOX: DurableObjectNamespaceLike
   MY_WORKFLOW: CloudflareWorkflowBindingLike
   MY_QUEUE: CloudflareQueueBindingLike

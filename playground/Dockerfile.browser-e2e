@@ -1,0 +1,15 @@
+FROM mcr.microsoft.com/playwright:v1.58.2-jammy
+
+WORKDIR /workspace
+
+ENV CI=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+RUN corepack enable
+
+COPY . .
+
+RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm build
+
+CMD ["node", "playground/scripts/browser-e2e.mjs"]

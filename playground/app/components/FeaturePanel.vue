@@ -3,6 +3,7 @@ import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProviders } from '../composables/useProviders'
 import SandboxPanel from './SandboxPanel.vue'
+import BrowserPanel from './BrowserPanel.vue'
 import WorkflowPanel from './WorkflowPanel.vue'
 import QueuePanel from './QueuePanel.vue'
 import VectorPanel from './VectorPanel.vue'
@@ -31,6 +32,7 @@ watch([feature, provider], ([f, p]) => {
     <UEmpty v-if="!available" icon="i-lucide-circle-x" title="Not available" :description="reason" />
 
     <SandboxPanel v-else-if="feature === 'sandbox'" :provider="provider" />
+    <BrowserPanel v-else-if="feature === 'browser'" :provider="provider" />
     <WorkflowPanel v-else-if="feature === 'workflow'" :provider="provider" />
     <QueuePanel v-else-if="feature === 'queue'" :provider="provider" />
     <VectorPanel v-else-if="feature === 'vector'" :provider="provider" />

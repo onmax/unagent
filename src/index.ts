@@ -1,3 +1,25 @@
+export { BrowserError, NotSupportedError as BrowserNotSupportedError, createBrowser, detectBrowser, isBrowserAvailable } from './browser'
+export type {
+  BrowserCapabilities,
+  BrowserClickOptions,
+  BrowserClient,
+  BrowserDetectionResult,
+  BrowserExtractOptions,
+  BrowserGotoOptions,
+  BrowserOptions,
+  BrowserPage,
+  BrowserPageOptions,
+  BrowserProvider,
+  BrowserProviderOptions,
+  BrowserScreenshotOptions,
+  BrowserSession,
+  BrowserSessionOptions,
+  BrowserTypeOptions,
+  BrowserWaitForSelectorOptions,
+} from './browser'
+export type { BrowserbaseBrowserProviderOptions, BrowserbaseNamespace } from './browser'
+export type { CloudflareBrowserNamespace, CloudflareBrowserProviderOptions } from './browser'
+export type { PlaywrightBrowserNamespace, PlaywrightBrowserProviderOptions } from './browser'
 export * from './env'
 export * from './fs'
 export { createCloudflareQueueBatchHandler, createQueue, detectQueue, isQueueAvailable, QueueError, NotSupportedError as QueueNotSupportedError, verifyQStashSignature } from './queue'

@@ -1,0 +1,11 @@
+.git
+node_modules
+dist
+docs/node_modules
+docs/.nuxt
+docs/.output
+playground/node_modules
+playground/.output
+playground/.nitro
+playground/.wrangler
+*.log

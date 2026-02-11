@@ -5,6 +5,7 @@ export default defineConfig({
     'src/index.ts',
     'src/env/index.ts',
     'src/fs/index.ts',
+    'src/browser/index.ts',
     'src/task/index.ts',
     'src/queue/index.ts',
     'src/sandbox/index.ts',

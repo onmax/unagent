@@ -4,6 +4,7 @@
   "assets": { "directory": ".output/public" },
   "compatibility_date": "2026-02-05",
   "compatibility_flags": ["nodejs_compat"],
+  "browser": { "binding": "MYBROWSER" },
   "account_id": "ba6e044dfdaaffec3cac45e9feccd237",
   "containers": [{
     "class_name": "Sandbox",

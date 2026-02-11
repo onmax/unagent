@@ -21,6 +21,11 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
     { id: 'vercel', label: 'Vercel', runtimeOrEnv: 'vercel', envRequired: ['VERCEL_TOKEN', 'VERCEL_TEAM_ID', 'VERCEL_PROJECT_ID'] },
     { id: 'deno', label: 'Deno', envRequired: ['DENO_DEPLOY_TOKEN'] },
   ],
+  browser: [
+    { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare', cloudflareBindingsRequired: ['MYBROWSER'] },
+    { id: 'browserbase', label: 'Browserbase', envRequired: ['BROWSERBASE_API_KEY', 'BROWSERBASE_PROJECT_ID'] },
+    { id: 'playwright', label: 'Playwright', runtimeOnly: 'node' },
+  ],
   queue: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare', cloudflareBindingsRequired: ['MY_QUEUE'] },
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },

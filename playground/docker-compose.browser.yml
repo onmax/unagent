@@ -1,0 +1,6 @@
+name: unagent-browser-e2e
+services:
+  playwright-e2e:
+    build:
+      context: ..
+      dockerfile: playground/Dockerfile.browser-e2e
