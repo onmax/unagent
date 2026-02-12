@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { detectSandbox, isSandboxAvailable } from '../src/sandbox'
+import { detectSandbox, isSandboxAvailable, validateSandboxConfig } from '../src/sandbox'
 
 describe('sandbox/detectSandbox', () => {
   const originalEnv = process.env
@@ -86,5 +86,43 @@ describe('sandbox/isSandboxAvailable', () => {
 
   it('returns true for deno when package installed', () => {
     expect(isSandboxAvailable('deno')).toBe(true)
+  })
+})
+
+describe('sandbox/validateSandboxConfig (deno)', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    process.env = { ...originalEnv }
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  it('fails when DENO_DEPLOY_TOKEN is missing', () => {
+    delete process.env.DENO_DEPLOY_TOKEN
+    const result = validateSandboxConfig({ name: 'deno' })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'DENO_TOKEN_REQUIRED', severity: 'error' }),
+    ])
+  })
+
+  it('fails when DENO_DEPLOY_TOKEN includes invalid header characters', () => {
+    process.env.DENO_DEPLOY_TOKEN = 'token-with-newline\n'
+    const result = validateSandboxConfig({ name: 'deno' })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'DENO_TOKEN_INVALID', severity: 'error' }),
+      expect.objectContaining({ code: 'DENO_TOKEN_INVALID', severity: 'error' }),
+    ])
+  })
+
+  it('passes when DENO_DEPLOY_TOKEN is valid', () => {
+    process.env.DENO_DEPLOY_TOKEN = 'valid-token-value'
+    const result = validateSandboxConfig({ name: 'deno' })
+    expect(result.ok).toBe(true)
+    expect(result.issues).toEqual([])
   })
 })

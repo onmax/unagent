@@ -127,6 +127,19 @@ export interface SandboxOptions {
   provider?: SandboxProviderOptions
 }
 
+export interface SandboxConfigValidationIssue {
+  code: string
+  message: string
+  field?: string
+  severity: 'error' | 'warning'
+}
+
+export interface SandboxConfigValidationResult {
+  provider: SandboxProvider
+  ok: boolean
+  issues: SandboxConfigValidationIssue[]
+}
+
 // === Cloudflare Stub Types ===
 export interface CloudflareSandboxExecResult {
   success: boolean

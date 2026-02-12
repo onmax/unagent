@@ -2,11 +2,13 @@ import type { CloudflareSandboxClient, CloudflareSandboxOptions, CloudflareSandb
 import { provider as envProvider, isWorkerd } from 'std-env'
 import { CloudflareSandboxAdapter, DenoSandboxAdapter, VercelSandboxAdapter } from './adapters'
 import { SandboxError } from './errors'
+import { validateSandboxConfig } from './validation'
 
 export { NotSupportedError, SandboxError } from './errors'
+export { validateSandboxConfig }
 
 // Re-exports
-export type { CloudflareSandboxClient, CloudflareSandboxNamespace, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxSession, DenoSandboxClient, DenoSandboxNamespace, DenoSandboxOptions, DenoSandboxProviderOptions, DurableObjectNamespaceLike, SandboxCapabilities, SandboxClient, SandboxCodeContext, SandboxCodeExecutionResult, SandboxExecOptions, SandboxExecResult, SandboxExposedPort, SandboxFileEntry, SandboxGitCheckoutResult, SandboxListFilesOptions, SandboxNetworkPolicy, SandboxOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider, SandboxWaitForPortOptions, VercelSandboxClient, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxProviderOptions, VercelSandboxSnapshot } from './types'
+export type { CloudflareSandboxClient, CloudflareSandboxNamespace, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxSession, DenoSandboxClient, DenoSandboxNamespace, DenoSandboxOptions, DenoSandboxProviderOptions, DurableObjectNamespaceLike, SandboxCapabilities, SandboxClient, SandboxCodeContext, SandboxCodeExecutionResult, SandboxConfigValidationIssue, SandboxConfigValidationResult, SandboxExecOptions, SandboxExecResult, SandboxExposedPort, SandboxFileEntry, SandboxGitCheckoutResult, SandboxListFilesOptions, SandboxNetworkPolicy, SandboxOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider, SandboxWaitForPortOptions, VercelSandboxClient, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxProviderOptions, VercelSandboxSnapshot } from './types'
 
 export function detectSandbox(): import('./types/common').SandboxDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')
@@ -139,6 +141,15 @@ export async function createSandbox(options: SandboxOptions = {}): Promise<Sandb
   }
 
   if (resolved.name === 'deno') {
+    const validation = validateSandboxConfig(resolved)
+    if (!validation.ok) {
+      const firstIssue = validation.issues.find(issue => issue.severity === 'error') || validation.issues[0]
+      throw new SandboxError(firstIssue?.message || '[deno] invalid sandbox config', {
+        code: 'DENO_CONFIG_INVALID',
+        provider: 'deno',
+        details: { issues: validation.issues },
+      })
+    }
     const { name: _name, ...sandboxOptions } = resolved
     const sdk = await loadDenoSandbox()
     const instance = await sdk.Sandbox.create(sandboxOptions)
