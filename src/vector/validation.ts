@@ -1,5 +1,6 @@
 import type { VectorConfigValidationIssue, VectorConfigValidationResult } from './types/common'
 import type { VectorProviderOptions } from './types/index'
+import type { PineconeProviderOptions } from './types/pinecone'
 import type { SqliteVecProviderOptions } from './types/sqlite-vec'
 
 function canResolve(moduleName: string): boolean {
@@ -57,11 +58,43 @@ function sqliteVecValidation(provider: SqliteVecProviderOptions): VectorConfigVa
   return issues
 }
 
+function pineconeValidation(provider: PineconeProviderOptions): VectorConfigValidationIssue[] {
+  const issues: VectorConfigValidationIssue[] = []
+  if (!provider.embeddings) {
+    issues.push({
+      code: 'PINECONE_EMBEDDINGS_REQUIRED',
+      field: 'embeddings',
+      severity: 'error',
+      message: '[pinecone] embeddings is required',
+    })
+  }
+  if (!provider.apiKey && !process.env.PINECONE_API_KEY) {
+    issues.push({
+      code: 'PINECONE_API_KEY_REQUIRED',
+      field: 'apiKey',
+      severity: 'error',
+      message: '[pinecone] apiKey is required',
+    })
+  }
+  if (!provider.host && !provider.index) {
+    issues.push({
+      code: 'PINECONE_HOST_OR_INDEX_REQUIRED',
+      field: 'host|index',
+      severity: 'error',
+      message: '[pinecone] host or index is required',
+    })
+  }
+  return issues
+}
+
 export function validateVectorConfig(provider: VectorProviderOptions): VectorConfigValidationResult {
   const issues: VectorConfigValidationIssue[] = []
 
   if (provider.name === 'sqlite-vec')
     issues.push(...sqliteVecValidation(provider))
+
+  if (provider.name === 'pinecone')
+    issues.push(...pineconeValidation(provider))
 
   return {
     provider: provider.name,

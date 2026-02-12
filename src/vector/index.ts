@@ -247,13 +247,13 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
   }
 
   if (resolved.name === 'pinecone') {
+    const validation = validateVectorConfig(resolved)
+    if (!validation.ok) {
+      const firstIssue = validation.issues.find(issue => issue.severity === 'error') || validation.issues[0]
+      throw new VectorError(firstIssue?.message || '[pinecone] invalid config')
+    }
+
     const { apiKey, host, index, namespace, embeddings } = resolved as PineconeProviderOptions
-    if (!embeddings)
-      throw new VectorError('[pinecone] embeddings is required')
-    if (!apiKey && !process.env.PINECONE_API_KEY)
-      throw new VectorError('[pinecone] apiKey is required')
-    if (!host && !index)
-      throw new VectorError('[pinecone] host or index is required')
     let PineconeCtor: any
     try {
       const mod: any = await import('@pinecone-database/pinecone')
