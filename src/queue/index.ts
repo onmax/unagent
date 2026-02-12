@@ -1,5 +1,6 @@
 import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions } from './types'
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
+import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
 import type { MemoryQueueProviderOptions } from './types/memory'
 import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
@@ -14,7 +15,7 @@ export { createCloudflareQueueBatchHandler }
 export { verifyQStashSignature }
 export type { CloudflareQueueClient, MemoryQueueClient, QStashQueueClient, QueueClient, VercelQueueClient } from './types'
 export type { CloudflareQueueBatchMessage, CloudflareQueueBindingLike, CloudflareQueueContentType, CloudflareQueueMessage, CloudflareQueueMessageBatch, CloudflareQueueNamespace, CloudflareQueueProviderOptions, CloudflareQueueRetryOptions, CloudflareQueueSendBatchOptions, CloudflareQueueSendOptions } from './types/cloudflare'
-export type { QueueBatchMessage, QueueCapabilities, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from './types/common'
+export type { QueueBatchMessage, QueueCapabilities, QueueConfigValidationIssue, QueueConfigValidationResult, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from './types/common'
 export type { MemoryQueueNamespace, MemoryQueueProviderOptions, MemoryQueueStore, MemoryQueueStoreItem } from './types/memory'
 export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/qstash'
 export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
@@ -83,6 +84,57 @@ export function isQueueAvailable(provider: QueueProvider): boolean {
   return false
 }
 
+export function validateQueueConfig(provider: QueueProviderOptions): QueueConfigValidationResult {
+  const issues: QueueConfigValidationIssue[] = []
+
+  if (provider.name === 'cloudflare') {
+    if (!provider.binding) {
+      issues.push({
+        code: 'CF_BINDING_REQUIRED',
+        field: 'binding',
+        message: 'Cloudflare queue requires a Queue binding.',
+        severity: 'error',
+      })
+    }
+  }
+
+  if (provider.name === 'vercel') {
+    if (!provider.topic) {
+      issues.push({
+        code: 'VERCEL_TOPIC_REQUIRED',
+        field: 'topic',
+        message: 'Vercel queue topic is required.',
+        severity: 'error',
+      })
+    }
+  }
+
+  if (provider.name === 'qstash') {
+    if (!provider.token) {
+      issues.push({
+        code: 'QSTASH_TOKEN_REQUIRED',
+        field: 'token',
+        message: '[qstash] token is required',
+        severity: 'error',
+      })
+    }
+    if (!provider.destination) {
+      issues.push({
+        code: 'QSTASH_DESTINATION_MISSING',
+        field: 'destination',
+        message: '[qstash] destination is required for publish operations',
+        severity: 'warning',
+      })
+    }
+  }
+
+  return {
+    provider: provider.name,
+    ok: issues.every(issue => issue.severity !== 'error'),
+    issues,
+  }
+}
+
 async function loadVercelQueue(): Promise<VercelQueueSDK> {
   const moduleName = '@vercel/queue'
   try {
@@ -119,28 +171,30 @@ export function createQueue(opts: { provider: MemoryQueueProviderOptions }): Pro
 export function createQueue(opts?: QueueOptions): Promise<QueueClient>
 export async function createQueue(options: QueueOptions = {}): Promise<QueueClient> {
   const resolved = resolveProvider(options.provider)
+  const validation = validateQueueConfig(resolved)
+  if (!validation.ok) {
+    const firstIssue = validation.issues.find(issue => issue.severity === 'error') || validation.issues[0]
+    throw new QueueError(firstIssue?.message || 'Invalid queue config', {
+      code: firstIssue?.code || 'QUEUE_CONFIG_INVALID',
+      provider: resolved.name,
+      httpStatus: 400,
+      details: { issues: validation.issues },
+    })
+  }
 
   if (resolved.name === 'cloudflare') {
     const { binding } = resolved as CloudflareQueueProviderOptions
-    if (!binding)
-      throw new QueueError('Cloudflare queue requires a Queue binding. Pass { provider: { name: "cloudflare", binding } }.')
     return new CloudflareQueueAdapter(binding)
   }
 
   if (resolved.name === 'vercel') {
     const { topic } = resolved as VercelQueueProviderOptions
-    if (!topic)
-      throw new QueueError('Vercel queue topic is required. Pass { provider: { name: "vercel", topic } }.')
     const sdk = await loadVercelQueue()
     return new VercelQueueAdapter(topic, sdk)
   }
 
   if (resolved.name === 'qstash') {
     const { token, destination, apiUrl } = resolved as QStashQueueProviderOptions
-    if (!token)
-      throw new QueueError('[qstash] token is required')
-    if (!destination)
-      throw new QueueError('[qstash] destination is required')
     return new QStashQueueAdapter(token, destination, apiUrl)
   }
 

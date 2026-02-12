@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createQueue, verifyQStashSignature } from '../src/queue'
+import { createQueue, QueueError, validateQueueConfig, verifyQStashSignature } from '../src/queue'
 
 vi.mock('@upstash/qstash', () => {
   const verify = vi.fn(async () => true)
@@ -69,6 +69,79 @@ describe('queue/qstash provider', () => {
     expect(body[0].destination).toBe('https://example.com/webhook')
     expect(body[0].headers['upstash-delay']).toBe('5s')
   })
+
+  it('allows createQueue without destination for preflight checks', async () => {
+    const queue = await createQueue({
+      provider: {
+        name: 'qstash',
+        token: 'token',
+      },
+    })
+
+    expect(queue.provider).toBe('qstash')
+    expect(queue.qstash.destination).toBeUndefined()
+  })
+
+  it('throws structured config error when send is called without destination', async () => {
+    vi.stubGlobal('fetch', vi.fn())
+    const queue = await createQueue({
+      provider: {
+        name: 'qstash',
+        token: 'token',
+      },
+    })
+
+    await expect(queue.send({ ok: true })).rejects.toMatchObject({
+      name: 'QueueError',
+      code: 'QSTASH_CONFIG_INVALID',
+      provider: 'qstash',
+      httpStatus: 400,
+    })
+  })
+
+  it('throws structured config error when sendBatch is called without destination', async () => {
+    vi.stubGlobal('fetch', vi.fn())
+    const queue = await createQueue({
+      provider: {
+        name: 'qstash',
+        token: 'token',
+      },
+    })
+
+    await expect(queue.sendBatch?.([{ body: { ok: true } }])).rejects.toMatchObject({
+      name: 'QueueError',
+      code: 'QSTASH_CONFIG_INVALID',
+      provider: 'qstash',
+      httpStatus: 400,
+    })
+  })
+
+  it('returns structured publish diagnostics for upstream failures', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ error: 'unauthorized token' }), { status: 401 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const queue = await createQueue({
+      provider: {
+        name: 'qstash',
+        token: 'token',
+        destination: 'https://example.com/webhook',
+      },
+    })
+
+    try {
+      await queue.send({ ok: true })
+      throw new Error('Expected send to fail')
+    }
+    catch (error) {
+      expect(error).toBeInstanceOf(QueueError)
+      expect(error).toMatchObject({
+        code: 'QSTASH_AUTH_FAILED',
+        provider: 'qstash',
+        httpStatus: 401,
+        upstreamError: 'unauthorized token',
+      })
+    }
+  })
 })
 
 describe('queue/qstash signature verify', () => {
@@ -89,5 +162,21 @@ describe('queue/qstash signature verify', () => {
 
     expect(ok).toBe(true)
     expect(mod.__verify).toHaveBeenCalledWith({ body: '{"ok":true}', signature: 'sig', url: 'https://example.com/webhook' })
+  })
+})
+
+describe('queue/qstash validation', () => {
+  it('returns warning when destination is omitted', () => {
+    const preflight = validateQueueConfig({
+      name: 'qstash',
+      token: 'token',
+    })
+    expect(preflight.ok).toBe(true)
+    expect(preflight.issues).toEqual([
+      expect.objectContaining({
+        code: 'QSTASH_DESTINATION_MISSING',
+        severity: 'warning',
+      }),
+    ])
   })
 })
