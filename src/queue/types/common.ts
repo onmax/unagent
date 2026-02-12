@@ -31,6 +31,19 @@ export interface QueueSendBatchOptions {
   delaySeconds?: number
 }
 
+export interface QueueConfigValidationIssue {
+  code: string
+  message: string
+  field?: string
+  severity: 'error' | 'warning'
+}
+
+export interface QueueConfigValidationResult {
+  provider: QueueProvider
+  ok: boolean
+  issues: QueueConfigValidationIssue[]
+}
+
 export type QueueProviderOptions = VercelQueueProviderOptions | CloudflareQueueProviderOptions | QStashQueueProviderOptions | MemoryQueueProviderOptions
 
 export interface QueueOptions {

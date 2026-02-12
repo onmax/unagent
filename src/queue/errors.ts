@@ -1,7 +1,32 @@
+export interface QueueErrorMetadata {
+  code?: string
+  provider?: string
+  httpStatus?: number
+  upstreamError?: unknown
+  details?: Record<string, unknown>
+}
+
 export class QueueError extends Error {
-  constructor(message: string, public readonly code?: string) {
+  readonly code?: string
+  readonly provider?: string
+  readonly httpStatus?: number
+  readonly upstreamError?: unknown
+  readonly details?: Record<string, unknown>
+
+  constructor(message: string, metadata?: string | QueueErrorMetadata) {
     super(message)
     this.name = 'QueueError'
+
+    if (typeof metadata === 'string') {
+      this.code = metadata
+      return
+    }
+
+    this.code = metadata?.code
+    this.provider = metadata?.provider
+    this.httpStatus = metadata?.httpStatus
+    this.upstreamError = metadata?.upstreamError
+    this.details = metadata?.details
   }
 }
 

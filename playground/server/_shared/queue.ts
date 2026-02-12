@@ -30,7 +30,7 @@ export async function createPlaygroundQueue(event: any, provider: QueueProvider,
     const token = process.env.QSTASH_TOKEN
     if (!token)
       throw new Error('Missing QSTASH_TOKEN')
-    const destination = extra?.destination || process.env.QSTASH_DESTINATION || ''
+    const destination = extra?.destination || process.env.QSTASH_DESTINATION
     const apiUrl = process.env.QSTASH_API_URL
     return {
       provider,
