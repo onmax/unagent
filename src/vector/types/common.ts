@@ -78,3 +78,16 @@ export interface ResolvedEmbedding {
 export interface EmbeddingConfig {
   resolve: () => Promise<ResolvedEmbedding>
 }
+
+export interface VectorConfigValidationIssue {
+  code: string
+  message: string
+  field?: string
+  severity: 'error' | 'warning'
+}
+
+export interface VectorConfigValidationResult {
+  provider: VectorProvider
+  ok: boolean
+  issues: VectorConfigValidationIssue[]
+}

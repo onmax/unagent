@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { detectVector, isVectorAvailable } from '../src/vector'
+import { detectVector, isVectorAvailable, validateVectorConfig } from '../src/vector'
 
 describe('vector/detectVector', () => {
   const originalEnv = process.env
@@ -71,5 +71,78 @@ describe('vector/isVectorAvailable', () => {
   it('returns true for cloudflare when runtime env is present', () => {
     process.env = { ...originalEnv, CLOUDFLARE_WORKER: '1' }
     expect(isVectorAvailable('cloudflare')).toBe(true)
+  })
+})
+
+describe('vector/validateVectorConfig (sqlite-vec)', () => {
+  const originalGlobalRequire = (globalThis as { require?: { resolve?: (id: string) => string } }).require
+  const processWithBuiltin = globalThis.process as typeof globalThis.process & { getBuiltinModule?: (id: string) => unknown }
+  const originalGetBuiltinModule = processWithBuiltin.getBuiltinModule
+
+  const dummyEmbeddings = {
+    async resolve() {
+      return {
+        embedder: async (_texts: string[]) => [[0.1]],
+        dimensions: 1,
+      }
+    },
+  }
+
+  afterEach(() => {
+    if (originalGlobalRequire) {
+      (globalThis as { require?: { resolve?: (id: string) => string } }).require = originalGlobalRequire
+    }
+    else {
+      delete (globalThis as { require?: { resolve?: (id: string) => string } }).require
+    }
+    processWithBuiltin.getBuiltinModule = originalGetBuiltinModule
+  })
+
+  it('flags missing node:sqlite runtime', () => {
+    processWithBuiltin.getBuiltinModule = () => undefined
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: () => 'sqlite-vec',
+    }
+
+    const result = validateVectorConfig({
+      name: 'sqlite-vec',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'SQLITE_VEC_RUNTIME_UNSUPPORTED', severity: 'error' }),
+    ])
+  })
+
+  it('flags missing sqlite-vec package', () => {
+    processWithBuiltin.getBuiltinModule = () => ({})
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: () => {
+        throw new Error('missing')
+      },
+    }
+
+    const result = validateVectorConfig({
+      name: 'sqlite-vec',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'SQLITE_VEC_PACKAGE_MISSING', severity: 'error' }),
+    ])
+  })
+
+  it('returns ok=true when runtime and package are available', () => {
+    processWithBuiltin.getBuiltinModule = () => ({})
+    ;(globalThis as { require?: { resolve?: (id: string) => string } }).require = {
+      resolve: () => 'sqlite-vec',
+    }
+
+    const result = validateVectorConfig({
+      name: 'sqlite-vec',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.issues).toEqual([])
   })
 })

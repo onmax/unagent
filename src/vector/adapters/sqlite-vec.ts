@@ -3,15 +3,24 @@ import type { SqliteDatabaseLike, SqliteVecNamespace } from '../types/sqlite-vec
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { resolveEmbedding } from '../embeddings/resolve'
+import { VectorError } from '../errors'
 import { compileFilter } from '../filter'
 import { extractSnippet } from '../utils/extract-snippet'
 import { BaseVectorAdapter } from './base'
 
 async function loadSqliteVec(db: SqliteDatabaseLike): Promise<void> {
-  const mod: any = await import('sqlite-vec')
+  let mod: any
+  try {
+    mod = await import('sqlite-vec')
+  }
+  catch (error) {
+    throw new VectorError(`[sqlite-vec] sqlite-vec package is required. Install it to use this provider. Original error: ${error instanceof Error ? error.message : error}`)
+  }
+
   const loader = mod.load ?? mod.default?.load ?? mod.default ?? mod
-  if (typeof loader !== 'function')
-    throw new Error('sqlite-vec load() not available')
+  if (typeof loader !== 'function') {
+    throw new VectorError('[sqlite-vec] sqlite-vec load() is not available')
+  }
   loader(db)
 }
 
@@ -20,7 +29,7 @@ export async function createSqliteVecAdapter(dbPath: string | undefined, embeddi
 
   const nodeSqlite = globalThis.process?.getBuiltinModule?.('node:sqlite') as typeof import('node:sqlite') | undefined
   if (!nodeSqlite)
-    throw new Error('node:sqlite not available. Requires Node.js >= 22.5')
+    throw new VectorError('[sqlite-vec] node:sqlite runtime is required (Node.js >= 22.5)')
 
   const path = dbPath || ':memory:'
   if (path !== ':memory:')
