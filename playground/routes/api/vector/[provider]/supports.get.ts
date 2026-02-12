@@ -25,6 +25,16 @@ export default defineEventHandler(async (event) => {
         })
       : null
 
+    const pineconePreflight = provider === 'pinecone'
+      ? validateVectorConfig({
+          name: 'pinecone',
+          apiKey: process.env.PINECONE_API_KEY,
+          host: process.env.PINECONE_HOST,
+          index: process.env.PINECONE_INDEX,
+          embeddings: preflightEmbeddings,
+        })
+      : null
+
     if (provider === 'sqlite-vec' && !sqlitePreflight?.ok) {
       return {
         provider,
@@ -35,11 +45,22 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    if (provider === 'pinecone' && !pineconePreflight?.ok) {
+      return {
+        provider,
+        supports: null,
+        preflight: pineconePreflight,
+        elapsed: Date.now() - start,
+        timestamp: nowIso(),
+      }
+    }
+
     const { vector } = await createPlaygroundVector(event, provider, { embeddings })
     return {
       provider,
       supports: vector.supports,
       ...(provider === 'sqlite-vec' ? { preflight: sqlitePreflight } : {}),
+      ...(provider === 'pinecone' ? { preflight: pineconePreflight } : {}),
       elapsed: Date.now() - start,
       timestamp: nowIso(),
     }

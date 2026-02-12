@@ -146,3 +146,60 @@ describe('vector/validateVectorConfig (sqlite-vec)', () => {
     expect(result.issues).toEqual([])
   })
 })
+
+describe('vector/validateVectorConfig (pinecone)', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    process.env = { ...originalEnv }
+    delete process.env.PINECONE_API_KEY
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  const dummyEmbeddings = {
+    async resolve() {
+      return {
+        embedder: async (_texts: string[]) => [[0.1]],
+        dimensions: 1,
+      }
+    },
+  }
+
+  it('returns missing apiKey for pinecone', () => {
+    const result = validateVectorConfig({
+      name: 'pinecone',
+      host: 'example-host',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'PINECONE_API_KEY_REQUIRED', severity: 'error' }),
+    ])
+  })
+
+  it('returns missing host/index for pinecone', () => {
+    const result = validateVectorConfig({
+      name: 'pinecone',
+      apiKey: 'pc-key',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({ code: 'PINECONE_HOST_OR_INDEX_REQUIRED', severity: 'error' }),
+    ])
+  })
+
+  it('returns ok=true for valid pinecone config', () => {
+    const result = validateVectorConfig({
+      name: 'pinecone',
+      apiKey: 'pc-key',
+      host: 'example-host',
+      embeddings: dummyEmbeddings,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.issues).toEqual([])
+  })
+})
