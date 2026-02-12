@@ -102,7 +102,22 @@ class CloudflareNamespaceImpl implements CloudflareSandboxNamespace {
     // The CF sandbox SDK should expose this - for now delegate to stub if available
     const stubAny = this.stub as unknown as Record<string, unknown>
     if (typeof stubAny.gitCheckout === 'function') {
-      return stubAny.gitCheckout(_url, _opts) as Promise<SandboxGitCheckoutResult>
+      try {
+        return await (stubAny.gitCheckout as (url: string, opts?: SandboxGitCheckoutOptions) => Promise<SandboxGitCheckoutResult>)(_url, _opts)
+      }
+      catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        throw new SandboxError(`[cloudflare] gitCheckout failed: ${message}`, {
+          code: 'CF_GIT_CHECKOUT_FAILED',
+          provider: 'cloudflare',
+          details: {
+            operation: 'gitCheckout',
+            url: _url,
+            options: _opts,
+          },
+          cause: error,
+        })
+      }
     }
     throw new NotSupportedError('gitCheckout', 'cloudflare')
   }
