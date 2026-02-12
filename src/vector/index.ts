@@ -23,6 +23,7 @@ import { createSqliteVecAdapter } from './adapters/sqlite-vec'
 import { UpstashVectorAdapter } from './adapters/upstash'
 import { createWeaviateAdapter } from './adapters/weaviate'
 import { VectorError } from './errors'
+import { validateVectorConfig } from './validation'
 
 export { vectorProviders } from './_providers'
 export type { VectorProviderName, VectorProviderOptionsMap } from './_providers'
@@ -42,12 +43,15 @@ export { resolveEmbedding } from './embeddings/resolve'
 export { transformersJs } from './embeddings/transformers-js'
 export type { TransformersEmbeddingOptions } from './embeddings/transformers-js'
 export { NotSupportedError, VectorError } from './errors'
+export { validateVectorConfig }
 export type {
   EmbeddingConfig,
   EmbeddingProvider,
   ResolvedEmbedding,
   VectorCapabilities,
   VectorClient,
+  VectorConfigValidationIssue,
+  VectorConfigValidationResult,
   VectorDetectionResult,
   VectorDocument,
   VectorOptions,
@@ -233,9 +237,12 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
   }
 
   if (resolved.name === 'sqlite-vec') {
+    const validation = validateVectorConfig(resolved)
+    if (!validation.ok) {
+      const firstIssue = validation.issues.find(issue => issue.severity === 'error') || validation.issues[0]
+      throw new VectorError(firstIssue?.message || '[sqlite-vec] invalid config')
+    }
     const { path, embeddings } = resolved as SqliteVecProviderOptions
-    if (!embeddings)
-      throw new VectorError('[sqlite-vec] embeddings is required')
     return createSqliteVecAdapter(path, embeddings)
   }
 

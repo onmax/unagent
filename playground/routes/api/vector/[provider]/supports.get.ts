@@ -1,5 +1,6 @@
 import type { VectorProvider } from '../../../../server/_shared/vector'
 import { defineEventHandler, getQuery } from 'h3'
+import { validateVectorConfig } from 'unagent/vector'
 import { jsonError, nowIso } from '../../../../server/_shared/http'
 import { createPlaygroundVector } from '../../../../server/_shared/vector'
 
@@ -8,10 +9,37 @@ export default defineEventHandler(async (event) => {
   const embeddings = (getQuery(event).embeddings as string) || undefined
   const start = Date.now()
   try {
+    const preflightEmbeddings = {
+      async resolve() {
+        return {
+          embedder: async (_texts: string[]) => [[0]],
+          dimensions: 1,
+        }
+      },
+    }
+
+    const sqlitePreflight = provider === 'sqlite-vec'
+      ? validateVectorConfig({
+          name: 'sqlite-vec',
+          embeddings: preflightEmbeddings,
+        })
+      : null
+
+    if (provider === 'sqlite-vec' && !sqlitePreflight?.ok) {
+      return {
+        provider,
+        supports: null,
+        preflight: sqlitePreflight,
+        elapsed: Date.now() - start,
+        timestamp: nowIso(),
+      }
+    }
+
     const { vector } = await createPlaygroundVector(event, provider, { embeddings })
     return {
       provider,
       supports: vector.supports,
+      ...(provider === 'sqlite-vec' ? { preflight: sqlitePreflight } : {}),
       elapsed: Date.now() - start,
       timestamp: nowIso(),
     }
