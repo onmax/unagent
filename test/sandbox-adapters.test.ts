@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { CloudflareSandboxAdapter } from '../src/sandbox/adapters/cloudflare'
 import { DenoSandboxAdapter } from '../src/sandbox/adapters/deno'
 import { VercelSandboxAdapter } from '../src/sandbox/adapters/vercel'
-import { SandboxError } from '../src/sandbox/errors'
+import { NotSupportedError, SandboxError } from '../src/sandbox/errors'
 
 function createCloudflareStub(overrides: Partial<CloudflareSandboxStub> = {}): CloudflareSandboxStub {
   return {
@@ -162,6 +162,32 @@ describe('sandbox adapters', () => {
     await expect(adapter.cloudflare.getExposedPorts()).rejects.toBeInstanceOf(SandboxError)
     expect(exposePort).not.toHaveBeenCalled()
     expect(getExposedPorts).not.toHaveBeenCalled()
+  })
+
+  it('cloudflare gitCheckout wraps upstream failures into structured SandboxError', async () => {
+    const stub = createCloudflareStub({
+      gitCheckout: async () => {
+        throw new Error('repository not found')
+      },
+    } as unknown as Partial<CloudflareSandboxStub>)
+
+    const adapter = new CloudflareSandboxAdapter('cf-git-1', stub)
+
+    await expect(
+      adapter.cloudflare.gitCheckout('https://github.com/unjs/unagent', { depth: 1 }),
+    ).rejects.toMatchObject({
+      name: 'SandboxError',
+      code: 'CF_GIT_CHECKOUT_FAILED',
+      provider: 'cloudflare',
+      details: expect.objectContaining({
+        operation: 'gitCheckout',
+      }),
+    })
+  })
+
+  it('cloudflare gitCheckout throws NotSupportedError when SDK method is unavailable', async () => {
+    const adapter = new CloudflareSandboxAdapter('cf-git-2', createCloudflareStub())
+    await expect(adapter.cloudflare.gitCheckout('https://github.com/unjs/unagent')).rejects.toBeInstanceOf(NotSupportedError)
   })
 
   it('vercel waitForLog remains stable with concurrent log reads', async () => {

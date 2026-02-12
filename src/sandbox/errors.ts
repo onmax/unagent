@@ -1,7 +1,29 @@
+export interface SandboxErrorMetadata {
+  code?: string
+  provider?: string
+  details?: Record<string, unknown>
+  cause?: unknown
+}
+
 export class SandboxError extends Error {
-  constructor(message: string, public readonly code?: string) {
+  readonly code?: string
+  readonly provider?: string
+  readonly details?: Record<string, unknown>
+  override readonly cause?: unknown
+
+  constructor(message: string, metadata?: string | SandboxErrorMetadata) {
     super(message)
     this.name = 'SandboxError'
+
+    if (typeof metadata === 'string') {
+      this.code = metadata
+      return
+    }
+
+    this.code = metadata?.code
+    this.provider = metadata?.provider
+    this.details = metadata?.details
+    this.cause = metadata?.cause
   }
 }
 
