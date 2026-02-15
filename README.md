@@ -43,7 +43,6 @@ await installSkill({ source: './local/skills', mode: 'symlink' })
 
 ## Credits
 
-- Agent detection parity (`determineAgent`) is based on Vercel’s [`detect-agent`](https://github.com/vercel/vercel/tree/main/packages/detect-agent).
 - Pricing sync uses Vercel AI Gateway’s public model catalog: [vercel.com/ai-gateway/models](https://vercel.com/ai-gateway/models).
 
 ## License
