@@ -1,3 +1,4 @@
+import { getRequestURL } from 'h3'
 import { createQueue } from 'unagent/queue'
 import { getCloudflareEnv } from './provider'
 
@@ -45,7 +46,7 @@ export async function createPlaygroundQueue(event: any, provider: QueueProvider,
       throw new Error(`Missing ${NETLIFY_QUEUE_EVENT_ENV}`)
 
     const apiKey = process.env.NETLIFY_API_KEY || process.env.NETLIFY_AUTH_TOKEN
-    const baseUrl = process.env.NETLIFY_ASYNC_WORKLOADS_BASE_URL
+    const baseUrl = process.env.NETLIFY_ASYNC_WORKLOADS_BASE_URL || getRequestURL(event).origin
 
     return {
       provider,

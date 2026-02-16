@@ -1,5 +1,5 @@
 import type { QueueProvider } from '../../../../server/_shared/queue'
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, getRequestURL } from 'h3'
 import { QueueError } from 'unagent/queue'
 import { jsonError, nowIso, readJsonBody } from '../../../../server/_shared/http'
 import { createPlaygroundQueue, NETLIFY_QUEUE_EVENT_ENV, VERCEL_QUEUE_TOPIC } from '../../../../server/_shared/queue'
@@ -31,7 +31,12 @@ export default defineEventHandler(async (event) => {
       provider,
       queueProvider: queue.provider,
       ...(provider === 'vercel' ? { topic: VERCEL_QUEUE_TOPIC } : {}),
-      ...(provider === 'netlify' ? { event: process.env[NETLIFY_QUEUE_EVENT_ENV] } : {}),
+      ...(provider === 'netlify'
+        ? {
+            event: process.env[NETLIFY_QUEUE_EVENT_ENV],
+            baseUrl: process.env.NETLIFY_ASYNC_WORKLOADS_BASE_URL || getRequestURL(event).origin,
+          }
+        : {}),
       ...result,
       elapsed: Date.now() - start,
       timestamp: nowIso(),

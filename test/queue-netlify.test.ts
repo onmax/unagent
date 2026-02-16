@@ -37,7 +37,7 @@ describe('queue/netlify provider', () => {
 
     const result = await queue.send({ to: 'hello@example.com' }, { delaySeconds: 5, priority: 10 })
 
-    expect(result).toEqual({ messageId: 'evt-1' })
+    expect(result).toEqual({ messageId: 'evt-1', sendStatus: 'succeeded' })
     expect(send).toHaveBeenCalledWith('emails.send', {
       data: { to: 'hello@example.com' },
       delayUntil: 5000,
@@ -101,8 +101,24 @@ describe('queue/netlify provider', () => {
     })
 
     const result = await queue.send({ ok: true })
-    expect(result).toEqual({ messageId: 'evt-custom' })
+    expect(result).toEqual({ messageId: 'evt-custom', sendStatus: 'succeeded' })
     expect(customSend).toHaveBeenCalledWith('custom.injected', { data: { ok: true } })
+  })
+
+  it('throws when upstream send reports failed status', async () => {
+    send.mockResolvedValueOnce({ sendStatus: 'failed', eventId: 'evt-failed' })
+    const queue = await createQueue({
+      provider: {
+        name: 'netlify',
+        event: 'emails.send',
+      },
+    })
+
+    await expect(queue.send({ hello: 'world' })).rejects.toMatchObject({
+      name: 'QueueError',
+      code: 'NETLIFY_SEND_FAILED',
+      provider: 'netlify',
+    })
   })
 
   it('does not support sendBatch()', async () => {

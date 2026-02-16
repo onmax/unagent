@@ -158,7 +158,7 @@ export function validateQueueConfig(provider: QueueProviderOptions): QueueConfig
 async function loadVercelQueue(): Promise<VercelQueueSDK> {
   const moduleName = '@vercel/queue'
   try {
-    return await import(moduleName) as VercelQueueSDK
+    return await import('@vercel/queue') as VercelQueueSDK
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${e instanceof Error ? e.message : e}`)
@@ -168,7 +168,7 @@ async function loadVercelQueue(): Promise<VercelQueueSDK> {
 async function loadNetlifyQueue(): Promise<NetlifyQueueSDK> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import(moduleName) as NetlifyQueueSDK
+    return await import('@netlify/async-workloads') as NetlifyQueueSDK
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)

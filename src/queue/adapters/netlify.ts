@@ -13,6 +13,21 @@ function toDelayUntil(options?: { delaySeconds?: number, delayUntil?: number | s
   return undefined
 }
 
+function assertSendSucceeded(eventName: string, response: { eventId: string, sendStatus?: 'succeeded' | 'failed' }): void {
+  if (response.sendStatus === 'failed') {
+    throw new QueueError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
+      code: 'NETLIFY_SEND_FAILED',
+      provider: 'netlify',
+      upstreamError: response,
+      details: {
+        eventId: response.eventId,
+        eventName,
+        sendStatus: response.sendStatus,
+      },
+    })
+  }
+}
+
 export class NetlifyQueueAdapter extends BaseQueueAdapter {
   readonly provider = 'netlify' as const
   readonly supports: QueueCapabilities = { sendBatch: false }
@@ -36,13 +51,14 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
       throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
 
     const delayUntil = toDelayUntil(options)
-    const { eventId } = await this.client.send(this.event, {
+    const response = await this.client.send(this.event, {
       data: payload,
       ...(delayUntil !== undefined ? { delayUntil } : {}),
       ...(options.priority !== undefined ? { priority: options.priority } : {}),
     })
+    assertSendSucceeded(this.event, response)
 
-    return { messageId: eventId }
+    return { messageId: response.eventId, sendStatus: response.sendStatus }
   }
 
   override get netlify(): NetlifyQueueNamespace {
@@ -56,13 +72,14 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
           throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
 
         const delayUntil = toDelayUntil(options)
-        const { eventId, sendStatus } = await client.send(eventName, {
+        const response = await client.send(eventName, {
           ...(options.data !== undefined ? { data: options.data } : {}),
           ...(delayUntil !== undefined ? { delayUntil } : {}),
           ...(options.priority !== undefined ? { priority: options.priority } : {}),
         })
+        assertSendSucceeded(eventName, response)
 
-        return { messageId: eventId, sendStatus }
+        return { messageId: response.eventId, sendStatus: response.sendStatus }
       },
       asyncWorkloadFn: sdk.asyncWorkloadFn,
       ErrorDoNotRetry: sdk.ErrorDoNotRetry,

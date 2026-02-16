@@ -23,6 +23,7 @@ export interface QueueSendOptions {
 
 export interface QueueSendResult {
   messageId?: string
+  sendStatus?: 'succeeded' | 'failed'
 }
 
 export interface QueueBatchMessage<T = unknown> {
