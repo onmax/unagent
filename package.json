@@ -101,6 +101,7 @@
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
     "playground:browser:e2e": "pnpm build && node playground/scripts/browser-e2e.mjs",
     "playground:browser:e2e:docker": "docker compose -f playground/docker-compose.browser.yml run --rm --build playwright-e2e",
+    "playground:queue:netlify:e2e": "node playground/scripts/queue-netlify-e2e.mjs",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",
     "release": "bumpp",
@@ -118,6 +119,7 @@
     "@deno/sandbox": ">=0.1.0",
     "@huggingface/transformers": ">=0.0.0",
     "@libsql/client": ">=0.0.0",
+    "@netlify/async-workloads": ">=0.0.0",
     "@pinecone-database/pinecone": ">=0.0.0",
     "@qdrant/js-client-rest": ">=0.0.0",
     "@upstash/qstash": ">=0.0.0",
@@ -162,6 +164,9 @@
       "optional": true
     },
     "@libsql/client": {
+      "optional": true
+    },
+    "@netlify/async-workloads": {
       "optional": true
     },
     "@pinecone-database/pinecone": {
@@ -224,6 +229,7 @@
     "@upstash/vector": "catalog:vector",
     "bumpp": "catalog:script",
     "eslint": "catalog:lint",
+    "jiti": "catalog:lint",
     "lint-staged": "catalog:lint",
     "pg": "catalog:vector",
     "simple-git-hooks": "catalog:lint",

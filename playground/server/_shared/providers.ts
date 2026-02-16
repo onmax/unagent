@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { isQueueAvailable } from 'unagent/queue'
 import { getCloudflareEnv, getProvider } from './provider'
 
 export interface ProviderEntry {
@@ -29,6 +30,7 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
   queue: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare', cloudflareBindingsRequired: ['MY_QUEUE'] },
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },
+    { id: 'netlify', label: 'Netlify', envRequired: ['NETLIFY_QUEUE_EVENT'] },
     { id: 'qstash', label: 'QStash', envRequired: ['QSTASH_TOKEN'] },
     { id: 'memory', label: 'Memory' },
   ],
@@ -70,6 +72,10 @@ export function isAvailable(entry: ProviderEntry, runtime: string, _event: H3Eve
     if (missing.length)
       return { available: false, reason: `Missing env: ${missing.join(', ')}` }
   }
+
+  if (entry.id === 'netlify' && !isQueueAvailable('netlify'))
+    return { available: false, reason: 'Missing optional dependency: @netlify/async-workloads' }
+
   return { available: true }
 }
 

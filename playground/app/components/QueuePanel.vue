@@ -8,6 +8,8 @@ const { api, postJson } = useApi()
 const payload = ref('{\n  "hello": "world"\n}')
 const destination = ref('')
 const delaySeconds = ref('')
+const delayUntil = ref('')
+const priority = ref('')
 const idempotencyKey = ref('')
 const contentType = ref('json')
 
@@ -26,6 +28,8 @@ async function send() {
     const p = safeParseJson(payload.value)
     const options: Record<string, any> = { contentType: contentType.value }
     if (delaySeconds.value.trim()) options.delaySeconds = Number(delaySeconds.value.trim())
+    if (delayUntil.value.trim()) options.delayUntil = delayUntil.value.trim()
+    if (priority.value.trim()) options.priority = Number(priority.value.trim())
     if (idempotencyKey.value.trim()) options.idempotencyKey = idempotencyKey.value.trim()
     const body: Record<string, any> = { payload: p, options }
     if (props.provider === 'qstash' && destination.value.trim()) body.destination = destination.value.trim()
@@ -60,9 +64,15 @@ async function sendBatch() {
       <UCollapsible>
         <UButton variant="link" size="sm" class="p-0">Options</UButton>
         <template #content>
-          <div class="grid grid-cols-3 gap-3 mt-2">
+          <div class="grid grid-cols-5 gap-3 mt-2">
             <UFormField label="delaySeconds">
               <UInput v-model="delaySeconds" placeholder="e.g. 10" />
+            </UFormField>
+            <UFormField label="delayUntil">
+              <UInput v-model="delayUntil" placeholder="e.g. 5000 or 2026-02-16T12:00:00Z" />
+            </UFormField>
+            <UFormField label="priority">
+              <UInput v-model="priority" placeholder="-50..50" />
             </UFormField>
             <UFormField label="idempotencyKey">
               <UInput v-model="idempotencyKey" placeholder="optional" />

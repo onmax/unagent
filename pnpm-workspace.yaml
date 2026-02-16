@@ -2,6 +2,8 @@ packages:
   - docs
   - playground
 catalog:
+  '@netlify/async-workloads': ^0.0.106
+  '@netlify/blobs': ^10.6.0
   '@nuxt/ui': ^4.4.0
   '@openworkflow/backend-postgres': ^0.6.0
   '@vercel/queue': ^0.0.0-alpha.36
@@ -29,6 +31,7 @@ catalogs:
   lint:
     '@antfu/eslint-config': ^4.0.0
     eslint: ^9.0.0
+    jiti: ^2.6.1
     lint-staged: ^16.2.7
     simple-git-hooks: ^2.13.1
   prod:

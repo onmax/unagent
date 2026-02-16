@@ -2,10 +2,11 @@ import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, Qu
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
 import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
 import type { MemoryQueueProviderOptions } from './types/memory'
+import type { NetlifyQueueProviderOptions, NetlifyQueueSDK } from './types/netlify'
 import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
-import { CloudflareQueueAdapter, MemoryQueueAdapter, QStashQueueAdapter, VercelQueueAdapter } from './adapters'
+import { CloudflareQueueAdapter, MemoryQueueAdapter, NetlifyQueueAdapter, QStashQueueAdapter, VercelQueueAdapter } from './adapters'
 import { createCloudflareQueueBatchHandler } from './cloudflare-consumer'
 import { QueueError } from './errors'
 import { verifyQStashSignature } from './qstash'
@@ -13,10 +14,11 @@ import { verifyQStashSignature } from './qstash'
 export { NotSupportedError, QueueError } from './errors'
 export { createCloudflareQueueBatchHandler }
 export { verifyQStashSignature }
-export type { CloudflareQueueClient, MemoryQueueClient, QStashQueueClient, QueueClient, VercelQueueClient } from './types'
+export type { CloudflareQueueClient, MemoryQueueClient, NetlifyQueueClient, QStashQueueClient, QueueClient, VercelQueueClient } from './types'
 export type { CloudflareQueueBatchMessage, CloudflareQueueBindingLike, CloudflareQueueContentType, CloudflareQueueMessage, CloudflareQueueMessageBatch, CloudflareQueueNamespace, CloudflareQueueProviderOptions, CloudflareQueueRetryOptions, CloudflareQueueSendBatchOptions, CloudflareQueueSendOptions } from './types/cloudflare'
 export type { QueueBatchMessage, QueueCapabilities, QueueConfigValidationIssue, QueueConfigValidationResult, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from './types/common'
 export type { MemoryQueueNamespace, MemoryQueueProviderOptions, MemoryQueueStore, MemoryQueueStoreItem } from './types/memory'
+export type { NetlifyAsyncWorkloadsClient, NetlifyClientConstructorOptions, NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendEventOptions, NetlifyQueueSendEventResult, NetlifyQueueSendOptions, NetlifyQueueSendResult } from './types/netlify'
 export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/qstash'
 export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
 
@@ -27,6 +29,8 @@ export function detectQueue(): QueueDetectionResult {
     return { type: 'cloudflare', details: { runtime: 'pages' } }
   if (envProvider === 'vercel')
     return { type: 'vercel', details: { env: (typeof process !== 'undefined' ? process.env.VERCEL_ENV : undefined) } }
+  if (envProvider === 'netlify')
+    return { type: 'netlify', details: { context: (typeof process !== 'undefined' ? process.env.CONTEXT : undefined) } }
 
   const env = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>
 
@@ -36,6 +40,8 @@ export function detectQueue(): QueueDetectionResult {
     return { type: 'cloudflare', details: { runtime: 'pages' } }
   if (env.VERCEL || env.VERCEL_ENV)
     return { type: 'vercel', details: { env: env.VERCEL_ENV } }
+  if (env.NETLIFY || env.NETLIFY_LOCAL)
+    return { type: 'netlify', details: { context: env.CONTEXT } }
   return { type: 'none' }
 }
 
@@ -74,6 +80,9 @@ export function isQueueAvailable(provider: QueueProvider): boolean {
 
   if (provider === 'vercel')
     return canResolve('@vercel/queue')
+
+  if (provider === 'netlify')
+    return canResolve('@netlify/async-workloads')
 
   if (provider === 'qstash')
     return typeof fetch === 'function'
@@ -128,6 +137,17 @@ export function validateQueueConfig(provider: QueueProviderOptions): QueueConfig
     }
   }
 
+  if (provider.name === 'netlify') {
+    if (!provider.event) {
+      issues.push({
+        code: 'NETLIFY_EVENT_REQUIRED',
+        field: 'event',
+        message: 'Netlify queue event is required.',
+        severity: 'error',
+      })
+    }
+  }
+
   return {
     provider: provider.name,
     ok: issues.every(issue => issue.severity !== 'error'),
@@ -138,10 +158,20 @@ export function validateQueueConfig(provider: QueueProviderOptions): QueueConfig
 async function loadVercelQueue(): Promise<VercelQueueSDK> {
   const moduleName = '@vercel/queue'
   try {
-    return await import(moduleName) as VercelQueueSDK
+    return await import('@vercel/queue') as VercelQueueSDK
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${e instanceof Error ? e.message : e}`)
+  }
+}
+
+async function loadNetlifyQueue(): Promise<NetlifyQueueSDK> {
+  const moduleName = '@netlify/async-workloads'
+  try {
+    return await import('@netlify/async-workloads') as NetlifyQueueSDK
+  }
+  catch (e) {
+    throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)
   }
 }
 
@@ -153,12 +183,16 @@ function resolveProvider(provider?: QueueProviderOptions): QueueProviderOptions 
     return { name: 'cloudflare', binding: undefined as unknown as CloudflareQueueProviderOptions['binding'] }
   if (envProvider === 'vercel')
     return { name: 'vercel', topic: undefined as unknown as VercelQueueProviderOptions['topic'] }
+  if (envProvider === 'netlify')
+    return { name: 'netlify', event: undefined as unknown as NetlifyQueueProviderOptions['event'] }
 
   if (typeof process !== 'undefined') {
     if (process.env.CLOUDFLARE_WORKER || process.env.CF_PAGES)
       return { name: 'cloudflare', binding: undefined as unknown as CloudflareQueueProviderOptions['binding'] }
     if (process.env.VERCEL || process.env.VERCEL_ENV)
       return { name: 'vercel', topic: undefined as unknown as VercelQueueProviderOptions['topic'] }
+    if (process.env.NETLIFY || process.env.NETLIFY_LOCAL)
+      return { name: 'netlify', event: undefined as unknown as NetlifyQueueProviderOptions['event'] }
   }
 
   throw new QueueError('Unable to auto-detect queue provider. Pass { provider }.')
@@ -168,6 +202,7 @@ export function createQueue(opts: { provider: VercelQueueProviderOptions }): Pro
 export function createQueue(opts: { provider: CloudflareQueueProviderOptions }): Promise<QueueClient<'cloudflare'>>
 export function createQueue(opts: { provider: QStashQueueProviderOptions }): Promise<QueueClient<'qstash'>>
 export function createQueue(opts: { provider: MemoryQueueProviderOptions }): Promise<QueueClient<'memory'>>
+export function createQueue(opts: { provider: NetlifyQueueProviderOptions }): Promise<QueueClient<'netlify'>>
 export function createQueue(opts?: QueueOptions): Promise<QueueClient>
 export async function createQueue(options: QueueOptions = {}): Promise<QueueClient> {
   const resolved = resolveProvider(options.provider)
@@ -201,6 +236,11 @@ export async function createQueue(options: QueueOptions = {}): Promise<QueueClie
   if (resolved.name === 'memory') {
     const { store } = resolved as MemoryQueueProviderOptions
     return new MemoryQueueAdapter(store)
+  }
+
+  if (resolved.name === 'netlify') {
+    const sdk = await loadNetlifyQueue()
+    return new NetlifyQueueAdapter(resolved as NetlifyQueueProviderOptions, sdk)
   }
 
   throw new QueueError(`Unknown queue provider: ${(resolved as { name: string }).name}`)

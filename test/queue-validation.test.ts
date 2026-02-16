@@ -34,4 +34,15 @@ describe('queue/validateQueueConfig', () => {
       }),
     ])
   })
+
+  it('returns blocking error when netlify event is missing', () => {
+    const result = validateQueueConfig({ name: 'netlify', event: '' as any })
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        code: 'NETLIFY_EVENT_REQUIRED',
+        severity: 'error',
+      }),
+    ])
+  })
 })

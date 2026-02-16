@@ -2,7 +2,7 @@ import type { QueueProvider } from '../../../../server/_shared/queue'
 import { defineEventHandler } from 'h3'
 import { QueueError } from 'unagent/queue'
 import { jsonError, nowIso } from '../../../../server/_shared/http'
-import { createPlaygroundQueue, VERCEL_QUEUE_TOPIC } from '../../../../server/_shared/queue'
+import { createPlaygroundQueue, getPlaygroundNetlifyQueueConfig, VERCEL_QUEUE_TOPIC } from '../../../../server/_shared/queue'
 
 function resolveStatus(error: QueueError): number {
   if (typeof error.httpStatus === 'number')
@@ -16,6 +16,7 @@ function resolveStatus(error: QueueError): number {
 
 export default defineEventHandler(async (event) => {
   const provider = event.context.params!.provider as QueueProvider
+  const netlifyConfig = getPlaygroundNetlifyQueueConfig()
   const start = Date.now()
   try {
     const { queue } = await createPlaygroundQueue(event, provider)
@@ -23,6 +24,11 @@ export default defineEventHandler(async (event) => {
       provider,
       queueProvider: queue.provider,
       ...(provider === 'vercel' ? { topic: VERCEL_QUEUE_TOPIC } : {}),
+      ...(provider === 'netlify'
+        ? {
+            ...netlifyConfig,
+          }
+        : {}),
       supports: queue.supports,
       elapsed: Date.now() - start,
       timestamp: nowIso(),
