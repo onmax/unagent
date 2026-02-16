@@ -1,11 +1,8 @@
+import type { NetlifyUpstreamClient, NetlifyUpstreamSdk } from '../../_internal/netlify-upstream-types'
 import type { QueueCapabilities, QueueSendOptions, QueueSendResult } from '../types/common'
 import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
 import { QueueError } from '../errors'
 import { BaseQueueAdapter } from './base'
-
-type NetlifyAsyncWorkloadsModule = typeof import('@netlify/async-workloads')
-type NetlifyQueueUpstreamSdk = Pick<NetlifyAsyncWorkloadsModule, 'AsyncWorkloadsClient' | 'asyncWorkloadFn' | 'ErrorDoNotRetry' | 'ErrorRetryAfterDelay'>
-type NetlifyQueueUpstreamClient = InstanceType<NetlifyQueueUpstreamSdk['AsyncWorkloadsClient']>
 
 function toDelayUntil(options?: { delaySeconds?: number, delayUntil?: number | string }): number | string | undefined {
   if (!options)
@@ -37,10 +34,10 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
   readonly supports: QueueCapabilities = { sendBatch: false }
 
   private event: string
-  private sdk: NetlifyQueueUpstreamSdk
-  private client: NetlifyQueueUpstreamClient | NonNullable<NetlifyQueueProviderOptions['client']>
+  private sdk: NetlifyUpstreamSdk
+  private client: NetlifyUpstreamClient | NonNullable<NetlifyQueueProviderOptions['client']>
 
-  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyQueueUpstreamSdk) {
+  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyUpstreamSdk) {
     super()
     this.event = provider.event
     this.sdk = sdk

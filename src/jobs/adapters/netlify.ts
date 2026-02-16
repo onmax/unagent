@@ -1,17 +1,14 @@
+import type { NetlifyUpstreamClient, NetlifyUpstreamEvent, NetlifyUpstreamSdk } from '../../_internal/netlify-upstream-types'
 import type { JobEnqueueOptions, JobEnqueueResult, JobEnvelope, JobResult, RunJobOptions } from '../types/common'
 import type { NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSendEventResult } from '../types/netlify'
 import { JobsError } from '../errors'
 import { BaseJobsAdapter } from './base'
 
-type NetlifyAsyncWorkloadsModule = typeof import('@netlify/async-workloads')
-type NetlifyJobsUpstreamSdk = Pick<NetlifyAsyncWorkloadsModule, 'AsyncWorkloadsClient' | 'asyncWorkloadFn' | 'ErrorDoNotRetry' | 'ErrorRetryAfterDelay'>
-type NetlifyJobsUpstreamClient = InstanceType<NetlifyJobsUpstreamSdk['AsyncWorkloadsClient']>
-type NetlifyJobsUpstreamEvent = Parameters<Parameters<NetlifyJobsUpstreamSdk['asyncWorkloadFn']>[0]>[0]
-type NetlifyAsyncWorkloadEventInput = Pick<NetlifyJobsUpstreamEvent, 'eventName' | 'eventData' | 'eventId' | 'attempt'> & { attemptContext?: { attempt?: number } }
+type NetlifyAsyncWorkloadEventInput = Pick<NetlifyUpstreamEvent, 'eventName' | 'eventData' | 'eventId' | 'attempt'> & { attemptContext?: { attempt?: number } }
 
 interface NetlifyJobsAdapterOptions {
   provider: NetlifyJobsProviderOptions
-  sdk: NetlifyJobsUpstreamSdk
+  sdk: NetlifyUpstreamSdk
   hasJob: (name: string) => boolean
   runJob: (name: string, options?: RunJobOptions) => Promise<JobResult>
 }
@@ -102,8 +99,8 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
   }
 
   private event: string
-  private sdk: NetlifyJobsUpstreamSdk
-  private client: NetlifyJobsUpstreamClient | NonNullable<NetlifyJobsProviderOptions['client']>
+  private sdk: NetlifyUpstreamSdk
+  private client: NetlifyUpstreamClient | NonNullable<NetlifyJobsProviderOptions['client']>
   private hasJob: NetlifyJobsAdapterOptions['hasJob']
   private runJob: NetlifyJobsAdapterOptions['runJob']
   private wrappedHandler: NetlifyJobsNamespace['handler']
@@ -118,7 +115,7 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
       ...(options.provider.baseUrl ? { baseUrl: options.provider.baseUrl } : {}),
       ...(options.provider.apiKey ? { apiKey: options.provider.apiKey } : {}),
     })
-    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyJobsUpstreamEvent) => {
+    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyUpstreamEvent) => {
       await this.handleEvent(event)
     }) as NetlifyJobsNamespace['handler']
   }

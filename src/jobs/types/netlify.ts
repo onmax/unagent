@@ -1,28 +1,22 @@
+import type {
+  NetlifyAsyncWorkloadsClientConstructorLike,
+  NetlifyAsyncWorkloadsClientLike,
+  NetlifyClientConstructorOptionsLike,
+  NetlifySdkLike,
+  NetlifySendEventOptionsLike,
+  NetlifySendEventResultLike,
+} from '../../_internal/netlify-structural-types'
 import type { JobEnqueueResult, JobEnvelope } from './common'
 
-export interface NetlifyClientConstructorOptions {
-  baseUrl?: string
-  apiKey?: string
-}
+export type NetlifyClientConstructorOptions = NetlifyClientConstructorOptionsLike
 
-export interface NetlifyJobsSendEventOptions {
-  data?: unknown
-  delayUntil?: number | string
-  priority?: number
-}
+export type NetlifyJobsSendEventOptions = NetlifySendEventOptionsLike
 
-export interface NetlifyJobsSendEventResult {
-  sendStatus: 'succeeded' | 'failed'
-  eventId: string
-}
+export type NetlifyJobsSendEventResult = NetlifySendEventResultLike
 
-export interface NetlifyAsyncWorkloadsClient {
-  send: (eventName: string, options?: NetlifyJobsSendEventOptions) => Promise<NetlifyJobsSendEventResult>
-}
+export type NetlifyAsyncWorkloadsClient = NetlifyAsyncWorkloadsClientLike
 
-export interface NetlifyAsyncWorkloadsClientConstructor {
-  new (options?: NetlifyClientConstructorOptions): NetlifyAsyncWorkloadsClient
-}
+export type NetlifyAsyncWorkloadsClientConstructor = NetlifyAsyncWorkloadsClientConstructorLike
 
 export interface NetlifyAsyncWorkloadEvent {
   eventName: string
@@ -38,12 +32,7 @@ export interface NetlifyAsyncWorkloadFunction {
   (event: NetlifyAsyncWorkloadEvent): Promise<void> | void
 }
 
-export interface NetlifyJobsSDK {
-  AsyncWorkloadsClient: NetlifyAsyncWorkloadsClientConstructor
-  asyncWorkloadFn: <T extends (...args: any[]) => any>(fn: T) => (...args: unknown[]) => Promise<Response | void>
-  ErrorDoNotRetry: new (...args: any[]) => Error
-  ErrorRetryAfterDelay: new (...args: any[]) => Error
-}
+export type NetlifyJobsSDK = NetlifySdkLike
 
 export interface NetlifyJobsProviderOptions {
   name: 'netlify'

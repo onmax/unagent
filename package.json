@@ -101,6 +101,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:dts:optional-peer": "pnpm -s build && ! rg -n \"@netlify/async-workloads\" dist/*.d.ts dist/**/*.d.ts",
     "pricing:sync": "node scripts/sync-ai-gateway-pricing.mjs",
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
     "playground:browser:e2e": "pnpm build && node playground/scripts/browser-e2e.mjs",
