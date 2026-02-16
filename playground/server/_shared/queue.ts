@@ -1,10 +1,11 @@
 import { createQueue } from 'unagent/queue'
 import { getCloudflareEnv } from './provider'
 
-export type QueueProvider = 'cloudflare' | 'vercel' | 'qstash' | 'memory'
+export type QueueProvider = 'cloudflare' | 'vercel' | 'netlify' | 'qstash' | 'memory'
 
 export const VERCEL_QUEUE_TOPIC = 'unagent-playground'
 export const VERCEL_QUEUE_CONSUMER = 'playground'
+export const NETLIFY_QUEUE_EVENT_ENV = 'NETLIFY_QUEUE_EVENT'
 
 const memoryStore = { messages: [] as any[] }
 
@@ -35,6 +36,27 @@ export async function createPlaygroundQueue(event: any, provider: QueueProvider,
     return {
       provider,
       queue: await createQueue({ provider: { name: 'qstash', token, destination, ...(apiUrl ? { apiUrl } : {}) } }),
+    }
+  }
+
+  if (provider === 'netlify') {
+    const eventName = process.env.NETLIFY_QUEUE_EVENT
+    if (!eventName)
+      throw new Error(`Missing ${NETLIFY_QUEUE_EVENT_ENV}`)
+
+    const apiKey = process.env.NETLIFY_API_KEY || process.env.NETLIFY_AUTH_TOKEN
+    const baseUrl = process.env.NETLIFY_ASYNC_WORKLOADS_BASE_URL
+
+    return {
+      provider,
+      queue: await createQueue({
+        provider: {
+          name: 'netlify',
+          event: eventName,
+          ...(apiKey ? { apiKey } : {}),
+          ...(baseUrl ? { baseUrl } : {}),
+        },
+      }),
     }
   }
 

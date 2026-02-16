@@ -1,0 +1,72 @@
+import type { QueueCapabilities, QueueSendOptions, QueueSendResult } from '../types/common'
+import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
+import { QueueError } from '../errors'
+import { BaseQueueAdapter } from './base'
+
+function toDelayUntil(options?: { delaySeconds?: number, delayUntil?: number | string }): number | string | undefined {
+  if (!options)
+    return undefined
+  if (options.delayUntil !== undefined)
+    return options.delayUntil
+  if (typeof options.delaySeconds === 'number')
+    return Math.max(0, Math.round(options.delaySeconds * 1000))
+  return undefined
+}
+
+export class NetlifyQueueAdapter extends BaseQueueAdapter {
+  readonly provider = 'netlify' as const
+  readonly supports: QueueCapabilities = { sendBatch: false }
+
+  private event: string
+  private sdk: NetlifyQueueSDK
+  private client: NonNullable<NetlifyQueueProviderOptions['client']>
+
+  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyQueueSDK) {
+    super()
+    this.event = provider.event
+    this.sdk = sdk
+    this.client = provider.client || new sdk.AsyncWorkloadsClient({
+      ...(provider.baseUrl ? { baseUrl: provider.baseUrl } : {}),
+      ...(provider.apiKey ? { apiKey: provider.apiKey } : {}),
+    })
+  }
+
+  async send<T = unknown>(payload: T, options: QueueSendOptions = {}): Promise<QueueSendResult> {
+    if (!this.client || typeof this.client.send !== 'function')
+      throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
+
+    const delayUntil = toDelayUntil(options)
+    const { eventId } = await this.client.send(this.event, {
+      data: payload,
+      ...(delayUntil !== undefined ? { delayUntil } : {}),
+      ...(options.priority !== undefined ? { priority: options.priority } : {}),
+    })
+
+    return { messageId: eventId }
+  }
+
+  override get netlify(): NetlifyQueueNamespace {
+    const client = this.client
+    const sdk = this.sdk
+    return {
+      event: this.event,
+      native: client,
+      send: async (eventName: string, options: NetlifyQueueSendOptions = {}): Promise<NetlifyQueueSendResult> => {
+        if (typeof client.send !== 'function')
+          throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
+
+        const delayUntil = toDelayUntil(options)
+        const { eventId, sendStatus } = await client.send(eventName, {
+          ...(options.data !== undefined ? { data: options.data } : {}),
+          ...(delayUntil !== undefined ? { delayUntil } : {}),
+          ...(options.priority !== undefined ? { priority: options.priority } : {}),
+        })
+
+        return { messageId: eventId, sendStatus }
+      },
+      asyncWorkloadFn: sdk.asyncWorkloadFn,
+      ErrorDoNotRetry: sdk.ErrorDoNotRetry,
+      ErrorRetryAfterDelay: sdk.ErrorRetryAfterDelay,
+    }
+  }
+}

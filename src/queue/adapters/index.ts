@@ -1,5 +1,6 @@
 export * from './base'
 export * from './cloudflare'
 export * from './memory'
+export * from './netlify'
 export * from './qstash'
 export * from './vercel'

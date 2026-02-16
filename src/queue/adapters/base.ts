@@ -2,6 +2,7 @@ import type { CloudflareQueueNamespace } from '../types/cloudflare'
 import type { QueueBatchMessage, QueueCapabilities, QueueProvider, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from '../types/common'
 import type { QueueClient } from '../types/index'
 import type { MemoryQueueNamespace } from '../types/memory'
+import type { NetlifyQueueNamespace } from '../types/netlify'
 import type { QStashQueueNamespace } from '../types/qstash'
 import type { VercelQueueNamespace } from '../types/vercel'
 import { NotSupportedError } from '../errors'
@@ -30,5 +31,9 @@ export abstract class BaseQueueAdapter implements QueueClient {
 
   get memory(): MemoryQueueNamespace {
     throw new NotSupportedError('memory namespace', this.provider)
+  }
+
+  get netlify(): NetlifyQueueNamespace {
+    throw new NotSupportedError('netlify namespace', this.provider)
   }
 }

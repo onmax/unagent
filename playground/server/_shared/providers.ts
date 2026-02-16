@@ -29,6 +29,7 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
   queue: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare', cloudflareBindingsRequired: ['MY_QUEUE'] },
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },
+    { id: 'netlify', label: 'Netlify', envRequired: ['NETLIFY_QUEUE_EVENT'] },
     { id: 'qstash', label: 'QStash', envRequired: ['QSTASH_TOKEN'] },
     { id: 'memory', label: 'Memory' },
   ],
