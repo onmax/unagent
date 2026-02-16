@@ -1,4 +1,5 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions } from './model-info'
 
 export interface OllamaEmbeddingOptions {
@@ -15,8 +16,8 @@ export function ollama(options: OllamaEmbeddingOptions = {}): EmbeddingConfig {
       if (cached)
         return cached
 
-      const { embed, embedMany } = await import('ai')
-      const { createOllama } = await import('ollama-ai-provider-v2')
+      const { embed, embedMany } = await dynamicImport<typeof import('ai')>('ai')
+      const { createOllama } = await dynamicImport<typeof import('ollama-ai-provider-v2')>('ollama-ai-provider-v2')
 
       const ollamaBaseUrl = baseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
       const ollamaClient = createOllama({

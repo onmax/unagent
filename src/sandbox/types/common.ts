@@ -1,12 +1,10 @@
 export type SandboxProvider = 'vercel' | 'cloudflare' | 'deno'
 
-// === Detection ===
 export interface SandboxDetectionResult {
   type: 'cloudflare' | 'vercel' | 'deno' | 'docker' | 'none'
   details?: Record<string, unknown>
 }
 
-// === Exec Options ===
 export interface SandboxExecOptions {
   cwd?: string
   env?: Record<string, string>
@@ -35,7 +33,6 @@ export interface SandboxCapabilities {
   startProcess: boolean
 }
 
-// === File Operations ===
 export interface SandboxFileEntry {
   name: string
   path: string
@@ -48,7 +45,6 @@ export interface SandboxListFilesOptions {
   recursive?: boolean
 }
 
-// === Process ===
 export interface SandboxProcessOptions {
   cwd?: string
   env?: Record<string, string>
@@ -69,7 +65,6 @@ export interface SandboxProcess {
   waitForPort: (port: number, opts?: SandboxWaitForPortOptions) => Promise<void>
 }
 
-// === Provider Options ===
 export interface CloudflareSandboxOptions {
   sleepAfter?: string | number
   keepAlive?: boolean
@@ -140,7 +135,6 @@ export interface SandboxConfigValidationResult {
   issues: SandboxConfigValidationIssue[]
 }
 
-// === Cloudflare Stub Types ===
 export interface CloudflareSandboxExecResult {
   success: boolean
   exitCode: number

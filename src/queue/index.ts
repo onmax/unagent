@@ -1,4 +1,4 @@
-import type { NetlifyUpstreamSdk } from '../_internal/netlify-upstream-types'
+import type { NetlifySdk } from '../_internal/netlify-types'
 import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions } from './types'
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
 import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
@@ -7,6 +7,7 @@ import type { NetlifyQueueProviderOptions } from './types/netlify'
 import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
+import { dynamicImport } from '../_internal/dynamic-import'
 import { CloudflareQueueAdapter, MemoryQueueAdapter, NetlifyQueueAdapter, QStashQueueAdapter, VercelQueueAdapter } from './adapters'
 import { createCloudflareQueueBatchHandler } from './cloudflare-consumer'
 import { QueueError } from './errors'
@@ -15,13 +16,7 @@ import { verifyQStashSignature } from './qstash'
 export { NotSupportedError, QueueError } from './errors'
 export { createCloudflareQueueBatchHandler }
 export { verifyQStashSignature }
-export type { CloudflareQueueClient, MemoryQueueClient, NetlifyQueueClient, QStashQueueClient, QueueClient, VercelQueueClient } from './types'
-export type { CloudflareQueueBatchMessage, CloudflareQueueBindingLike, CloudflareQueueContentType, CloudflareQueueMessage, CloudflareQueueMessageBatch, CloudflareQueueNamespace, CloudflareQueueProviderOptions, CloudflareQueueRetryOptions, CloudflareQueueSendBatchOptions, CloudflareQueueSendOptions } from './types/cloudflare'
-export type { QueueBatchMessage, QueueCapabilities, QueueConfigValidationIssue, QueueConfigValidationResult, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions, QueueSendBatchOptions, QueueSendOptions, QueueSendResult } from './types/common'
-export type { MemoryQueueNamespace, MemoryQueueProviderOptions, MemoryQueueStore, MemoryQueueStoreItem } from './types/memory'
-export type { NetlifyAsyncWorkloadsClient, NetlifyClientConstructorOptions, NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendEventOptions, NetlifyQueueSendEventResult, NetlifyQueueSendOptions, NetlifyQueueSendResult } from './types/netlify'
-export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/qstash'
-export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
+export type * from './types'
 
 export function detectQueue(): QueueDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')
@@ -159,17 +154,17 @@ export function validateQueueConfig(provider: QueueProviderOptions): QueueConfig
 async function loadVercelQueue(): Promise<VercelQueueSDK> {
   const moduleName = '@vercel/queue'
   try {
-    return await import('@vercel/queue') as VercelQueueSDK
+    return await dynamicImport<VercelQueueSDK>(moduleName)
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${e instanceof Error ? e.message : e}`)
   }
 }
 
-async function loadNetlifyQueue(): Promise<NetlifyUpstreamSdk> {
+async function loadNetlifyQueue(): Promise<NetlifySdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import('@netlify/async-workloads') as NetlifyUpstreamSdk
+    return await dynamicImport<NetlifySdk>(moduleName)
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)

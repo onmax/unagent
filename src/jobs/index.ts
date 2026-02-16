@@ -1,16 +1,15 @@
-import type { NetlifyUpstreamSdk } from '../_internal/netlify-upstream-types'
+import type { NetlifySdk } from '../_internal/netlify-types'
 import type { RunTaskOptions } from '../task/types'
 import type { JobEnqueueOptions, JobEnqueueResult, JobEntry, JobListEntry, JobResult, JobsClient, JobsConfigValidationIssue, JobsConfigValidationResult, JobsDetectionResult, JobsOptions, JobsProvider, JobsProviderOptions, RunJobOptions } from './types'
 import type { NetlifyJobsProviderOptions } from './types/netlify'
 import { provider as envProvider } from 'std-env'
+import { dynamicImport } from '../_internal/dynamic-import'
 import { createTaskRunner } from '../task'
 import { NetlifyJobsAdapter } from './adapters'
 import { JobsError } from './errors'
 
 export { JobsError, NotSupportedError } from './errors'
-export type { JobsClient } from './types'
-export type { Job, JobEnqueueOptions, JobEnqueueResult, JobEntry, JobEvent, JobListEntry, JobMeta, JobResult, JobsCapabilities, JobsConfigValidationIssue, JobsConfigValidationResult, JobsDetectionResult, JobsOptions, JobsProvider, JobsProviderOptions, MaybePromise, NetlifyJobsClient, RunJobOptions } from './types'
-export type { NetlifyAsyncWorkloadEvent, NetlifyAsyncWorkloadsClient, NetlifyClientConstructorOptions, NetlifyJobContext, NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSDK, NetlifyJobsSendEventOptions, NetlifyJobsSendEventResult } from './types/netlify'
+export type * from './types'
 
 function hasJobs(jobs: Record<string, JobEntry>): boolean {
   return Object.keys(jobs).length > 0
@@ -84,10 +83,10 @@ export function validateJobsConfig(provider: JobsProviderOptions, jobs: Record<s
   }
 }
 
-async function loadNetlifyJobs(): Promise<NetlifyUpstreamSdk> {
+async function loadNetlifyJobs(): Promise<NetlifySdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import('@netlify/async-workloads') as NetlifyUpstreamSdk
+    return await dynamicImport<NetlifySdk>(moduleName)
   }
   catch (error) {
     throw new JobsError(`${moduleName} load failed. Install it to use the Netlify jobs provider. Original error: ${error instanceof Error ? error.message : error}`)

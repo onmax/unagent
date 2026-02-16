@@ -1,16 +1,16 @@
 import type { CloudflareSandboxClient, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxStub, DenoSandboxClient, DenoSandboxProviderOptions, DenoSandboxSDK, DurableObjectNamespaceLike, SandboxClient, SandboxOptions, SandboxProvider, VercelSandboxClient, VercelSandboxCredentials, VercelSandboxListItem, VercelSandboxProviderOptions, VercelSandboxSDK } from './types'
+import type { SandboxDetectionResult } from './types/common'
 import { provider as envProvider, isWorkerd } from 'std-env'
+import { dynamicImport } from '../_internal/dynamic-import'
 import { CloudflareSandboxAdapter, DenoSandboxAdapter, VercelSandboxAdapter } from './adapters'
 import { SandboxError } from './errors'
 import { validateSandboxConfig } from './validation'
 
 export { NotSupportedError, SandboxError } from './errors'
 export { validateSandboxConfig }
+export type * from './types'
 
-// Re-exports
-export type { CloudflareSandboxClient, CloudflareSandboxNamespace, CloudflareSandboxOptions, CloudflareSandboxProviderOptions, CloudflareSandboxSession, DenoSandboxClient, DenoSandboxNamespace, DenoSandboxOptions, DenoSandboxProviderOptions, DurableObjectNamespaceLike, SandboxCapabilities, SandboxClient, SandboxCodeContext, SandboxCodeExecutionResult, SandboxConfigValidationIssue, SandboxConfigValidationResult, SandboxExecOptions, SandboxExecResult, SandboxExposedPort, SandboxFileEntry, SandboxGitCheckoutResult, SandboxListFilesOptions, SandboxNetworkPolicy, SandboxOptions, SandboxProcess, SandboxProcessOptions, SandboxProvider, SandboxWaitForPortOptions, VercelSandboxClient, VercelSandboxMetadata, VercelSandboxNamespace, VercelSandboxProviderOptions, VercelSandboxSnapshot } from './types'
-
-export function detectSandbox(): import('./types/common').SandboxDetectionResult {
+export function detectSandbox(): SandboxDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')
     return { type: 'cloudflare', details: { runtime: 'workers' } }
   if (envProvider === 'cloudflare_pages')
@@ -75,12 +75,10 @@ export function isSandboxAvailable(provider: SandboxProvider): boolean {
   return false
 }
 
-export type { SandboxDetectionResult } from './types/common'
-
 async function loadVercelSandbox(): Promise<VercelSandboxSDK> {
   const moduleName = '@vercel/sandbox'
   try {
-    return await import(moduleName) as VercelSandboxSDK
+    return await dynamicImport<VercelSandboxSDK>(moduleName)
   }
   catch (e) {
     throw new SandboxError(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${e instanceof Error ? e.message : e}`)
@@ -90,7 +88,7 @@ async function loadVercelSandbox(): Promise<VercelSandboxSDK> {
 async function loadCloudflareSandbox(): Promise<{ getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }> {
   const moduleName = '@cloudflare/sandbox'
   try {
-    return await import(moduleName) as { getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }
+    return await dynamicImport<{ getSandbox: <T extends CloudflareSandboxStub>(ns: DurableObjectNamespaceLike, id: string, opts?: CloudflareSandboxOptions) => T }>(moduleName)
   }
   catch (e) {
     throw new SandboxError(`${moduleName} load failed. Install it to use the Cloudflare provider. Original error: ${e instanceof Error ? e.message : e}`)
@@ -100,14 +98,12 @@ async function loadCloudflareSandbox(): Promise<{ getSandbox: <T extends Cloudfl
 async function loadDenoSandbox(): Promise<DenoSandboxSDK> {
   const moduleName = '@deno/sandbox'
   try {
-    return await import(moduleName) as DenoSandboxSDK
+    return await dynamicImport<DenoSandboxSDK>(moduleName)
   }
   catch (e) {
     throw new SandboxError(`${moduleName} load failed. Install it to use the Deno provider. Original error: ${e instanceof Error ? e.message : e}`)
   }
 }
-
-// Factory overloads for type inference
 export function createSandbox(opts: { provider: VercelSandboxProviderOptions }): Promise<VercelSandboxClient>
 export function createSandbox(opts: { provider: CloudflareSandboxProviderOptions }): Promise<CloudflareSandboxClient>
 export function createSandbox(opts: { provider: DenoSandboxProviderOptions }): Promise<DenoSandboxClient>
@@ -188,7 +184,6 @@ function resolveProvider(provider: VercelSandboxProviderOptions | CloudflareSand
   throw new SandboxError('Unable to auto-detect sandbox provider. Pass { provider }.')
 }
 
-// === Static methods for Vercel ===
 export const VercelSandboxStatic = {
   async list(): Promise<{ sandboxes: VercelSandboxListItem[] }> {
     const sdk = await loadVercelSandbox()

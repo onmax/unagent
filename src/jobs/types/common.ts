@@ -1,3 +1,4 @@
+import type { Promisable } from 'type-fest'
 import type { NetlifyJobsProviderOptions } from './netlify'
 
 export type JobsProvider = 'netlify'
@@ -17,11 +18,12 @@ export interface JobResult<T = unknown> {
   result?: T
 }
 
-export type MaybePromise<T> = T | Promise<T>
+export type JobPromisable<T> = Promisable<T>
+export type MaybePromise<T> = JobPromisable<T>
 
 export interface Job<T = unknown, TPayload = Record<string, unknown>> {
   meta?: JobMeta
-  run: (event: JobEvent<TPayload>) => MaybePromise<JobResult<T>>
+  run: (event: JobEvent<TPayload>) => JobPromisable<JobResult<T>>
 }
 
 export type JobEntry<T = unknown, TPayload = Record<string, unknown>> = Job<T, TPayload> | { resolve: () => Promise<Job<T, TPayload>>, meta?: JobMeta }

@@ -1,24 +1,17 @@
 import type {
-  NetlifyAsyncWorkloadsClientConstructorLike,
-  NetlifyAsyncWorkloadsClientLike,
-  NetlifyClientConstructorOptionsLike,
-  NetlifySdkLike,
-  NetlifySendEventOptionsLike,
-  NetlifySendEventResultLike,
-} from '../../_internal/netlify-structural-types'
+  NetlifyAsyncWorkloadsClient,
+  NetlifySdk,
+} from '../../_internal/netlify-types'
 import type { QueueSendResult } from './common'
 
-export type NetlifyClientConstructorOptions = NetlifyClientConstructorOptionsLike
-
-export type NetlifyQueueSendEventOptions = NetlifySendEventOptionsLike
-
-export type NetlifyQueueSendEventResult = NetlifySendEventResultLike
-
-export type NetlifyAsyncWorkloadsClient = NetlifyAsyncWorkloadsClientLike
-
-export type NetlifyAsyncWorkloadsClientConstructor = NetlifyAsyncWorkloadsClientConstructorLike
-
-export type NetlifyQueueSDK = NetlifySdkLike
+export type {
+  NetlifyAsyncWorkloadsClient as NetlifyQueueAsyncWorkloadsClient,
+  NetlifyAsyncWorkloadsClientConstructor as NetlifyQueueAsyncWorkloadsClientConstructor,
+  NetlifyClientConstructorOptions as NetlifyQueueClientConstructorOptions,
+  NetlifySdk as NetlifyQueueSDK,
+  NetlifySendEventOptions as NetlifyQueueSendEventOptions,
+  NetlifySendEventResult as NetlifyQueueSendEventResult,
+} from '../../_internal/netlify-types'
 
 export interface NetlifyQueueProviderOptions {
   name: 'netlify'
@@ -43,7 +36,7 @@ export interface NetlifyQueueNamespace {
   readonly event: string
   readonly native: NetlifyAsyncWorkloadsClient
   readonly send: (eventName: string, options?: NetlifyQueueSendOptions) => Promise<NetlifyQueueSendResult>
-  readonly asyncWorkloadFn: NetlifyQueueSDK['asyncWorkloadFn']
-  readonly ErrorDoNotRetry: NetlifyQueueSDK['ErrorDoNotRetry']
-  readonly ErrorRetryAfterDelay: NetlifyQueueSDK['ErrorRetryAfterDelay']
+  readonly asyncWorkloadFn: NetlifySdk['asyncWorkloadFn']
+  readonly ErrorDoNotRetry: NetlifySdk['ErrorDoNotRetry']
+  readonly ErrorRetryAfterDelay: NetlifySdk['ErrorRetryAfterDelay']
 }

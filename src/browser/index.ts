@@ -13,27 +13,7 @@ import { BrowserbaseBrowserAdapter, CloudflareBrowserAdapter, PlaywrightBrowserA
 import { BrowserError } from './errors'
 
 export { BrowserError, NotSupportedError } from './errors'
-export type {
-  BrowserCapabilities,
-  BrowserClickOptions,
-  BrowserClient,
-  BrowserDetectionResult,
-  BrowserExtractOptions,
-  BrowserGotoOptions,
-  BrowserOptions,
-  BrowserPage,
-  BrowserPageOptions,
-  BrowserProvider,
-  BrowserProviderOptions,
-  BrowserScreenshotOptions,
-  BrowserSession,
-  BrowserSessionOptions,
-  BrowserTypeOptions,
-  BrowserWaitForSelectorOptions,
-} from './types'
-export type { BrowserbaseBrowserProviderOptions, BrowserbaseNamespace } from './types/browserbase'
-export type { CloudflareBrowserNamespace, CloudflareBrowserProviderOptions } from './types/cloudflare'
-export type { PlaywrightBrowserNamespace, PlaywrightBrowserProviderOptions } from './types/playwright'
+export type * from './types'
 
 export function detectBrowser(): BrowserDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')

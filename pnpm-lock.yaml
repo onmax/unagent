@@ -134,6 +134,9 @@ catalogs:
     '@types/node':
       specifier: ^25.1.0
       version: 25.1.0
+    type-fest:
+      specifier: ^4.41.0
+      version: 4.41.0
     typescript:
       specifier: ^5.7.0
       version: 5.9.3
@@ -279,6 +282,9 @@ importers:
       tsdown:
         specifier: catalog:build
         version: 0.15.12(typescript@5.9.3)
+      type-fest:
+        specifier: catalog:types
+        version: 4.41.0
       typescript:
         specifier: catalog:types
         version: 5.9.3

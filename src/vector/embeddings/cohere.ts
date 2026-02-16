@@ -1,4 +1,5 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions } from './model-info'
 
 export interface CohereEmbeddingOptions {
@@ -16,8 +17,8 @@ export function cohere(options: CohereEmbeddingOptions = {}): EmbeddingConfig {
       if (cached)
         return cached
 
-      const { createCohere } = await import('@ai-sdk/cohere')
-      const { embed, embedMany } = await import('ai')
+      const { createCohere } = await dynamicImport<typeof import('@ai-sdk/cohere')>('@ai-sdk/cohere')
+      const { embed, embedMany } = await dynamicImport<typeof import('ai')>('ai')
 
       const cohereClient = createCohere({ apiKey, baseURL: baseUrl })
       const embeddingModel = cohereClient.textEmbeddingModel(model)

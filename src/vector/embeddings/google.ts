@@ -1,4 +1,5 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions } from './model-info'
 
 export interface GoogleEmbeddingOptions {
@@ -16,8 +17,8 @@ export function google(options: GoogleEmbeddingOptions = {}): EmbeddingConfig {
       if (cached)
         return cached
 
-      const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
-      const { embed, embedMany } = await import('ai')
+      const { createGoogleGenerativeAI } = await dynamicImport<typeof import('@ai-sdk/google')>('@ai-sdk/google')
+      const { embed, embedMany } = await dynamicImport<typeof import('ai')>('ai')
 
       const googleClient = createGoogleGenerativeAI({ apiKey, baseURL: baseUrl })
       const embeddingModel = googleClient.textEmbeddingModel(model)

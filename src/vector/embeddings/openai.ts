@@ -1,4 +1,5 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions } from './model-info'
 
 export interface OpenAIEmbeddingOptions {
@@ -16,8 +17,8 @@ export function openai(options: OpenAIEmbeddingOptions = {}): EmbeddingConfig {
       if (cached)
         return cached
 
-      const { createOpenAI } = await import('@ai-sdk/openai')
-      const { embed, embedMany } = await import('ai')
+      const { createOpenAI } = await dynamicImport<typeof import('@ai-sdk/openai')>('@ai-sdk/openai')
+      const { embed, embedMany } = await dynamicImport<typeof import('ai')>('ai')
 
       const openaiClient = createOpenAI({ apiKey, baseURL: baseUrl })
       const embeddingModel = openaiClient.textEmbeddingModel(model)

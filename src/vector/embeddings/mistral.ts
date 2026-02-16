@@ -1,4 +1,5 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions } from './model-info'
 
 export interface MistralEmbeddingOptions {
@@ -16,8 +17,8 @@ export function mistral(options: MistralEmbeddingOptions = {}): EmbeddingConfig 
       if (cached)
         return cached
 
-      const { createMistral } = await import('@ai-sdk/mistral')
-      const { embed, embedMany } = await import('ai')
+      const { createMistral } = await dynamicImport<typeof import('@ai-sdk/mistral')>('@ai-sdk/mistral')
+      const { embed, embedMany } = await dynamicImport<typeof import('ai')>('ai')
 
       const mistralClient = createMistral({ apiKey, baseURL: baseUrl })
       const embeddingModel = mistralClient.textEmbeddingModel(model)

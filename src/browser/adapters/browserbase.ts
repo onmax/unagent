@@ -1,6 +1,6 @@
 import type { BrowserbaseBrowserProviderOptions, BrowserbaseNamespace } from '../types/browserbase'
 import type { BrowserSession, BrowserSessionOptions } from '../types/common'
-import { dynamicImport } from '../_import'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { BrowserError } from '../errors'
 import { BaseBrowserAdapter } from './base'
 

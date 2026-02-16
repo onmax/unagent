@@ -51,6 +51,7 @@ catalogs:
     vitest: ^3.0.0
   types:
     '@types/node': ^25.1.0
+    type-fest: ^4.41.0
     typescript: ^5.7.0
   vector:
     '@libsql/client': ^0.17.0

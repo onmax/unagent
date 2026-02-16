@@ -1,3 +1,5 @@
+import type { Promisable } from 'type-fest'
+
 export interface TaskMeta {
   name?: string
   description?: string
@@ -13,11 +15,11 @@ export interface TaskResult<T = unknown> {
   result?: T
 }
 
-export type MaybePromise<T> = T | Promise<T>
+export type TaskPromisable<T> = Promisable<T>
 
 export interface Task<T = unknown> {
   meta?: TaskMeta
-  run: (event: TaskEvent) => MaybePromise<TaskResult<T>>
+  run: (event: TaskEvent) => TaskPromisable<TaskResult<T>>
 }
 
 export type TaskEntry<T = unknown> = Task<T> | { resolve: () => Promise<Task<T>>, meta?: TaskMeta }
