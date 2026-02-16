@@ -1,8 +1,8 @@
 import type { QueueProvider } from '../../../../server/_shared/queue'
-import { defineEventHandler, getRequestURL } from 'h3'
+import { defineEventHandler } from 'h3'
 import { QueueError } from 'unagent/queue'
 import { jsonError, nowIso, readJsonBody } from '../../../../server/_shared/http'
-import { createPlaygroundQueue, NETLIFY_QUEUE_EVENT_ENV, VERCEL_QUEUE_TOPIC } from '../../../../server/_shared/queue'
+import { createPlaygroundQueue, getPlaygroundNetlifyQueueConfig } from '../../../../server/_shared/queue'
 
 function resolveStatus(error: QueueError): number {
   if (typeof error.httpStatus === 'number')
@@ -33,8 +33,7 @@ export default defineEventHandler(async (event) => {
       ...(provider === 'vercel' ? { topic: VERCEL_QUEUE_TOPIC } : {}),
       ...(provider === 'netlify'
         ? {
-            event: process.env[NETLIFY_QUEUE_EVENT_ENV],
-            baseUrl: process.env.NETLIFY_ASYNC_WORKLOADS_BASE_URL || getRequestURL(event).origin,
+            ...getPlaygroundNetlifyQueueConfig(),
           }
         : {}),
       ...result,

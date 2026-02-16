@@ -1,7 +1,7 @@
 import { asyncWorkloadFn } from '@netlify/async-workloads'
 import { getStore } from '@netlify/blobs'
 
-const EVENT_NAME = 'unagent.playground.queue'
+const EVENT_NAME = process.env.NETLIFY_QUEUE_EVENT || 'unagent.playground.queue'
 const STORE_NAME = 'unagent-playground-queue-receipts'
 
 export const config = {
