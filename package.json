@@ -39,6 +39,10 @@
       "types": "./dist/browser/index.d.ts",
       "default": "./dist/browser/index.js"
     },
+    "./jobs": {
+      "types": "./dist/jobs/index.d.ts",
+      "default": "./dist/jobs/index.js"
+    },
     "./task": {
       "types": "./dist/task/index.d.ts",
       "default": "./dist/task/index.js"
@@ -101,6 +105,7 @@
     "playground:vectorize:smoke": "node playground/scripts/vectorize-smoke.mjs",
     "playground:browser:e2e": "pnpm build && node playground/scripts/browser-e2e.mjs",
     "playground:browser:e2e:docker": "docker compose -f playground/docker-compose.browser.yml run --rm --build playwright-e2e",
+    "playground:jobs:netlify:e2e": "node playground/scripts/jobs-netlify-e2e.mjs",
     "playground:queue:netlify:e2e": "node playground/scripts/queue-netlify-e2e.mjs",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",
