@@ -110,8 +110,6 @@
     "playground:queue:netlify:e2e": "node playground/scripts/queue-netlify-e2e.mjs",
     "playground:vector:e2e": "pnpm build && node playground/scripts/vector-e2e.mjs",
     "playground:workflow:e2e": "node playground/scripts/openworkflow-e2e.mjs",
-    "prepack": "node scripts/prepare-pack-manifest.mjs",
-    "postpack": "node scripts/restore-pack-manifest.mjs",
     "release": "bumpp",
     "prepare": "simple-git-hooks",
     "prepublishOnly": "pnpm run build"
