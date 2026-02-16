@@ -1,6 +1,6 @@
 import type { RunTaskOptions } from '../task/types'
 import type { JobEnqueueOptions, JobEnqueueResult, JobEntry, JobListEntry, JobResult, JobsClient, JobsConfigValidationIssue, JobsConfigValidationResult, JobsDetectionResult, JobsOptions, JobsProvider, JobsProviderOptions, RunJobOptions } from './types'
-import type { NetlifyJobsProviderOptions, NetlifyJobsSDK } from './types/netlify'
+import type { NetlifyJobsProviderOptions, NetlifyJobsSDK, NetlifyJobsSendEventResult } from './types/netlify'
 import { provider as envProvider } from 'std-env'
 import { createTaskRunner } from '../task'
 import { NetlifyJobsAdapter } from './adapters'
@@ -10,6 +10,18 @@ export { JobsError, NotSupportedError } from './errors'
 export type { JobsClient } from './types'
 export type { Job, JobEnqueueOptions, JobEnqueueResult, JobEntry, JobEvent, JobListEntry, JobMeta, JobResult, JobsCapabilities, JobsConfigValidationIssue, JobsConfigValidationResult, JobsDetectionResult, JobsOptions, JobsProvider, JobsProviderOptions, MaybePromise, NetlifyJobsClient, RunJobOptions } from './types'
 export type { NetlifyAsyncWorkloadEvent, NetlifyAsyncWorkloadsClient, NetlifyClientConstructorOptions, NetlifyJobContext, NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSDK, NetlifyJobsSendEventOptions, NetlifyJobsSendEventResult } from './types/netlify'
+
+type NetlifyAsyncWorkloadsModule = typeof import('@netlify/async-workloads')
+type NetlifyJobsUpstreamSdk = Pick<NetlifyAsyncWorkloadsModule, 'AsyncWorkloadsClient' | 'asyncWorkloadFn' | 'ErrorDoNotRetry' | 'ErrorRetryAfterDelay'>
+type NetlifyJobsUpstreamClient = InstanceType<NetlifyJobsUpstreamSdk['AsyncWorkloadsClient']>
+type NetlifyJobsLocalClient = InstanceType<NetlifyJobsSDK['AsyncWorkloadsClient']>
+
+type Assert<T extends true> = T
+type JobsNetlifyClientParity = Assert<NetlifyJobsUpstreamClient extends NetlifyJobsLocalClient ? true : false>
+type JobsNetlifySendResultParity = Assert<Awaited<ReturnType<NetlifyJobsUpstreamClient['send']>> extends NetlifyJobsSendEventResult ? true : false>
+
+void (0 as unknown as JobsNetlifyClientParity)
+void (0 as unknown as JobsNetlifySendResultParity)
 
 function hasJobs(jobs: Record<string, JobEntry>): boolean {
   return Object.keys(jobs).length > 0
@@ -83,10 +95,10 @@ export function validateJobsConfig(provider: JobsProviderOptions, jobs: Record<s
   }
 }
 
-async function loadNetlifyJobs(): Promise<NetlifyJobsSDK> {
+async function loadNetlifyJobs(): Promise<NetlifyJobsUpstreamSdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import('@netlify/async-workloads') as NetlifyJobsSDK
+    return await import('@netlify/async-workloads') as NetlifyJobsUpstreamSdk
   }
   catch (error) {
     throw new JobsError(`${moduleName} load failed. Install it to use the Netlify jobs provider. Original error: ${error instanceof Error ? error.message : error}`)

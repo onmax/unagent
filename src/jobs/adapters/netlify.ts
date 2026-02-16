@@ -1,11 +1,17 @@
 import type { JobEnqueueOptions, JobEnqueueResult, JobEnvelope, JobResult, RunJobOptions } from '../types/common'
-import type { NetlifyAsyncWorkloadEvent, NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSDK, NetlifyJobsSendEventResult } from '../types/netlify'
+import type { NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSendEventResult } from '../types/netlify'
 import { JobsError } from '../errors'
 import { BaseJobsAdapter } from './base'
 
+type NetlifyAsyncWorkloadsModule = typeof import('@netlify/async-workloads')
+type NetlifyJobsUpstreamSdk = Pick<NetlifyAsyncWorkloadsModule, 'AsyncWorkloadsClient' | 'asyncWorkloadFn' | 'ErrorDoNotRetry' | 'ErrorRetryAfterDelay'>
+type NetlifyJobsUpstreamClient = InstanceType<NetlifyJobsUpstreamSdk['AsyncWorkloadsClient']>
+type NetlifyJobsUpstreamEvent = Parameters<Parameters<NetlifyJobsUpstreamSdk['asyncWorkloadFn']>[0]>[0]
+type NetlifyAsyncWorkloadEventInput = Pick<NetlifyJobsUpstreamEvent, 'eventName' | 'eventData' | 'eventId' | 'attempt'> & { attemptContext?: { attempt?: number } }
+
 interface NetlifyJobsAdapterOptions {
   provider: NetlifyJobsProviderOptions
-  sdk: NetlifyJobsSDK
+  sdk: NetlifyJobsUpstreamSdk
   hasJob: (name: string) => boolean
   runJob: (name: string, options?: RunJobOptions) => Promise<JobResult>
 }
@@ -39,7 +45,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
-function toAttempt(event: NetlifyAsyncWorkloadEvent): number {
+function toAttempt(event: NetlifyAsyncWorkloadEventInput): number {
   const direct = Number(event.attempt)
   if (Number.isFinite(direct))
     return direct
@@ -96,11 +102,11 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
   }
 
   private event: string
-  private sdk: NetlifyJobsSDK
-  private client: NonNullable<NetlifyJobsProviderOptions['client']>
+  private sdk: NetlifyJobsUpstreamSdk
+  private client: NetlifyJobsUpstreamClient | NonNullable<NetlifyJobsProviderOptions['client']>
   private hasJob: NetlifyJobsAdapterOptions['hasJob']
   private runJob: NetlifyJobsAdapterOptions['runJob']
-  private wrappedHandler: (...args: unknown[]) => Promise<Response | void>
+  private wrappedHandler: NetlifyJobsNamespace['handler']
 
   constructor(options: NetlifyJobsAdapterOptions) {
     super()
@@ -112,9 +118,9 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
       ...(options.provider.baseUrl ? { baseUrl: options.provider.baseUrl } : {}),
       ...(options.provider.apiKey ? { apiKey: options.provider.apiKey } : {}),
     })
-    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyAsyncWorkloadEvent) => {
+    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyJobsUpstreamEvent) => {
       await this.handleEvent(event)
-    })
+    }) as NetlifyJobsNamespace['handler']
   }
 
   async enqueueEnvelope(envelope: JobEnvelope, options: JobEnqueueOptions = {}): Promise<JobEnqueueResult> {
@@ -133,7 +139,7 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
     return { messageId: response.eventId, sendStatus: response.sendStatus }
   }
 
-  private async handleEvent(event: NetlifyAsyncWorkloadEvent): Promise<void> {
+  private async handleEvent(event: NetlifyAsyncWorkloadEventInput): Promise<void> {
     if (!event || typeof event !== 'object') {
       throw new JobsError('Invalid Netlify event payload for jobs handler', {
         code: 'NETLIFY_INVALID_EVENT',
@@ -182,7 +188,7 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
       event,
       native: client,
       handler: this.wrappedHandler,
-      asyncWorkloadFn: sdk.asyncWorkloadFn,
+      asyncWorkloadFn: sdk.asyncWorkloadFn as NetlifyJobsNamespace['asyncWorkloadFn'],
       ErrorDoNotRetry: sdk.ErrorDoNotRetry,
       ErrorRetryAfterDelay: sdk.ErrorRetryAfterDelay,
       sendEnvelope: async (envelope, options = {}) => {

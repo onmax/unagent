@@ -2,7 +2,7 @@ import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, Qu
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
 import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
 import type { MemoryQueueProviderOptions } from './types/memory'
-import type { NetlifyQueueProviderOptions, NetlifyQueueSDK } from './types/netlify'
+import type { NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendEventResult } from './types/netlify'
 import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
@@ -21,6 +21,18 @@ export type { MemoryQueueNamespace, MemoryQueueProviderOptions, MemoryQueueStore
 export type { NetlifyAsyncWorkloadsClient, NetlifyClientConstructorOptions, NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendEventOptions, NetlifyQueueSendEventResult, NetlifyQueueSendOptions, NetlifyQueueSendResult } from './types/netlify'
 export type { QStashQueueNamespace, QStashQueueProviderOptions } from './types/qstash'
 export type { VercelQueueHandleCallbackOptions, VercelQueueMessageHandler, VercelQueueNamespace, VercelQueueParsedCallbackRequest, VercelQueueProviderOptions, VercelQueueReceiveOptions, VercelQueueSDK, VercelQueueSendOptions } from './types/vercel'
+
+type NetlifyAsyncWorkloadsModule = typeof import('@netlify/async-workloads')
+type NetlifyQueueUpstreamSdk = Pick<NetlifyAsyncWorkloadsModule, 'AsyncWorkloadsClient' | 'asyncWorkloadFn' | 'ErrorDoNotRetry' | 'ErrorRetryAfterDelay'>
+type NetlifyQueueUpstreamClient = InstanceType<NetlifyQueueUpstreamSdk['AsyncWorkloadsClient']>
+type NetlifyQueueLocalClient = InstanceType<NetlifyQueueSDK['AsyncWorkloadsClient']>
+
+type Assert<T extends true> = T
+type QueueNetlifyClientParity = Assert<NetlifyQueueUpstreamClient extends NetlifyQueueLocalClient ? true : false>
+type QueueNetlifySendResultParity = Assert<Awaited<ReturnType<NetlifyQueueUpstreamClient['send']>> extends NetlifyQueueSendEventResult ? true : false>
+
+void (0 as unknown as QueueNetlifyClientParity)
+void (0 as unknown as QueueNetlifySendResultParity)
 
 export function detectQueue(): QueueDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')
@@ -165,10 +177,10 @@ async function loadVercelQueue(): Promise<VercelQueueSDK> {
   }
 }
 
-async function loadNetlifyQueue(): Promise<NetlifyQueueSDK> {
+async function loadNetlifyQueue(): Promise<NetlifyQueueUpstreamSdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import('@netlify/async-workloads') as NetlifyQueueSDK
+    return await import('@netlify/async-workloads') as NetlifyQueueUpstreamSdk
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)
