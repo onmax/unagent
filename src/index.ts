@@ -22,6 +22,34 @@ export type { CloudflareBrowserNamespace, CloudflareBrowserProviderOptions } fro
 export type { PlaywrightBrowserNamespace, PlaywrightBrowserProviderOptions } from './browser'
 export * from './env'
 export * from './fs'
+export { createJobs, detectJobs, isJobsAvailable, JobsError, NotSupportedError as JobsNotSupportedError, validateJobsConfig } from './jobs'
+export type {
+  Job,
+  JobEnqueueOptions,
+  JobEnqueueResult,
+  JobEntry,
+  JobEvent,
+  JobListEntry,
+  JobMeta,
+  JobResult,
+  JobsCapabilities,
+  JobsClient,
+  JobsConfigValidationIssue,
+  JobsConfigValidationResult,
+  JobsDetectionResult,
+  JobsOptions,
+  JobsProvider,
+  JobsProviderOptions,
+  NetlifyAsyncWorkloadEvent,
+  NetlifyJobContext,
+  NetlifyJobsClient,
+  NetlifyJobsNamespace,
+  NetlifyJobsProviderOptions,
+  NetlifyJobsSDK,
+  NetlifyJobsSendEventOptions,
+  NetlifyJobsSendEventResult,
+  RunJobOptions,
+} from './jobs'
 export { createCloudflareQueueBatchHandler, createQueue, detectQueue, isQueueAvailable, QueueError, NotSupportedError as QueueNotSupportedError, verifyQStashSignature } from './queue'
 export type {
   CloudflareQueueBatchMessage,

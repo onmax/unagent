@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { isJobsAvailable } from 'unagent/jobs'
 import { isQueueAvailable } from 'unagent/queue'
 import { getCloudflareEnv, getProvider } from './provider'
 
@@ -34,6 +35,9 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
     { id: 'qstash', label: 'QStash', envRequired: ['QSTASH_TOKEN'] },
     { id: 'memory', label: 'Memory' },
   ],
+  jobs: [
+    { id: 'netlify', label: 'Netlify', envRequired: ['NETLIFY_JOBS_EVENT'] },
+  ],
   workflow: [
     { id: 'cloudflare', label: 'Cloudflare', runtimeOnly: 'cloudflare', cloudflareBindingsRequired: ['MY_WORKFLOW'] },
     { id: 'vercel', label: 'Vercel', runtimeOnly: 'vercel' },
@@ -54,7 +58,7 @@ export const providerRegistry: Record<string, ProviderEntry[]> = {
   ],
 }
 
-export function isAvailable(entry: ProviderEntry, runtime: string, _event: H3Event): { available: boolean, reason?: string } {
+export function isAvailable(entry: ProviderEntry, runtime: string, _event: H3Event, feature?: string): { available: boolean, reason?: string } {
   if (entry.runtimeOnly && entry.runtimeOnly !== runtime)
     return { available: false, reason: `Requires ${entry.runtimeOnly} runtime` }
 
@@ -73,7 +77,10 @@ export function isAvailable(entry: ProviderEntry, runtime: string, _event: H3Eve
       return { available: false, reason: `Missing env: ${missing.join(', ')}` }
   }
 
-  if (entry.id === 'netlify' && !isQueueAvailable('netlify'))
+  if (entry.id === 'netlify' && feature === 'queue' && !isQueueAvailable('netlify'))
+    return { available: false, reason: 'Missing optional dependency: @netlify/async-workloads' }
+
+  if (entry.id === 'netlify' && feature === 'jobs' && !isJobsAvailable('netlify'))
     return { available: false, reason: 'Missing optional dependency: @netlify/async-workloads' }
 
   return { available: true }
@@ -84,7 +91,7 @@ export function getProvidersMatrix(event: H3Event): Record<string, ProviderAvail
   const result: Record<string, ProviderAvailability[]> = {}
   for (const [feature, entries] of Object.entries(providerRegistry)) {
     result[feature] = entries.map((entry) => {
-      const { available, reason } = isAvailable(entry, runtime, event)
+      const { available, reason } = isAvailable(entry, runtime, event, feature)
       return { ...entry, available, reason }
     })
   }

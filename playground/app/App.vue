@@ -15,6 +15,7 @@ const featureIcons: Record<string, string> = {
   browser: 'i-lucide-globe',
   workflow: 'i-lucide-git-branch',
   queue: 'i-lucide-mail',
+  jobs: 'i-lucide-briefcase-business',
   vector: 'i-lucide-search',
   task: 'i-lucide-list-checks',
 }

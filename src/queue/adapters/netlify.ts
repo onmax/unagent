@@ -1,5 +1,6 @@
+import type { NetlifyUpstreamClient, NetlifyUpstreamSdk } from '../../_internal/netlify-upstream-types'
 import type { QueueCapabilities, QueueSendOptions, QueueSendResult } from '../types/common'
-import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSDK, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
+import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
 import { QueueError } from '../errors'
 import { BaseQueueAdapter } from './base'
 
@@ -33,10 +34,10 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
   readonly supports: QueueCapabilities = { sendBatch: false }
 
   private event: string
-  private sdk: NetlifyQueueSDK
-  private client: NonNullable<NetlifyQueueProviderOptions['client']>
+  private sdk: NetlifyUpstreamSdk
+  private client: NetlifyUpstreamClient | NonNullable<NetlifyQueueProviderOptions['client']>
 
-  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyQueueSDK) {
+  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyUpstreamSdk) {
     super()
     this.event = provider.event
     this.sdk = sdk
@@ -81,7 +82,7 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
 
         return { messageId: response.eventId, sendStatus: response.sendStatus }
       },
-      asyncWorkloadFn: sdk.asyncWorkloadFn,
+      asyncWorkloadFn: sdk.asyncWorkloadFn as NetlifyQueueNamespace['asyncWorkloadFn'],
       ErrorDoNotRetry: sdk.ErrorDoNotRetry,
       ErrorRetryAfterDelay: sdk.ErrorRetryAfterDelay,
     }

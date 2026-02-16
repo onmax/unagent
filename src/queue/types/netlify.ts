@@ -1,35 +1,24 @@
+import type {
+  NetlifyAsyncWorkloadsClientConstructorLike,
+  NetlifyAsyncWorkloadsClientLike,
+  NetlifyClientConstructorOptionsLike,
+  NetlifySdkLike,
+  NetlifySendEventOptionsLike,
+  NetlifySendEventResultLike,
+} from '../../_internal/netlify-structural-types'
 import type { QueueSendResult } from './common'
 
-export interface NetlifyClientConstructorOptions {
-  baseUrl?: string
-  apiKey?: string
-}
+export type NetlifyClientConstructorOptions = NetlifyClientConstructorOptionsLike
 
-export interface NetlifyQueueSendEventOptions {
-  data?: unknown
-  delayUntil?: number | string
-  priority?: number
-}
+export type NetlifyQueueSendEventOptions = NetlifySendEventOptionsLike
 
-export interface NetlifyQueueSendEventResult {
-  sendStatus: 'succeeded' | 'failed'
-  eventId: string
-}
+export type NetlifyQueueSendEventResult = NetlifySendEventResultLike
 
-export interface NetlifyAsyncWorkloadsClient {
-  send: (eventName: string, options?: NetlifyQueueSendEventOptions) => Promise<NetlifyQueueSendEventResult>
-}
+export type NetlifyAsyncWorkloadsClient = NetlifyAsyncWorkloadsClientLike
 
-export interface NetlifyAsyncWorkloadsClientConstructor {
-  new (options?: NetlifyClientConstructorOptions): NetlifyAsyncWorkloadsClient
-}
+export type NetlifyAsyncWorkloadsClientConstructor = NetlifyAsyncWorkloadsClientConstructorLike
 
-export interface NetlifyQueueSDK {
-  AsyncWorkloadsClient: NetlifyAsyncWorkloadsClientConstructor
-  asyncWorkloadFn: <T extends (...args: any[]) => any>(fn: T) => (...args: unknown[]) => Promise<Response | void>
-  ErrorDoNotRetry: new (...args: any[]) => Error
-  ErrorRetryAfterDelay: new (...args: any[]) => Error
-}
+export type NetlifyQueueSDK = NetlifySdkLike
 
 export interface NetlifyQueueProviderOptions {
   name: 'netlify'

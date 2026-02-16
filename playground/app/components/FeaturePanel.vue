@@ -6,6 +6,7 @@ import SandboxPanel from './SandboxPanel.vue'
 import BrowserPanel from './BrowserPanel.vue'
 import WorkflowPanel from './WorkflowPanel.vue'
 import QueuePanel from './QueuePanel.vue'
+import JobsPanel from './JobsPanel.vue'
 import VectorPanel from './VectorPanel.vue'
 import TaskPanel from './TaskPanel.vue'
 
@@ -35,6 +36,7 @@ watch([feature, provider], ([f, p]) => {
     <BrowserPanel v-else-if="feature === 'browser'" :provider="provider" />
     <WorkflowPanel v-else-if="feature === 'workflow'" :provider="provider" />
     <QueuePanel v-else-if="feature === 'queue'" :provider="provider" />
+    <JobsPanel v-else-if="feature === 'jobs'" :provider="provider" />
     <VectorPanel v-else-if="feature === 'vector'" :provider="provider" />
     <TaskPanel v-else-if="feature === 'task'" />
   </div>

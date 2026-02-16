@@ -1,8 +1,9 @@
+import type { NetlifyUpstreamSdk } from '../_internal/netlify-upstream-types'
 import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions } from './types'
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
 import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
 import type { MemoryQueueProviderOptions } from './types/memory'
-import type { NetlifyQueueProviderOptions, NetlifyQueueSDK } from './types/netlify'
+import type { NetlifyQueueProviderOptions } from './types/netlify'
 import type { QStashQueueProviderOptions } from './types/qstash'
 import type { VercelQueueProviderOptions, VercelQueueSDK } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
@@ -165,10 +166,10 @@ async function loadVercelQueue(): Promise<VercelQueueSDK> {
   }
 }
 
-async function loadNetlifyQueue(): Promise<NetlifyQueueSDK> {
+async function loadNetlifyQueue(): Promise<NetlifyUpstreamSdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await import('@netlify/async-workloads') as NetlifyQueueSDK
+    return await import('@netlify/async-workloads') as NetlifyUpstreamSdk
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)

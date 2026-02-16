@@ -14,6 +14,7 @@ export const FEATURES: Record<string, { title: string, subtitle: string }> = {
   browser: { title: 'Browser', subtitle: 'Session-based browser actions, extraction, and screenshots.' },
   workflow: { title: 'Workflow', subtitle: 'Start a workflow, check status, stop it.' },
   queue: { title: 'Queue', subtitle: 'Send and batch messages.' },
+  jobs: { title: 'Jobs', subtitle: 'Durable background job enqueue + provider handlers.' },
   vector: { title: 'Vector', subtitle: 'Index/search/remove/clear documents.' },
   task: { title: 'Task', subtitle: 'Define, run, and schedule tasks.' },
 }

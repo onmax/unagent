@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://your-preview-site.netlify.app",
+  "bootstrapCommand": "pnpm -C playground build:netlify && cd playground && netlify deploy --json --dir=\"$PWD/public\" --no-build",
+  "pollTimeoutMs": 90000,
+  "pollIntervalMs": 2000
+}
