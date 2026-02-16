@@ -19,6 +19,7 @@ export interface JobResult<T = unknown> {
 }
 
 export type JobPromisable<T> = Promisable<T>
+export type MaybePromise<T> = JobPromisable<T>
 
 export interface Job<T = unknown, TPayload = Record<string, unknown>> {
   meta?: JobMeta
