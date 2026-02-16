@@ -130,6 +130,60 @@ describe('jobs/netlify provider', () => {
     }))
   })
 
+  it('preserves primitive and array payloads in handler events', async () => {
+    const run = vi.fn(async event => ({ result: event.payload }))
+
+    const jobs = await createJobs({
+      provider: { name: 'netlify', event: 'jobs.event' },
+      jobs: {
+        'demo:job': { run },
+      },
+    })
+
+    await jobs.netlify.handler({
+      eventName: 'jobs.event',
+      eventId: 'evt-primitive',
+      eventData: {
+        job: 'demo:job',
+        payload: 'hello',
+        enqueuedAt: '2026-02-16T11:00:00.000Z',
+      },
+      attempt: 1,
+    })
+
+    await jobs.netlify.handler({
+      eventName: 'jobs.event',
+      eventId: 'evt-array',
+      eventData: {
+        job: 'demo:job',
+        payload: [1, 2],
+        enqueuedAt: '2026-02-16T11:00:00.000Z',
+      },
+      attempt: 1,
+    })
+
+    await jobs.netlify.handler({
+      eventName: 'jobs.event',
+      eventId: 'evt-zero',
+      eventData: {
+        job: 'demo:job',
+        payload: 0,
+        enqueuedAt: '2026-02-16T11:00:00.000Z',
+      },
+      attempt: 1,
+    })
+
+    expect(run).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      payload: 'hello',
+    }))
+    expect(run).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      payload: [1, 2],
+    }))
+    expect(run).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      payload: 0,
+    }))
+  })
+
   it('throws when handler receives unknown job in envelope', async () => {
     const jobs = await createJobs({
       provider: { name: 'netlify', event: 'jobs.event' },

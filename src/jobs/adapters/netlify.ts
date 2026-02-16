@@ -41,14 +41,6 @@ function toAttempt(event: NetlifyAsyncWorkloadEvent): number {
   return 0
 }
 
-function normalizePayload(payload: unknown): Record<string, unknown> {
-  if (isRecord(payload))
-    return payload
-  if (payload === undefined)
-    return {}
-  return { value: payload }
-}
-
 function parseEnvelope(eventData: unknown): JobEnvelope {
   if (!isRecord(eventData)) {
     throw new JobsError('Netlify job payload envelope must be an object', {
@@ -151,7 +143,7 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
     }
 
     await this.runJob(envelope.job, {
-      payload: normalizePayload(envelope.payload),
+      payload: envelope.payload as RunJobOptions['payload'],
       context: {
         netlify: {
           eventName: event.eventName,

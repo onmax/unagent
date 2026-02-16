@@ -190,8 +190,8 @@ export function createTaskRunner(options: TaskRunnerOptions): TaskRunner {
 
     const promise = resolveTask(name).then(task => task.run({
       name,
-      payload: options.payload || {},
-      context: options.context || {},
+      payload: options.payload ?? {},
+      context: options.context ?? {},
     })).finally(() => {
       if (key)
         running.delete(key)
