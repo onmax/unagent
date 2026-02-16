@@ -1,4 +1,4 @@
-import type { NetlifySendEventResultLike } from './netlify-types'
+import type { NetlifySendEventResult } from './netlify-types'
 
 export interface NetlifyDelayOptions {
   delaySeconds?: number
@@ -17,8 +17,8 @@ export function toNetlifyDelayUntil(options?: NetlifyDelayOptions): number | str
 
 export function assertNetlifySendSucceeded(
   eventName: string,
-  response: NetlifySendEventResultLike,
-  createError: (eventName: string, response: NetlifySendEventResultLike) => Error,
+  response: NetlifySendEventResult,
+  createError: (eventName: string, response: NetlifySendEventResult) => Error,
 ): void {
   if (response.sendStatus === 'failed')
     throw createError(eventName, response)

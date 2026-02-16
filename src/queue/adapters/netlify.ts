@@ -1,11 +1,11 @@
-import type { NetlifyAsyncWorkloadsClientLike, NetlifySdkLike, NetlifySendEventResultLike } from '../../_internal/netlify-types'
+import type { NetlifyAsyncWorkloadsClient, NetlifySdk, NetlifySendEventResult } from '../../_internal/netlify-types'
 import type { QueueCapabilities, QueueSendOptions, QueueSendResult } from '../types/common'
 import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
 import { assertNetlifySendSucceeded, toNetlifyDelayUntil } from '../../_internal/netlify-send'
 import { QueueError } from '../errors'
 import { BaseQueueAdapter } from './base'
 
-function createNetlifySendFailedError(eventName: string, response: NetlifySendEventResultLike): QueueError {
+function createNetlifySendFailedError(eventName: string, response: NetlifySendEventResult): QueueError {
   return new QueueError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
     code: 'NETLIFY_SEND_FAILED',
     provider: 'netlify',
@@ -23,10 +23,10 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
   readonly supports: QueueCapabilities = { sendBatch: false }
 
   private event: string
-  private sdk: NetlifySdkLike
-  private client: NetlifyAsyncWorkloadsClientLike | NonNullable<NetlifyQueueProviderOptions['client']>
+  private sdk: NetlifySdk
+  private client: NetlifyAsyncWorkloadsClient | NonNullable<NetlifyQueueProviderOptions['client']>
 
-  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifySdkLike) {
+  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifySdk) {
     super()
     this.event = provider.event
     this.sdk = sdk

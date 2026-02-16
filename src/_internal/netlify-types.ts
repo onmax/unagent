@@ -1,28 +1,28 @@
-export interface NetlifyClientConstructorOptionsLike {
+export interface NetlifyClientConstructorOptions {
   baseUrl?: string
   apiKey?: string
 }
 
-export interface NetlifySendEventOptionsLike {
+export interface NetlifySendEventOptions {
   data?: unknown
   delayUntil?: number | string
   priority?: number
 }
 
-export interface NetlifySendEventResultLike {
+export interface NetlifySendEventResult {
   sendStatus: 'succeeded' | 'failed'
   eventId: string
 }
 
-export interface NetlifyAsyncWorkloadsClientLike {
-  send: (eventName: string, options?: NetlifySendEventOptionsLike) => Promise<NetlifySendEventResultLike>
+export interface NetlifyAsyncWorkloadsClient {
+  send: (eventName: string, options?: NetlifySendEventOptions) => Promise<NetlifySendEventResult>
 }
 
-export interface NetlifyAsyncWorkloadsClientConstructorLike {
-  new (options?: NetlifyClientConstructorOptionsLike): NetlifyAsyncWorkloadsClientLike
+export interface NetlifyAsyncWorkloadsClientConstructor {
+  new (options?: NetlifyClientConstructorOptions): NetlifyAsyncWorkloadsClient
 }
 
-export interface NetlifyAsyncWorkloadEventLike {
+export interface NetlifyAsyncWorkloadEvent {
   eventName: string
   eventData?: unknown
   eventId: string
@@ -30,8 +30,8 @@ export interface NetlifyAsyncWorkloadEventLike {
   attemptContext?: { attempt?: number }
 }
 
-export interface NetlifySdkLike {
-  AsyncWorkloadsClient: NetlifyAsyncWorkloadsClientConstructorLike
+export interface NetlifySdk {
+  AsyncWorkloadsClient: NetlifyAsyncWorkloadsClientConstructor
   asyncWorkloadFn: <T extends (...args: any[]) => any>(fn: T) => (...args: unknown[]) => Promise<Response | void>
   ErrorDoNotRetry: new (...args: any[]) => Error
   ErrorRetryAfterDelay: new (...args: any[]) => Error

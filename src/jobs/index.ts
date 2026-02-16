@@ -1,4 +1,4 @@
-import type { NetlifySdkLike } from '../_internal/netlify-types'
+import type { NetlifySdk } from '../_internal/netlify-types'
 import type { RunTaskOptions } from '../task/types'
 import type { JobEnqueueOptions, JobEnqueueResult, JobEntry, JobListEntry, JobResult, JobsClient, JobsConfigValidationIssue, JobsConfigValidationResult, JobsDetectionResult, JobsOptions, JobsProvider, JobsProviderOptions, RunJobOptions } from './types'
 import type { NetlifyJobsProviderOptions } from './types/netlify'
@@ -83,10 +83,10 @@ export function validateJobsConfig(provider: JobsProviderOptions, jobs: Record<s
   }
 }
 
-async function loadNetlifyJobs(): Promise<NetlifySdkLike> {
+async function loadNetlifyJobs(): Promise<NetlifySdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await dynamicImport<NetlifySdkLike>(moduleName)
+    return await dynamicImport<NetlifySdk>(moduleName)
   }
   catch (error) {
     throw new JobsError(`${moduleName} load failed. Install it to use the Netlify jobs provider. Original error: ${error instanceof Error ? error.message : error}`)

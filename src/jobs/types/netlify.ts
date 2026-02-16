@@ -1,44 +1,31 @@
 import type {
-  NetlifyAsyncWorkloadEventLike,
-  NetlifyAsyncWorkloadsClientConstructorLike,
-  NetlifyAsyncWorkloadsClientLike,
-  NetlifyClientConstructorOptionsLike,
-  NetlifySdkLike,
-  NetlifySendEventOptionsLike,
-  NetlifySendEventResultLike,
+  NetlifyAsyncWorkloadEvent,
+  NetlifyAsyncWorkloadsClient,
+  NetlifySdk,
+  NetlifySendEventOptions,
 } from '../../_internal/netlify-types'
 import type { JobEnqueueResult, JobEnvelope } from './common'
 
-export type NetlifyJobsClientConstructorOptions = NetlifyClientConstructorOptionsLike
-
-export type NetlifyJobsSendEventOptions = NetlifySendEventOptionsLike
-
-export type NetlifyJobsSendEventResult = NetlifySendEventResultLike
-
-export type NetlifyJobsAsyncWorkloadsClient = NetlifyAsyncWorkloadsClientLike
-
-export type NetlifyJobsAsyncWorkloadsClientConstructor = NetlifyAsyncWorkloadsClientConstructorLike
-
-export interface NetlifyAsyncWorkloadEvent {
-  eventName: NetlifyAsyncWorkloadEventLike['eventName']
-  eventId: NetlifyAsyncWorkloadEventLike['eventId']
-  eventData?: NetlifyAsyncWorkloadEventLike['eventData']
-  attempt?: NetlifyAsyncWorkloadEventLike['attempt']
-  attemptContext?: NetlifyAsyncWorkloadEventLike['attemptContext']
-}
+export type {
+  NetlifyAsyncWorkloadsClient as NetlifyJobsAsyncWorkloadsClient,
+  NetlifyAsyncWorkloadsClientConstructor as NetlifyJobsAsyncWorkloadsClientConstructor,
+  NetlifyClientConstructorOptions as NetlifyJobsClientConstructorOptions,
+  NetlifySdk as NetlifyJobsSDK,
+  NetlifySendEventOptions as NetlifyJobsSendEventOptions,
+  NetlifySendEventResult as NetlifyJobsSendEventResult,
+} from '../../_internal/netlify-types'
+export type { NetlifyAsyncWorkloadEvent }
 
 export interface NetlifyAsyncWorkloadFunction {
   (event: NetlifyAsyncWorkloadEvent): Promise<void> | void
 }
-
-export type NetlifyJobsSDK = NetlifySdkLike
 
 export interface NetlifyJobsProviderOptions {
   name: 'netlify'
   event: string
   baseUrl?: string
   apiKey?: string
-  client?: NetlifyJobsAsyncWorkloadsClient
+  client?: NetlifyAsyncWorkloadsClient
 }
 
 export interface NetlifyJobContext {
@@ -49,10 +36,10 @@ export interface NetlifyJobContext {
 
 export interface NetlifyJobsNamespace {
   readonly event: string
-  readonly native: NetlifyJobsAsyncWorkloadsClient
+  readonly native: NetlifyAsyncWorkloadsClient
   readonly handler: (...args: unknown[]) => Promise<Response | void>
-  readonly asyncWorkloadFn: NetlifyJobsSDK['asyncWorkloadFn']
-  readonly ErrorDoNotRetry: NetlifyJobsSDK['ErrorDoNotRetry']
-  readonly ErrorRetryAfterDelay: NetlifyJobsSDK['ErrorRetryAfterDelay']
-  readonly sendEnvelope: (envelope: JobEnvelope, options?: Omit<NetlifyJobsSendEventOptions, 'data'>) => Promise<JobEnqueueResult>
+  readonly asyncWorkloadFn: NetlifySdk['asyncWorkloadFn']
+  readonly ErrorDoNotRetry: NetlifySdk['ErrorDoNotRetry']
+  readonly ErrorRetryAfterDelay: NetlifySdk['ErrorRetryAfterDelay']
+  readonly sendEnvelope: (envelope: JobEnvelope, options?: Omit<NetlifySendEventOptions, 'data'>) => Promise<JobEnqueueResult>
 }

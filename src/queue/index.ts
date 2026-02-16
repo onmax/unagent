@@ -1,4 +1,4 @@
-import type { NetlifySdkLike } from '../_internal/netlify-types'
+import type { NetlifySdk } from '../_internal/netlify-types'
 import type { QueueClient, QueueDetectionResult, QueueOptions, QueueProvider, QueueProviderOptions } from './types'
 import type { CloudflareQueueProviderOptions } from './types/cloudflare'
 import type { QueueConfigValidationIssue, QueueConfigValidationResult } from './types/common'
@@ -161,10 +161,10 @@ async function loadVercelQueue(): Promise<VercelQueueSDK> {
   }
 }
 
-async function loadNetlifyQueue(): Promise<NetlifySdkLike> {
+async function loadNetlifyQueue(): Promise<NetlifySdk> {
   const moduleName = '@netlify/async-workloads'
   try {
-    return await dynamicImport<NetlifySdkLike>(moduleName)
+    return await dynamicImport<NetlifySdk>(moduleName)
   }
   catch (e) {
     throw new QueueError(`${moduleName} load failed. Install it to use the Netlify provider. Original error: ${e instanceof Error ? e.message : e}`)
