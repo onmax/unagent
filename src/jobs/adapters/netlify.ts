@@ -1,41 +1,30 @@
-import type { NetlifyUpstreamClient, NetlifyUpstreamEvent, NetlifyUpstreamSdk } from '../../_internal/netlify-upstream-types'
+import type { NetlifyAsyncWorkloadEventLike, NetlifyAsyncWorkloadsClientLike, NetlifySdkLike, NetlifySendEventResultLike } from '../../_internal/netlify-types'
 import type { JobEnqueueOptions, JobEnqueueResult, JobEnvelope, JobResult, RunJobOptions } from '../types/common'
-import type { NetlifyJobsNamespace, NetlifyJobsProviderOptions, NetlifyJobsSendEventResult } from '../types/netlify'
+import type { NetlifyJobsNamespace, NetlifyJobsProviderOptions } from '../types/netlify'
+import { assertNetlifySendSucceeded, toNetlifyDelayUntil } from '../../_internal/netlify-send'
 import { JobsError } from '../errors'
 import { BaseJobsAdapter } from './base'
 
-type NetlifyAsyncWorkloadEventInput = Pick<NetlifyUpstreamEvent, 'eventName' | 'eventData' | 'eventId' | 'attempt'> & { attemptContext?: { attempt?: number } }
+type NetlifyAsyncWorkloadEventInput = NetlifyAsyncWorkloadEventLike
 
 interface NetlifyJobsAdapterOptions {
   provider: NetlifyJobsProviderOptions
-  sdk: NetlifyUpstreamSdk
+  sdk: NetlifySdkLike
   hasJob: (name: string) => boolean
   runJob: (name: string, options?: RunJobOptions) => Promise<JobResult>
 }
 
-function toDelayUntil(options?: { delaySeconds?: number, delayUntil?: number | string }): number | string | undefined {
-  if (!options)
-    return undefined
-  if (options.delayUntil !== undefined)
-    return options.delayUntil
-  if (typeof options.delaySeconds === 'number')
-    return Math.max(0, Math.round(options.delaySeconds * 1000))
-  return undefined
-}
-
-function assertSendSucceeded(eventName: string, response: NetlifyJobsSendEventResult): void {
-  if (response.sendStatus === 'failed') {
-    throw new JobsError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
-      code: 'NETLIFY_SEND_FAILED',
-      provider: 'netlify',
-      upstreamError: response,
-      details: {
-        eventId: response.eventId,
-        eventName,
-        sendStatus: response.sendStatus,
-      },
-    })
-  }
+function createNetlifySendFailedError(eventName: string, response: NetlifySendEventResultLike): JobsError {
+  return new JobsError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
+    code: 'NETLIFY_SEND_FAILED',
+    provider: 'netlify',
+    upstreamError: response,
+    details: {
+      eventId: response.eventId,
+      eventName,
+      sendStatus: response.sendStatus,
+    },
+  })
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -99,8 +88,8 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
   }
 
   private event: string
-  private sdk: NetlifyUpstreamSdk
-  private client: NetlifyUpstreamClient | NonNullable<NetlifyJobsProviderOptions['client']>
+  private sdk: NetlifySdkLike
+  private client: NetlifyAsyncWorkloadsClientLike | NonNullable<NetlifyJobsProviderOptions['client']>
   private hasJob: NetlifyJobsAdapterOptions['hasJob']
   private runJob: NetlifyJobsAdapterOptions['runJob']
   private wrappedHandler: NetlifyJobsNamespace['handler']
@@ -115,7 +104,7 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
       ...(options.provider.baseUrl ? { baseUrl: options.provider.baseUrl } : {}),
       ...(options.provider.apiKey ? { apiKey: options.provider.apiKey } : {}),
     })
-    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyUpstreamEvent) => {
+    this.wrappedHandler = options.sdk.asyncWorkloadFn(async (event: NetlifyAsyncWorkloadEventLike) => {
       await this.handleEvent(event)
     }) as NetlifyJobsNamespace['handler']
   }
@@ -124,14 +113,14 @@ export class NetlifyJobsAdapter extends BaseJobsAdapter {
     if (!this.client || typeof this.client.send !== 'function')
       throw new JobsError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
 
-    const delayUntil = toDelayUntil(options)
+    const delayUntil = toNetlifyDelayUntil(options)
     const response = await this.client.send(this.event, {
       data: envelope,
       ...(delayUntil !== undefined ? { delayUntil } : {}),
       ...(options.priority !== undefined ? { priority: options.priority } : {}),
     })
 
-    assertSendSucceeded(this.event, response)
+    assertNetlifySendSucceeded(this.event, response, createNetlifySendFailedError)
 
     return { messageId: response.eventId, sendStatus: response.sendStatus }
   }

@@ -22,6 +22,14 @@ export interface NetlifyAsyncWorkloadsClientConstructorLike {
   new (options?: NetlifyClientConstructorOptionsLike): NetlifyAsyncWorkloadsClientLike
 }
 
+export interface NetlifyAsyncWorkloadEventLike {
+  eventName: string
+  eventData?: unknown
+  eventId: string
+  attempt?: number
+  attemptContext?: { attempt?: number }
+}
+
 export interface NetlifySdkLike {
   AsyncWorkloadsClient: NetlifyAsyncWorkloadsClientConstructorLike
   asyncWorkloadFn: <T extends (...args: any[]) => any>(fn: T) => (...args: unknown[]) => Promise<Response | void>

@@ -1,5 +1,6 @@
 import type { EmbeddingConfig, EmbeddingProvider, ResolvedEmbedding } from '../types'
 import { rm } from 'node:fs/promises'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { getModelDimensions, resolveModelForPreset } from './model-info'
 
 export interface TransformersEmbeddingOptions {
@@ -11,7 +12,7 @@ async function clearCorruptedCache(error: unknown, model: string): Promise<boole
   const isProtobufError = error instanceof Error
     && (error.message?.includes('Protobuf parsing failed') || String(error.cause)?.includes('Protobuf parsing failed'))
 
-  const transformers = await import('@huggingface/transformers')
+  const transformers = await dynamicImport<typeof import('@huggingface/transformers')>('@huggingface/transformers')
   const env = transformers.env as { cacheDir?: string }
 
   if (!isProtobufError || !env.cacheDir)
@@ -33,7 +34,7 @@ export function transformersJs(options: TransformersEmbeddingOptions = {}): Embe
       if (cached)
         return cached
 
-      const transformers = await import('@huggingface/transformers')
+      const transformers = await dynamicImport<typeof import('@huggingface/transformers')>('@huggingface/transformers')
       const pipeline = transformers.pipeline as (task: string, model: string, opts?: Record<string, unknown>) => Promise<any>
 
       const extractor = await pipeline('feature-extraction', model, { dtype: 'fp32' })

@@ -1,6 +1,6 @@
 import type { NetlifyUpstreamClient, NetlifyUpstreamSdk, NetlifyUpstreamSendEventResult } from '../src/_internal/netlify-upstream-types'
-import type { NetlifyAsyncWorkloadsClient as NetlifyJobsClient, NetlifyJobsSDK, NetlifyJobsSendEventResult } from '../src/jobs/types/netlify'
-import type { NetlifyAsyncWorkloadsClient as NetlifyQueueClient, NetlifyQueueSDK, NetlifyQueueSendEventResult } from '../src/queue/types/netlify'
+import type { NetlifyJobsAsyncWorkloadsClient as NetlifyJobsClient, NetlifyJobsSDK, NetlifyJobsSendEventResult } from '../src/jobs/types/netlify'
+import type { NetlifyQueueAsyncWorkloadsClient as NetlifyQueueClient, NetlifyQueueSDK, NetlifyQueueSendEventResult } from '../src/queue/types/netlify'
 import { describe, expect, it } from 'vitest'
 
 type Assert<T extends true> = T

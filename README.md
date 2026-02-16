@@ -40,6 +40,7 @@ await installSkill({ source: './local/skills', mode: 'symlink' })
 - [Docs home](https://unagent.unjs.io)
 - [Getting started](https://unagent.unjs.io/guide)
 - [Core](https://unagent.unjs.io/core)
+- [Changelog](./CHANGELOG.md)
 
 ## Credits
 

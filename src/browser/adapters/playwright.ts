@@ -1,6 +1,6 @@
 import type { BrowserSession, BrowserSessionOptions } from '../types/common'
 import type { PlaywrightBrowserNamespace, PlaywrightBrowserProviderOptions } from '../types/playwright'
-import { dynamicImport } from '../_import'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { BrowserError } from '../errors'
 import { BaseBrowserAdapter, createId } from './base'
 

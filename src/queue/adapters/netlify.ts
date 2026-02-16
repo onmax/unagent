@@ -1,32 +1,21 @@
-import type { NetlifyUpstreamClient, NetlifyUpstreamSdk } from '../../_internal/netlify-upstream-types'
+import type { NetlifyAsyncWorkloadsClientLike, NetlifySdkLike, NetlifySendEventResultLike } from '../../_internal/netlify-types'
 import type { QueueCapabilities, QueueSendOptions, QueueSendResult } from '../types/common'
 import type { NetlifyQueueNamespace, NetlifyQueueProviderOptions, NetlifyQueueSendOptions, NetlifyQueueSendResult } from '../types/netlify'
+import { assertNetlifySendSucceeded, toNetlifyDelayUntil } from '../../_internal/netlify-send'
 import { QueueError } from '../errors'
 import { BaseQueueAdapter } from './base'
 
-function toDelayUntil(options?: { delaySeconds?: number, delayUntil?: number | string }): number | string | undefined {
-  if (!options)
-    return undefined
-  if (options.delayUntil !== undefined)
-    return options.delayUntil
-  if (typeof options.delaySeconds === 'number')
-    return Math.max(0, Math.round(options.delaySeconds * 1000))
-  return undefined
-}
-
-function assertSendSucceeded(eventName: string, response: { eventId: string, sendStatus?: 'succeeded' | 'failed' }): void {
-  if (response.sendStatus === 'failed') {
-    throw new QueueError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
-      code: 'NETLIFY_SEND_FAILED',
-      provider: 'netlify',
-      upstreamError: response,
-      details: {
-        eventId: response.eventId,
-        eventName,
-        sendStatus: response.sendStatus,
-      },
-    })
-  }
+function createNetlifySendFailedError(eventName: string, response: NetlifySendEventResultLike): QueueError {
+  return new QueueError(`@netlify/async-workloads AsyncWorkloadsClient.send failed for event "${eventName}"`, {
+    code: 'NETLIFY_SEND_FAILED',
+    provider: 'netlify',
+    upstreamError: response,
+    details: {
+      eventId: response.eventId,
+      eventName,
+      sendStatus: response.sendStatus,
+    },
+  })
 }
 
 export class NetlifyQueueAdapter extends BaseQueueAdapter {
@@ -34,10 +23,10 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
   readonly supports: QueueCapabilities = { sendBatch: false }
 
   private event: string
-  private sdk: NetlifyUpstreamSdk
-  private client: NetlifyUpstreamClient | NonNullable<NetlifyQueueProviderOptions['client']>
+  private sdk: NetlifySdkLike
+  private client: NetlifyAsyncWorkloadsClientLike | NonNullable<NetlifyQueueProviderOptions['client']>
 
-  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifyUpstreamSdk) {
+  constructor(provider: NetlifyQueueProviderOptions, sdk: NetlifySdkLike) {
     super()
     this.event = provider.event
     this.sdk = sdk
@@ -51,13 +40,13 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
     if (!this.client || typeof this.client.send !== 'function')
       throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
 
-    const delayUntil = toDelayUntil(options)
+    const delayUntil = toNetlifyDelayUntil(options)
     const response = await this.client.send(this.event, {
       data: payload,
       ...(delayUntil !== undefined ? { delayUntil } : {}),
       ...(options.priority !== undefined ? { priority: options.priority } : {}),
     })
-    assertSendSucceeded(this.event, response)
+    assertNetlifySendSucceeded(this.event, response, createNetlifySendFailedError)
 
     return { messageId: response.eventId, sendStatus: response.sendStatus }
   }
@@ -72,13 +61,13 @@ export class NetlifyQueueAdapter extends BaseQueueAdapter {
         if (typeof client.send !== 'function')
           throw new QueueError('@netlify/async-workloads AsyncWorkloadsClient.send is not available')
 
-        const delayUntil = toDelayUntil(options)
+        const delayUntil = toNetlifyDelayUntil(options)
         const response = await client.send(eventName, {
           ...(options.data !== undefined ? { data: options.data } : {}),
           ...(delayUntil !== undefined ? { delayUntil } : {}),
           ...(options.priority !== undefined ? { priority: options.priority } : {}),
         })
-        assertSendSucceeded(eventName, response)
+        assertNetlifySendSucceeded(eventName, response, createNetlifySendFailedError)
 
         return { messageId: response.eventId, sendStatus: response.sendStatus }
       },

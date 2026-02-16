@@ -10,18 +10,15 @@ export abstract class BaseSandboxAdapter<P extends SandboxProvider = SandboxProv
   abstract readonly provider: P
   abstract readonly supports: SandboxCapabilities
 
-  // === Core methods (must implement) ===
   abstract exec(cmd: string, args?: string[], opts?: SandboxExecOptions): Promise<SandboxExecResult>
   abstract writeFile(path: string, content: string): Promise<void>
   abstract readFile(path: string): Promise<string>
   abstract stop(): Promise<void>
 
-  // === New unified methods ===
   abstract mkdir(path: string, opts?: { recursive?: boolean }): Promise<void>
   abstract readFileStream(path: string): Promise<ReadableStream<Uint8Array>>
   abstract startProcess(cmd: string, args?: string[], opts?: SandboxProcessOptions): Promise<SandboxProcess>
 
-  // === CF-only methods (default throws) ===
   async listFiles(_path: string, _opts?: SandboxListFilesOptions): Promise<SandboxFileEntry[]> {
     throw new NotSupportedError('listFiles', this.provider)
   }
@@ -38,7 +35,6 @@ export abstract class BaseSandboxAdapter<P extends SandboxProvider = SandboxProv
     throw new NotSupportedError('moveFile', this.provider)
   }
 
-  // === Platform namespaces ===
   get vercel(): P extends 'vercel' ? VercelSandboxNamespace : never {
     throw new NotSupportedError('vercel namespace', this.provider)
   }

@@ -14,6 +14,7 @@ import type { SqliteVecProviderOptions } from './types/sqlite-vec'
 import type { UpstashVectorProviderOptions } from './types/upstash'
 import type { WeaviateProviderOptions } from './types/weaviate'
 import { provider as envProvider, isWorkerd } from 'std-env'
+import { dynamicImport } from '../_internal/dynamic-import'
 import { createCloudflareVectorAdapter } from './adapters/cloudflare'
 import { createLibsqlAdapter } from './adapters/libsql'
 import { createPgvectorAdapter } from './adapters/pgvector'
@@ -183,7 +184,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
       throw new VectorError('[upstash] token is required')
     let IndexCtor: any
     try {
-      const mod: any = await import('@upstash/vector')
+      const mod: any = await dynamicImport('@upstash/vector')
       IndexCtor = mod.Index || mod.default?.Index || mod.default
     }
     catch (error) {
@@ -203,7 +204,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
       throw new VectorError('[pgvector] embeddings is required')
     let PgMod: any
     try {
-      PgMod = await import('pg')
+      PgMod = await dynamicImport('pg')
     }
     catch (error) {
       throw new VectorError(`pg load failed. Install it to use the pgvector provider. Original error: ${error instanceof Error ? error.message : error}`)
@@ -221,7 +222,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
       throw new VectorError('[libsql] embeddings is required')
     let createClient: any
     try {
-      const mod: any = await import('@libsql/client')
+      const mod: any = await dynamicImport('@libsql/client')
       createClient = mod.createClient || mod.default?.createClient || mod.default
     }
     catch (error) {
@@ -256,7 +257,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
     const { apiKey, host, index, namespace, embeddings } = resolved as PineconeProviderOptions
     let PineconeCtor: any
     try {
-      const mod: any = await import('@pinecone-database/pinecone')
+      const mod: any = await dynamicImport('@pinecone-database/pinecone')
       PineconeCtor = mod.Pinecone || mod.default?.Pinecone || mod.default
     }
     catch (error) {
@@ -284,7 +285,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
       throw new VectorError('[qdrant] embeddings is required')
     let QdrantCtor: any
     try {
-      const mod: any = await import('@qdrant/js-client-rest')
+      const mod: any = await dynamicImport('@qdrant/js-client-rest')
       QdrantCtor = mod.QdrantClient || mod.default?.QdrantClient || mod.default
     }
     catch (error) {
@@ -302,7 +303,7 @@ export async function createVector(options: VectorOptions = {}): Promise<VectorC
       throw new VectorError('[weaviate] embeddings is required')
     let weaviate: any
     try {
-      const mod: any = await import('weaviate-client')
+      const mod: any = await dynamicImport('weaviate-client')
       weaviate = mod.default || mod
     }
     catch (error) {

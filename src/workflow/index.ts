@@ -3,14 +3,12 @@ import type { CloudflareWorkflowProviderOptions } from './types/cloudflare'
 import type { OpenWorkflowProviderOptions } from './types/openworkflow'
 import type { VercelWorkflowAPI, VercelWorkflowProviderOptions } from './types/vercel'
 import { provider as envProvider, isWorkerd } from 'std-env'
+import { dynamicImport } from '../_internal/dynamic-import'
 import { assertCloudflareBinding, CloudflareWorkflowAdapter, OpenWorkflowAdapter, VercelWorkflowAdapter } from './adapters'
 import { WorkflowError } from './errors'
 
 export { NotSupportedError, WorkflowError } from './errors'
-export type { WorkflowBatchItem, WorkflowCapabilities, WorkflowClient, WorkflowDetectionResult, WorkflowOptions, WorkflowProvider, WorkflowProviderOptions, WorkflowResultOptions, WorkflowRun, WorkflowRunState, WorkflowRunStatus, WorkflowStartOptions } from './types'
-export type { CloudflareWorkflowBindingLike, CloudflareWorkflowInstanceLike, CloudflareWorkflowNamespace, CloudflareWorkflowProviderOptions, CloudflareWorkflowStatusLike } from './types/cloudflare'
-export type { OpenWorkflowNamespace, OpenWorkflowProviderOptions, OpenWorkflowRunLike, OpenWorkflowWorkflowLike } from './types/openworkflow'
-export type { VercelWorkflowAPI, VercelWorkflowNamespace, VercelWorkflowProviderOptions, VercelWorkflowRunLike, VercelWorkflowStartOptions } from './types/vercel'
+export type * from './types'
 
 export function detectWorkflow(): WorkflowDetectionResult {
   if (isWorkerd || envProvider === 'cloudflare_workers')
@@ -99,22 +97,17 @@ async function resolveModulePath(moduleName: string): Promise<string> {
 
 async function loadVercelWorkflowApi(): Promise<VercelWorkflowAPI> {
   const moduleName = 'workflow/api'
-  const dynamicImport = (specifier: string): Promise<unknown> => {
-    // eslint-disable-next-line no-new-func
-    const loader = new Function('s', 'return import(s)') as (s: string) => Promise<unknown>
-    return loader(specifier)
-  }
   try {
-    return await dynamicImport('workflow/api') as VercelWorkflowAPI
+    return await dynamicImport<VercelWorkflowAPI>('workflow/api')
   }
   catch {
     try {
-      return await dynamicImport('workflow/dist/api.js') as VercelWorkflowAPI
+      return await dynamicImport<VercelWorkflowAPI>('workflow/dist/api.js')
     }
     catch {
       try {
         const resolved = await resolveModulePath(moduleName)
-        return await dynamicImport(resolved) as VercelWorkflowAPI
+        return await dynamicImport<VercelWorkflowAPI>(resolved)
       }
       catch (finalError) {
         throw new WorkflowError(`${moduleName} load failed. Install it to use the Vercel provider. Original error: ${finalError instanceof Error ? finalError.message : finalError}`)

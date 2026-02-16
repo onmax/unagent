@@ -1,5 +1,6 @@
 import type { CloudflareBrowserNamespace, CloudflareBrowserProviderOptions } from '../types/cloudflare'
 import type { BrowserSession, BrowserSessionOptions } from '../types/common'
+import { dynamicImport } from '../../_internal/dynamic-import'
 import { BrowserError } from '../errors'
 import { BaseBrowserAdapter, createId } from './base'
 
@@ -29,7 +30,7 @@ export class CloudflareBrowserAdapter extends BaseBrowserAdapter<'cloudflare'> {
     let endpointURLString: ((binding: unknown, opts?: { sessionId?: string, persistent?: boolean, keepAlive?: number }) => string) | undefined
 
     try {
-      const mod: any = await import('@cloudflare/playwright')
+      const mod: any = await dynamicImport('@cloudflare/playwright')
       launch = mod?.launch
       endpointURLString = mod?.endpointURLString
     }

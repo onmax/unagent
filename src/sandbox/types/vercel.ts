@@ -1,4 +1,3 @@
-// === Vercel SDK Types ===
 export interface VercelSandboxRunCommandParams {
   cmd: string
   args?: string[]
@@ -58,7 +57,6 @@ export interface VercelSandboxListItem {
   createdAt: string
 }
 
-// === Vercel Namespace ===
 export interface VercelSandboxSnapshot {
   id: string
   sandboxId: string
