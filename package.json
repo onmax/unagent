@@ -229,6 +229,7 @@
     "@upstash/vector": "catalog:vector",
     "bumpp": "catalog:script",
     "eslint": "catalog:lint",
+    "jiti": "catalog:lint",
     "lint-staged": "catalog:lint",
     "pg": "catalog:vector",
     "simple-git-hooks": "catalog:lint",

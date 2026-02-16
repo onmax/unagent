@@ -31,6 +31,7 @@ catalogs:
   lint:
     '@antfu/eslint-config': ^4.0.0
     eslint: ^9.0.0
+    jiti: ^2.6.1
     lint-staged: ^16.2.7
     simple-git-hooks: ^2.13.1
   prod:
