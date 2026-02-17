@@ -24,3 +24,5 @@ export * from './vercel'
 
 export { createWorkflow, detectWorkflow, isWorkflowAvailable, WorkflowError, NotSupportedError as WorkflowNotSupportedError } from './workflow'
 export type * from './workflow/types'
+
+// CI integrity check marker
