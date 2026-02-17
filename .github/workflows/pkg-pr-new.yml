@@ -15,4 +15,4 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - run: pnpm build
-      - run: npx pkg-pr-new publish
+      - run: npx pkg-pr-new publish --pnpm
