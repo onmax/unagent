@@ -1,7 +1,7 @@
 # unagent
 
-[![npm version](https://img.shields.io/npm/v/unagent?color=f43f5e)](https://npmjs.com/package/unagent)
-[![npm downloads](https://img.shields.io/npm/dm/unagent?color=f43f5e)](https://npmjs.com/package/unagent)
+[![npm version](https://comark-ui.onmax.me/badge.svg?source=npm-version&package=unagent&icon=npm)](https://npmjs.com/package/unagent)
+[![npm downloads](https://comark-ui.onmax.me/badge.svg?source=npm-downloads&package=unagent&icon=npm)](https://npmjs.com/package/unagent)
 
 Unified primitives for AI coding agents.
 
