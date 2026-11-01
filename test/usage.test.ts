@@ -54,9 +54,11 @@ describe('usage', () => {
       expect(rates!.inputCostPerMillionTokens).toBe(2.5)
     })
 
-    it('returns fuzzy match', () => {
-      const rates = getRatesForModel('claude-3-5-sonnet-20241022-v2')
-      expect(rates).toBeDefined()
+    it.each([
+      ['claude-3-5-sonnet-20241022-v2', { inputCostPerMillionTokens: 3, outputCostPerMillionTokens: 15, cacheReadCostPerMillionTokens: 0.3, cacheWriteCostPerMillionTokens: 3.75 }],
+      ['gpt-4o-mini-latest', { inputCostPerMillionTokens: 0.15, outputCostPerMillionTokens: 0.6 }],
+    ])('returns the most specific fuzzy rates for %s', (model, rates) => {
+      expect(getRatesForModel(model)).toEqual(rates)
     })
 
     it('returns undefined for unknown model', () => {

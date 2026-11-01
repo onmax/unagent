@@ -1,8 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { discoverSkills, extractSkillName, filterSkills, installSkill, parseSkillMd, toPromptXml, uninstallSkill, validateSkill, validateSkillMd } from '../src/skill'
+import { useAgentHome } from './helpers/agent-home'
+
+const getAgentHome = useAgentHome()
 
 describe('skill/parse', () => {
   it('parses SKILL.md with frontmatter', () => {
@@ -104,15 +106,10 @@ describe('skill/validate', () => {
 })
 
 describe('skill/discover', () => {
-  const testDir = join(process.cwd(), '.test-skills')
+  let testDir: string
 
   beforeEach(() => {
-    rmSync(testDir, { recursive: true, force: true })
-    mkdirSync(testDir, { recursive: true })
-  })
-
-  afterEach(() => {
-    rmSync(testDir, { recursive: true, force: true })
+    testDir = getAgentHome()
   })
 
   it('discovers skills in directories with SKILL.md', () => {
@@ -153,33 +150,18 @@ Content`)
   })
 
   it('expands ~ in discovery path', () => {
-    const oldHome = process.env.HOME
-    const oldUserProfile = process.env.USERPROFILE
-
-    const home = mkdtempSync(join(tmpdir(), 'unagent-home-'))
-    process.env.HOME = home
-    process.env.USERPROFILE = home
-
-    try {
-      const skillsBase = join(home, 'my-skills')
-      const skillDir = join(skillsBase, 'my-skill')
-      mkdirSync(skillDir, { recursive: true })
-      writeFileSync(join(skillDir, 'SKILL.md'), `---
+    const skillDir = join(testDir, 'my-skills', 'my-skill')
+    mkdirSync(skillDir, { recursive: true })
+    writeFileSync(join(skillDir, 'SKILL.md'), `---
 name: my-skill
 description: Test skill
 ---
 Content`)
 
-      const skills = discoverSkills('~/my-skills')
-      expect(skills).toHaveLength(1)
-      expect(skills[0].name).toBe('my-skill')
-      expect(skills[0].path).toBe(skillDir)
-    }
-    finally {
-      process.env.HOME = oldHome
-      process.env.USERPROFILE = oldUserProfile
-      rmSync(home, { recursive: true, force: true })
-    }
+    const skills = discoverSkills('~/my-skills')
+    expect(skills).toHaveLength(1)
+    expect(skills[0].name).toBe('my-skill')
+    expect(skills[0].path).toBe(skillDir)
   })
 
   it('filterSkills filters by name', () => {
@@ -225,67 +207,50 @@ describe('skill/prompt', () => {
 })
 
 describe('skill/install', () => {
-  const testDir = join(process.cwd(), '.test-install')
-  const sourceDir = join(testDir, 'source')
-  const targetDir = join(testDir, 'target')
-
-  beforeEach(() => {
-    rmSync(testDir, { recursive: true, force: true })
-    mkdirSync(sourceDir, { recursive: true })
-    mkdirSync(targetDir, { recursive: true })
-
-    // Create a test skill in source
-    const skillDir = join(sourceDir, 'test-skill')
-    mkdirSync(skillDir)
-    writeFileSync(join(skillDir, 'SKILL.md'), `---
+  let sourceDir: string
+  let targetDir: string
+  const content = `---
 name: test-skill
 description: A test skill
 ---
-Instructions here`)
+Instructions here`
+
+  beforeEach(() => {
+    sourceDir = join(getAgentHome(), 'source')
+    targetDir = join(getAgentHome(), 'target')
+    mkdirSync(join(sourceDir, 'test-skill'), { recursive: true })
+    mkdirSync(targetDir)
+    writeFileSync(join(sourceDir, 'test-skill', 'SKILL.md'), content)
   })
 
-  afterEach(() => {
-    rmSync(testDir, { recursive: true, force: true })
-  })
-
-  it('installs skill from local path', async () => {
+  it.each(['absolute', 'relative'])('installs and uninstalls a skill from %s local sources', async (kind) => {
+    const source = kind === 'relative' ? '../source' : sourceDir
+    const skillsDir = join(getAgentHome(), '.claude', 'skills')
+    const path = join(skillsDir, 'test-skill')
     const result = await installSkill({
-      source: sourceDir,
+      source,
+      cwd: targetDir,
       skills: ['test-skill'],
       agents: ['claude-code'],
     })
 
-    // Should fail gracefully since claude-code dir doesn't exist in test env
-    expect(result).toBeDefined()
-    expect(Array.isArray(result.installed)).toBe(true)
-    expect(Array.isArray(result.errors)).toBe(true)
-  })
+    expect(result).toEqual({ success: true, installed: [{ skill: 'test-skill', agent: 'claude-code', path }], errors: [] })
+    expect(lstatSync(path).isSymbolicLink()).toBe(true)
+    expect(realpathSync(path)).toBe(realpathSync(join(sourceDir, 'test-skill')))
+    expect(readFileSync(join(path, 'SKILL.md'), 'utf8')).toBe(content)
+    expect(JSON.parse(readFileSync(join(skillsDir, 'skill.lock'), 'utf8'))).toMatchObject({
+      version: 1,
+      skills: { 'test-skill': { name: 'test-skill', source, hash: expect.stringMatching(/^[a-f0-9]{16}$/) } },
+    })
 
-  it('resolves relative local sources against cwd', async () => {
-    const oldHome = process.env.HOME
-    const oldUserProfile = process.env.USERPROFILE
-
-    const home = mkdtempSync(join(tmpdir(), 'unagent-home-install-'))
-    process.env.HOME = home
-    process.env.USERPROFILE = home
-
-    try {
-      const cwd = targetDir
-      const result = await installSkill({
-        source: '../source',
-        cwd,
-        skills: ['test-skill'],
-        agents: ['claude-code'],
-      })
-
-      // We only care that resolution did not produce a "No skills found" error.
-      expect(result.errors.some(e => e.error.includes('No skills found'))).toBe(false)
-    }
-    finally {
-      process.env.HOME = oldHome
-      process.env.USERPROFILE = oldUserProfile
-      rmSync(home, { recursive: true, force: true })
-    }
+    expect(await uninstallSkill({ skill: 'test-skill', agents: ['claude-code'] })).toEqual({
+      success: true,
+      removed: [{ skill: 'test-skill', agent: 'claude-code', path }],
+      errors: [],
+    })
+    expect(existsSync(path)).toBe(false)
+    expect(readFileSync(join(sourceDir, 'test-skill', 'SKILL.md'), 'utf8')).toBe(content)
+    expect(JSON.parse(readFileSync(join(skillsDir, 'skill.lock'), 'utf8'))).toEqual({ version: 1, skills: {} })
   })
 
   it('returns error for non-existent skill', async () => {
@@ -295,41 +260,38 @@ Instructions here`)
       agents: ['claude-code'],
     })
 
-    expect(result.errors.some(e => e.skill === 'non-existent')).toBe(true)
+    expect(result).toEqual({
+      success: false,
+      installed: [],
+      errors: [{ skill: 'non-existent', agent: '*', error: 'Skill not found in source' }],
+    })
   })
 
   it('returns error for empty source', async () => {
-    const emptyDir = join(testDir, 'empty')
-    mkdirSync(emptyDir)
+    const result = await installSkill({ source: targetDir, agents: ['claude-code'] })
 
-    const result = await installSkill({
-      source: emptyDir,
-      agents: ['claude-code'],
+    expect(result).toEqual({
+      success: false,
+      installed: [],
+      errors: [{ skill: '*', agent: '*', error: 'No skills found in source' }],
     })
-
-    expect(result.success).toBe(false)
-    expect(result.errors.some(e => e.error.includes('No skills found'))).toBe(true)
   })
 })
 
 describe('skill/uninstall', () => {
   it('returns error when no agents specified and none detected', async () => {
-    const result = await uninstallSkill({
-      skill: 'non-existent',
-      agents: [],
+    expect(await uninstallSkill({ skill: 'non-existent', agents: [] })).toEqual({
+      success: false,
+      removed: [],
+      errors: [{ skill: 'non-existent', agent: '*', error: 'No agents found or specified' }],
     })
-
-    // With empty agents array, should try to detect and likely fail
-    expect(result).toBeDefined()
   })
 
   it('handles non-existent skill gracefully', async () => {
-    const result = await uninstallSkill({
-      skill: 'definitely-not-installed',
-      agents: ['claude-code'],
+    expect(await uninstallSkill({ skill: 'definitely-not-installed', agents: ['claude-code'] })).toEqual({
+      success: false,
+      removed: [],
+      errors: [],
     })
-
-    // Should not throw, returns result with no removed entries
-    expect(result.removed).toHaveLength(0)
   })
 })

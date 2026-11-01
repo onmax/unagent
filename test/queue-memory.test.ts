@@ -13,7 +13,8 @@ describe('queue/memory provider', () => {
     expect(queue.memory.size()).toBe(3)
 
     const peek = queue.memory.peek(2)
-    expect(peek.length).toBe(2)
+    expect(peek.map(item => item.payload)).toEqual([{ a: 1 }, { a: 2 }])
+    expect(peek[0].messageId).toBe(r1.messageId)
 
     const seen: unknown[] = []
     const drained = await queue.memory.drain(async (payload) => {
@@ -22,6 +23,6 @@ describe('queue/memory provider', () => {
 
     expect(drained).toBe(3)
     expect(queue.memory.size()).toBe(0)
-    expect(seen.length).toBe(3)
+    expect(seen).toEqual([{ a: 1 }, { a: 2 }, { a: 3 }])
   })
 })

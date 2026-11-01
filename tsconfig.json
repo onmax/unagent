@@ -15,6 +15,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["src", "test/netlify-type-parity.test.ts"],
+  "include": ["src", "test/netlify-type-parity.test-d.ts"],
   "exclude": ["node_modules", "dist"]
 }
