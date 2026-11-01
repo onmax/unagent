@@ -143,11 +143,15 @@ describe('workflow adapters (cloudflare)', () => {
   it('supports pause/resume/restart/sendEvent and batch start', async () => {
     const instance = createCloudflareInstance({
       status: async () => ({ status: 'paused' }),
+      pause: vi.fn(async () => {}),
+      resume: vi.fn(async () => {}),
+      restart: vi.fn(async () => {}),
+      sendEvent: vi.fn(async () => {}),
     })
     const instance2 = createCloudflareInstance({ id: 'cf-2' })
     const binding: CloudflareWorkflowBindingLike = {
       create: async () => instance,
-      createBatch: async () => [instance, instance2],
+      createBatch: vi.fn(async () => [instance, instance2]),
       get: async () => instance,
     }
 
@@ -159,11 +163,17 @@ describe('workflow adapters (cloudflare)', () => {
     await run.restart?.()
     await run.sendEvent?.({ type: 'ping' })
 
+    expect(instance.pause).toHaveBeenCalledExactlyOnceWith()
+    expect(instance.resume).toHaveBeenCalledExactlyOnceWith()
+    expect(instance.restart).toHaveBeenCalledExactlyOnceWith()
+    expect(instance.sendEvent).toHaveBeenCalledExactlyOnceWith({ type: 'ping' })
+
     const status = await run.status()
     expect(status.state).toBe('paused')
 
     const batch = await adapter.startBatch([{ payload: { id: 1 } }, { payload: { id: 2 } }])
-    expect(batch).toHaveLength(2)
+    expect(binding.createBatch).toHaveBeenCalledExactlyOnceWith([{ params: { id: 1 } }, { params: { id: 2 } }])
+    expect(batch.map(run => run.id)).toEqual(['cf-1', 'cf-2'])
   })
 
   it('normalizes errored status as failed', async () => {
